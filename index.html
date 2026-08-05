@@ -385,6 +385,15 @@
     text-align:center;
     font-size:11px;
     color: rgba(243,230,211,0.5);
+    margin-bottom:2px;
+  }
+  .preview-price{
+    text-align:center;
+    font-family: Georgia, serif;
+    font-size:18px;
+    font-weight:700;
+    color: var(--gold-2);
+    font-variant-numeric: tabular-nums;
     margin-bottom:14px;
   }
 
@@ -765,6 +774,7 @@
       </div>
       <div class="preview-label serif" id="previewLabel">Gula Aren Latte</div>
       <div class="preview-sub" id="previewSub">Single Shot · Es Normal</div>
+      <div class="preview-price" id="previewPrice">Rp 0</div>
 
       <div class="cart-list" id="cartList"></div>
 
@@ -848,7 +858,9 @@
   var cartIdSeq = 1;
 
   function idr(n){
-    return 'Rp ' + n.toLocaleString('id-ID');
+    var s = Math.round(n || 0).toString();
+    s = s.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return 'Rp ' + s;
   }
 
   function lerp(a,b,t){ return a + (b-a)*t; }
@@ -980,6 +992,7 @@
     var subParts = [LABELS.temp[state.temp], LABELS.shots[state.shots]];
     if (state.temp !== 'hot') subParts.push(LABELS.ice[state.ice]);
     document.getElementById('previewSub').textContent = subParts.join(' · ');
+    document.getElementById('previewPrice').textContent = idr(computeUnitPrice(state) * state.qty);
 
     var ctaBtns = [document.getElementById('ctaBtn'), document.getElementById('ctaBtnMobile')];
     ctaBtns.forEach(function(btn){
