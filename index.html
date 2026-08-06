@@ -42,6 +42,22 @@
     padding: 20px 20px 26px;
     text-align:center;
   }
+  .history-btn{
+    position:absolute;
+    top:14px;
+    right:14px;
+    background: rgba(23,14,9,0.55);
+    border: 1px solid rgba(201,161,90,0.4);
+    color: var(--gold-2);
+    font-size:11px;
+    padding:7px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    font-family: inherit;
+    z-index:5;
+    backdrop-filter: blur(2px);
+  }
+  .history-btn:hover{ background: rgba(23,14,9,0.8); }
   .hero .eyebrow{
     font-size:11px;
     letter-spacing:4px;
@@ -197,6 +213,14 @@
     font-size:24px;
     font-weight:700;
     color: var(--cream);
+    font-variant-numeric: tabular-nums;
+  }
+  .current-line-price{
+    text-align:center;
+    font-size:15px;
+    font-weight:700;
+    color: var(--gold-2);
+    margin-top:8px;
     font-variant-numeric: tabular-nums;
   }
   .add-cart-btn{
@@ -385,15 +409,6 @@
     text-align:center;
     font-size:11px;
     color: rgba(243,230,211,0.5);
-    margin-bottom:2px;
-  }
-  .preview-price{
-    text-align:center;
-    font-family: Georgia, serif;
-    font-size:18px;
-    font-weight:700;
-    color: var(--gold-2);
-    font-variant-numeric: tabular-nums;
     margin-bottom:14px;
   }
 
@@ -579,11 +594,114 @@
     color: rgba(243,230,211,0.4);
     line-height:1.5;
   }
+
+  /* ---------- History panel ---------- */
+  .history-card{
+    max-width:640px;
+    text-align:left;
+  }
+  .history-card .overlay-logo,
+  .history-card .overlay-title{
+    text-align:center;
+  }
+  .history-summary{
+    display:flex;
+    justify-content:space-between;
+    font-size:12.5px;
+    color: rgba(243,230,211,0.75);
+    border-top: 1px dashed rgba(243,230,211,0.25);
+    border-bottom: 1px dashed rgba(243,230,211,0.25);
+    padding:10px 2px;
+    margin:14px 0;
+  }
+  .history-summary b{ color: var(--gold-2); }
+  .history-table-wrap{
+    max-height:280px;
+    overflow-y:auto;
+    border:1px solid rgba(243,230,211,0.15);
+    border-radius:10px;
+    margin-bottom:14px;
+  }
+  .history-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:11.5px;
+  }
+  .history-table th{
+    position:sticky;
+    top:0;
+    background: var(--cocoa-2);
+    color: var(--gold-2);
+    text-align:left;
+    padding:8px 10px;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .history-table td{
+    padding:8px 10px;
+    border-top:1px solid rgba(243,230,211,0.1);
+    color: rgba(243,230,211,0.85);
+    vertical-align:top;
+  }
+  .history-empty-row td{
+    text-align:center;
+    padding:24px 10px;
+    color: rgba(243,230,211,0.4);
+  }
+  .history-actions{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .history-actions .add-cart-btn{ margin-top:0; flex:1; }
+  .history-clear-btn{
+    background: transparent;
+    border: 1px solid rgba(230,120,90,0.5);
+    color: #e6816a;
+    padding:11px 14px;
+    border-radius:10px;
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+    font-family: inherit;
+    white-space:nowrap;
+  }
+  .history-clear-btn:hover{ background: rgba(230,120,90,0.12); }
+
+  /* ---------- PIN gate ---------- */
+  .pin-card{ max-width:320px; }
+  .pin-input{
+    width:100%;
+    text-align:center;
+    letter-spacing:8px;
+    font-size:22px;
+    padding:12px 10px;
+    border-radius:10px;
+    border: 1px solid rgba(243,230,211,0.25);
+    background: rgba(23,14,9,0.4);
+    color: var(--cream);
+    margin-bottom:10px;
+    font-family: inherit;
+  }
+  .pin-input:focus{ outline:none; border-color: var(--gold); }
+  .pin-error{
+    display:none;
+    color:#e6816a;
+    font-size:11.5px;
+    margin-bottom:12px;
+  }
+  .pin-error.show{ display:block; }
+  .pin-cancel{
+    display:block;
+    width:100%;
+    margin-top:8px;
+  }
 </style>
 </head>
 <body>
 
   <div class="hero">
+    <button type="button" class="history-btn" id="historyBtn">📊 Riwayat Transaksi</button>
     <div class="eyebrow">Famuha Coffee Roastery</div>
     <h1 class="serif">Build Your Own Iced Latte</h1>
     <p>Susun kombinasi favoritmu — preview dan harga langsung berubah sesuai pilihanmu.</p>
@@ -617,6 +735,10 @@
           <label class="choice" data-value="black-americano">
             <input type="radio" name="variant" value="black-americano">
             <span class="name">Black Americano</span>
+          </label>
+          <label class="choice" data-value="mont-blanc-orange">
+            <input type="radio" name="variant" value="mont-blanc-orange">
+            <span class="name">Mont Blanc Orange</span>
           </label>
         </div>
       </div>
@@ -666,10 +788,10 @@
         </div>
       </div>
 
-      <div class="group">
+      <div class="group" id="tempGroup">
         <div class="group-head">
           <div class="group-title serif">Suhu</div>
-          <div class="group-hint">Wajib pilih 1</div>
+          <div class="group-hint" id="tempHint">Wajib pilih 1</div>
         </div>
         <div class="choice-row" data-group="temp" data-type="radio">
           <label class="choice" data-value="cold">
@@ -717,6 +839,7 @@
           <div class="qty-value" id="qtyValue">1</div>
           <button type="button" class="qty-btn" id="qtyPlus" aria-label="Tambah jumlah">+</button>
         </div>
+        <div class="current-line-price" id="currentLinePrice">Rp 20.000</div>
         <button type="button" class="add-cart-btn" id="addCartBtn">+ Tambah ke Pesanan</button>
       </div>
 
@@ -774,7 +897,6 @@
       </div>
       <div class="preview-label serif" id="previewLabel">Gula Aren Latte</div>
       <div class="preview-sub" id="previewSub">Single Shot · Es Normal</div>
-      <div class="preview-price" id="previewPrice">Rp 0</div>
 
       <div class="cart-list" id="cartList"></div>
 
@@ -807,6 +929,46 @@
     </div>
   </div>
 
+  <div class="overlay" id="pinOverlay">
+    <div class="overlay-card pin-card">
+      <div class="overlay-logo serif">FAMUHA COFFEE</div>
+      <div class="overlay-title serif">Akses Riwayat</div>
+      <div class="overlay-msg">Masukkan PIN untuk melihat riwayat transaksi.</div>
+      <input type="password" inputmode="numeric" class="pin-input" id="pinInput" placeholder="••••" maxlength="8" autocomplete="off">
+      <div class="pin-error" id="pinError">PIN salah, coba lagi.</div>
+      <button type="button" class="cta-btn" id="pinSubmit">Masuk</button>
+      <button type="button" class="history-clear-btn pin-cancel" id="pinCancel">Batal</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="historyOverlay">
+    <div class="overlay-card history-card">
+      <div class="overlay-logo serif">FAMUHA COFFEE</div>
+      <div class="overlay-title serif">Riwayat Transaksi</div>
+
+      <div class="history-summary">
+        <div><span id="historyCount">0</span> transaksi</div>
+        <div>Total Pendapatan: <b id="historyRevenue">Rp 0</b></div>
+      </div>
+
+      <div class="history-table-wrap">
+        <table class="history-table" id="historyTable">
+          <thead>
+            <tr><th>Waktu</th><th>Item</th><th>Delivery</th><th>Bayar</th><th>Total</th></tr>
+          </thead>
+          <tbody id="historyTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="history-actions">
+        <button type="button" class="add-cart-btn" id="exportCsvBtn">⬇ Export ke Excel (CSV)</button>
+        <button type="button" class="history-clear-btn" id="clearHistoryBtn">Hapus Riwayat</button>
+      </div>
+      <button type="button" class="cta-btn" id="historyClose">Tutup</button>
+      <div class="overlay-note">Data ini tersimpan otomatis dan bisa dilihat siapa saja yang membuka halaman ini.</div>
+    </div>
+  </div>
+
 <script>
 (function(){
   "use strict";
@@ -815,7 +977,7 @@
     size: { small: 18000, regular: 20000, large: 29000 },
     milk: { 'full-cream': 0, oat: 3000, almond: 3000, coconut: 3000 },
     shots: { single: 0, double: 4000, triple: 5000 },
-    variant: { pistachio: 0, hazelnut: 0, vanilla: 0, 'gula-aren': 0, 'black-americano': 0 }
+    variant: { pistachio: 2000, hazelnut: 2000, vanilla: 2000, 'gula-aren': 2000, 'black-americano': 0, 'mont-blanc-orange': 5000 }
   };
 
   var LABELS = {
@@ -823,7 +985,7 @@
     milk: { 'full-cream':'Full Cream', oat:'Oat Milk', almond:'Almond Milk', coconut:'Coconut Milk' },
     shots: { single:'Single Shot', double:'Double Shot', triple:'Signature Shot' },
     ice: { none:'Tanpa Es', normal:'Es Normal', extra:'Extra Es' },
-    variant: { pistachio:'Pistachio Latte', hazelnut:'Hazelnut Latte', vanilla:'Vanilla Latte', 'gula-aren':'Gula Aren Latte', 'black-americano':'Black Americano' },
+    variant: { pistachio:'Pistachio Latte', hazelnut:'Hazelnut Latte', vanilla:'Vanilla Latte', 'gula-aren':'Gula Aren Latte', 'black-americano':'Black Americano', 'mont-blanc-orange':'Mont Blanc Orange' },
     sugar: { 'no-sugar':'No Sugar', 'less-sugar':'Less Sugar', 'normal-sugar':'Normal Sugar' },
     temp: { cold:'Dingin (Cold)', hot:'Panas (Hot)' },
     delivery: { pickup:'Ambil Sendiri', delivered:'Diantar (maks. 10 menit)' },
@@ -835,7 +997,8 @@
     hazelnut: [180,138,92],
     vanilla: [230,216,182],
     'gula-aren': [178,120,56],
-    'black-americano': [58,36,24]
+    'black-americano': [58,36,24],
+    'mont-blanc-orange': [224,146,64]
   };
   var ESPRESSO_COLOR = [43,26,18];
   var SHOT_WEIGHT = { single:0.25, double:0.45, triple:0.68 };
@@ -851,16 +1014,12 @@
     sugar:'normal-sugar', ice:'normal', temp:'cold', qty:1, delivery:'pickup', payment:'cod'
   };
   var iceBeforeHot = 'normal';
-  var shotsBeforeAmericano = 'single';
-  var sugarBeforeAmericano = 'normal-sugar';
 
   var cart = [];
   var cartIdSeq = 1;
 
   function idr(n){
-    var s = Math.round(n || 0).toString();
-    s = s.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return 'Rp ' + s;
+    return 'Rp ' + n.toLocaleString('id-ID');
   }
 
   function lerp(a,b,t){ return a + (b-a)*t; }
@@ -888,6 +1047,110 @@
     return cart.reduce(function(sum, item){
       return sum + item.unitPrice * item.qty;
     }, 0);
+  }
+
+  // ---------------- Transaction recording (persisted, shared) ----------------
+  var TX_KEY = 'famuha-transactions';
+  var transactions = [];
+
+  // Ganti PIN ini sesuai keinginanmu. Ini hanya penghalang sederhana, bukan
+  // keamanan sesungguhnya — siapa pun yang membuka "view source" bisa melihatnya.
+  var HISTORY_PIN = '8630';
+  var historyUnlocked = false;
+
+  function loadTransactions(){
+    return window.storage.get(TX_KEY, true)
+      .then(function(result){
+        transactions = (result && result.value) ? JSON.parse(result.value) : [];
+      })
+      .catch(function(){
+        transactions = [];
+      });
+  }
+
+  function saveTransactions(){
+    return window.storage.set(TX_KEY, JSON.stringify(transactions), true)
+      .catch(function(err){ console.error('Gagal menyimpan riwayat transaksi', err); });
+  }
+
+  function recordTransaction(){
+    var record = {
+      id: Date.now() + '-' + Math.floor(Math.random() * 1000),
+      ts: new Date().toISOString(),
+      items: cart.map(function(item){
+        return {
+          qty: item.qty,
+          variant: LABELS.variant[item.variant],
+          temp: LABELS.temp[item.temp],
+          shots: LABELS.shots[item.shots],
+          sugar: LABELS.sugar[item.sugar],
+          ice: item.temp === 'hot' ? '-' : LABELS.ice[item.ice],
+          unitPrice: item.unitPrice,
+          lineTotal: item.unitPrice * item.qty
+        };
+      }),
+      delivery: LABELS.delivery[state.delivery],
+      payment: LABELS.payment[state.payment],
+      total: computeCartTotal()
+    };
+    transactions.push(record);
+    saveTransactions();
+    return record;
+  }
+
+  function formatTs(iso){
+    var d = new Date(iso);
+    return d.toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'2-digit' })
+      + ' ' + d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+  }
+
+  function renderHistory(){
+    var tbody = document.getElementById('historyTbody');
+    var revenue = transactions.reduce(function(s, t){ return s + t.total; }, 0);
+    document.getElementById('historyCount').textContent = transactions.length;
+    document.getElementById('historyRevenue').textContent = idr(revenue);
+
+    if (transactions.length === 0){
+      tbody.innerHTML = '<tr class="history-empty-row"><td colspan="5">Belum ada transaksi tercatat.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = transactions.slice().reverse().map(function(t){
+      var itemsStr = t.items.map(function(it){ return it.qty + 'x ' + it.variant; }).join('<br>');
+      return '<tr>'
+        + '<td>' + formatTs(t.ts) + '</td>'
+        + '<td>' + itemsStr + '</td>'
+        + '<td>' + t.delivery + '</td>'
+        + '<td>' + t.payment + '</td>'
+        + '<td>' + idr(t.total) + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  function csvEscape(val){
+    val = String(val);
+    if (/[",\n]/.test(val)) val = '"' + val.replace(/"/g, '""') + '"';
+    return val;
+  }
+
+  function exportCsv(){
+    var rows = [['No', 'Waktu', 'Item', 'Delivery', 'Pembayaran', 'Total (Rp)']];
+    transactions.forEach(function(t, i){
+      var itemsStr = t.items.map(function(it){
+        return it.qty + 'x ' + it.variant + ' (' + it.temp + ', ' + it.shots + ', ' + it.sugar + (it.ice !== '-' ? ', ' + it.ice : '') + ')';
+      }).join('; ');
+      rows.push([i + 1, formatTs(t.ts), itemsStr, t.delivery, t.payment, t.total]);
+    });
+    var csv = rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\r\n');
+    var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'famuha-transaksi-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   // ---------------- SVG cup builder ----------------
@@ -992,7 +1255,6 @@
     var subParts = [LABELS.temp[state.temp], LABELS.shots[state.shots]];
     if (state.temp !== 'hot') subParts.push(LABELS.ice[state.ice]);
     document.getElementById('previewSub').textContent = subParts.join(' · ');
-    document.getElementById('previewPrice').textContent = idr(computeUnitPrice(state) * state.qty);
 
     var ctaBtns = [document.getElementById('ctaBtn'), document.getElementById('ctaBtnMobile')];
     ctaBtns.forEach(function(btn){
@@ -1033,6 +1295,7 @@
     updateCtaLinks(total);
     document.getElementById('qrisPanel').hidden = (state.payment !== 'qris');
     document.getElementById('paidBtn').classList.toggle('disabled', cart.length === 0);
+    document.getElementById('currentLinePrice').textContent = idr(computeUnitPrice(state) * state.qty);
   }
 
   // ---------------- Wire up controls ----------------
@@ -1066,41 +1329,43 @@
     refreshChoiceVisuals(iceRow);
   }
 
-  function applyVariantEffect(){
-    var shotsGroup = document.getElementById('shotsGroup');
-    var shotsHint = document.getElementById('shotsHint');
-    var shotsRow = shotsGroup.querySelector('.choice-row');
-    var sugarGroup = document.getElementById('sugarGroup');
-    var sugarHint = document.getElementById('sugarHint');
-    var sugarRow = sugarGroup.querySelector('.choice-row');
+  var VARIANT_LOCKS = {
+    'black-americano': { shots: 'single', sugar: 'no-sugar' },
+    'mont-blanc-orange': { shots: 'single', sugar: 'normal-sugar', temp: 'cold' }
+  };
+  var savedBeforeLock = { shots: 'single', sugar: 'normal-sugar', temp: 'cold' };
 
-    if (state.variant === 'black-americano'){
-      shotsBeforeAmericano = state.shots;
-      sugarBeforeAmericano = state.sugar;
-      state.shots = 'single';
-      state.sugar = 'no-sugar';
-      shotsGroup.classList.add('group-disabled');
-      sugarGroup.classList.add('group-disabled');
-      shotsHint.textContent = 'Tidak berlaku untuk Black Americano';
-      sugarHint.textContent = 'Tidak berlaku untuk Black Americano';
-      var shotsInput = shotsRow.querySelector('input[value="single"]');
-      if (shotsInput) shotsInput.checked = true;
-      var sugarInput = sugarRow.querySelector('input[value="no-sugar"]');
-      if (sugarInput) sugarInput.checked = true;
-    } else {
-      shotsGroup.classList.remove('group-disabled');
-      sugarGroup.classList.remove('group-disabled');
-      shotsHint.textContent = 'Wajib pilih 1';
-      sugarHint.textContent = 'Wajib pilih 1';
-      state.shots = shotsBeforeAmericano || 'single';
-      state.sugar = sugarBeforeAmericano || 'normal-sugar';
-      var restoredShots = shotsRow.querySelector('input[value="' + state.shots + '"]');
-      if (restoredShots) restoredShots.checked = true;
-      var restoredSugar = sugarRow.querySelector('input[value="' + state.sugar + '"]');
-      if (restoredSugar) restoredSugar.checked = true;
-    }
-    refreshChoiceVisuals(shotsRow);
-    refreshChoiceVisuals(sugarRow);
+  function applyVariantEffect(){
+    var fields = {
+      shots: { group: document.getElementById('shotsGroup'), hint: document.getElementById('shotsHint') },
+      sugar: { group: document.getElementById('sugarGroup'), hint: document.getElementById('sugarHint') },
+      temp:  { group: document.getElementById('tempGroup'),  hint: document.getElementById('tempHint') }
+    };
+    var lock = VARIANT_LOCKS[state.variant];
+    var variantName = LABELS.variant[state.variant];
+
+    ['shots', 'sugar', 'temp'].forEach(function(key){
+      var f = fields[key];
+      var row = f.group.querySelector('.choice-row');
+      if (lock && lock[key]){
+        savedBeforeLock[key] = state[key];
+        state[key] = lock[key];
+        f.group.classList.add('group-disabled');
+        f.hint.textContent = 'Tidak berlaku untuk ' + variantName;
+        var input = row.querySelector('input[value="' + lock[key] + '"]');
+        if (input) input.checked = true;
+      } else {
+        f.group.classList.remove('group-disabled');
+        f.hint.textContent = 'Wajib pilih 1';
+        var fallback = key === 'shots' ? 'single' : key === 'sugar' ? 'normal-sugar' : 'cold';
+        state[key] = savedBeforeLock[key] || fallback;
+        var restored = row.querySelector('input[value="' + state[key] + '"]');
+        if (restored) restored.checked = true;
+      }
+      refreshChoiceVisuals(row);
+    });
+
+    applyTempEffect();
   }
 
   document.querySelectorAll('.choice-row').forEach(function(row){
@@ -1150,8 +1415,8 @@
     update();
   });
 
-  function showThankyou(message){
-    var total = computeCartTotal();
+  function showThankyou(message, total){
+    if (total === undefined) total = computeCartTotal();
     document.getElementById('thankyouMsg').textContent = message;
     document.getElementById('thankyouTotal').textContent = idr(total);
     document.getElementById('thankyouOverlay').classList.add('show');
@@ -1173,7 +1438,20 @@
         document.getElementById('addCartBtn').classList.add('flash');
         document.getElementById('addCartBtn').scrollIntoView({ behavior:'smooth', block:'center' });
       } else {
-        showThankyou('Terima kasih untuk order-nya! Pesananmu sudah kami terima di WhatsApp dan akan segera diproses.');
+        var total = computeCartTotal();
+        var isQris = state.payment === 'qris';
+        recordTransaction();
+        showThankyou(
+          isQris
+            ? 'Terima kasih untuk order-nya! Pesananmu sudah kami terima di WhatsApp. Silakan scan QRIS untuk menyelesaikan pembayaran.'
+            : 'Terima kasih untuk order-nya! Pesananmu sudah kami terima di WhatsApp dan akan segera diproses.',
+          total
+        );
+        if (!isQris){
+          cart = [];
+          state.qty = 1;
+          update();
+        }
       }
     });
   });
@@ -1186,8 +1464,68 @@
       document.getElementById('addCartBtn').classList.add('flash');
       document.getElementById('addCartBtn').scrollIntoView({ behavior:'smooth', block:'center' });
     } else {
-      showThankyou('Terima kasih! Konfirmasi pembayaran QRIS kamu sudah kami terima di WhatsApp dan sedang kami cek.');
+      var total = computeCartTotal();
+      showThankyou('Terima kasih! Konfirmasi pembayaran QRIS kamu sudah kami terima di WhatsApp dan sedang kami cek.', total);
+      cart = [];
+      state.qty = 1;
+      update();
     }
+  });
+
+  function openHistory(){
+    document.getElementById('historyOverlay').classList.add('show');
+    loadTransactions().then(renderHistory);
+  }
+
+  document.getElementById('historyBtn').addEventListener('click', function(){
+    if (historyUnlocked){
+      openHistory();
+      return;
+    }
+    document.getElementById('pinError').classList.remove('show');
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinOverlay').classList.add('show');
+    setTimeout(function(){ document.getElementById('pinInput').focus(); }, 100);
+  });
+
+  function checkPin(){
+    var input = document.getElementById('pinInput');
+    if (input.value === HISTORY_PIN){
+      historyUnlocked = true;
+      document.getElementById('pinOverlay').classList.remove('show');
+      openHistory();
+    } else {
+      document.getElementById('pinError').classList.add('show');
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  document.getElementById('pinSubmit').addEventListener('click', checkPin);
+  document.getElementById('pinInput').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') checkPin();
+  });
+  document.getElementById('pinCancel').addEventListener('click', function(){
+    document.getElementById('pinOverlay').classList.remove('show');
+  });
+  document.getElementById('pinOverlay').addEventListener('click', function(e){
+    if (e.target === this) this.classList.remove('show');
+  });
+
+  document.getElementById('historyClose').addEventListener('click', function(){
+    document.getElementById('historyOverlay').classList.remove('show');
+  });
+  document.getElementById('historyOverlay').addEventListener('click', function(e){
+    if (e.target === this) this.classList.remove('show');
+  });
+  document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+  document.getElementById('clearHistoryBtn').addEventListener('click', function(){
+    if (transactions.length === 0) return;
+    var ok = confirm('Hapus semua riwayat transaksi? Tindakan ini tidak bisa dibatalkan.');
+    if (!ok) return;
+    transactions = [];
+    saveTransactions();
+    renderHistory();
   });
 
   update();
