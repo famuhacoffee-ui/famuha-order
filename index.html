@@ -163,6 +163,43 @@
     margin-top:2px;
     font-variant-numeric: tabular-nums;
   }
+
+  .field-row{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .field-label{
+    font-size:12px;
+    color: rgba(243,230,211,0.75);
+  }
+  .field-optional{
+    color: rgba(243,230,211,0.4);
+    font-weight:400;
+  }
+  .field-input{
+    background: rgba(23,14,9,0.35);
+    border:1px solid rgba(243,230,211,0.18);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:13px;
+    font-family:inherit;
+    color: var(--cream);
+    transition: border-color 0.15s;
+  }
+  .field-input::placeholder{ color: rgba(243,230,211,0.32); }
+  .field-input:focus{
+    outline:none;
+    border-color: var(--gold);
+  }
+  .field-input.field-error{
+    border-color:#e07a6b;
+  }
   .choice.selected{
     border-color: var(--gold);
     background: rgba(201,161,90,0.14);
@@ -373,6 +410,7 @@
   .paid-btn.disabled{
     opacity:0.45;
     filter:grayscale(0.4);
+    pointer-events:none;
   }
 
   /* ---------- Preview Card ---------- */
@@ -475,6 +513,7 @@
   .cta-btn.disabled{
     opacity:0.45;
     filter:grayscale(0.4);
+    pointer-events:none;
   }
   .cta-note{
     text-align:center;
@@ -843,6 +882,27 @@
         <button type="button" class="add-cart-btn" id="addCartBtn">+ Tambah ke Pesanan</button>
       </div>
 
+      <div class="group" id="customerGroup">
+        <div class="group-head">
+          <div class="group-title serif">Data Pelanggan</div>
+          <div class="group-hint">Nama &amp; No. HP wajib diisi</div>
+        </div>
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">Nama</span>
+            <input type="text" id="custName" class="field-input" placeholder="Nama kamu" autocomplete="name">
+          </label>
+          <label class="field">
+            <span class="field-label">No. HP / WhatsApp</span>
+            <input type="tel" id="custPhone" class="field-input" placeholder="08xxxxxxxxxx" autocomplete="tel">
+          </label>
+          <label class="field">
+            <span class="field-label">Alamat <span class="field-optional">(opsional)</span></span>
+            <input type="text" id="custAddress" class="field-input" placeholder="Alamat pengiriman (jika perlu)" autocomplete="street-address">
+          </label>
+        </div>
+      </div>
+
       <div class="group">
         <div class="group-head">
           <div class="group-title serif">Delivery</div>
@@ -954,7 +1014,7 @@
       <div class="history-table-wrap">
         <table class="history-table" id="historyTable">
           <thead>
-            <tr><th>Waktu</th><th>Item</th><th>Delivery</th><th>Bayar</th><th>Total</th></tr>
+            <tr><th>Waktu</th><th>Pelanggan</th><th>Item</th><th>Delivery</th><th>Bayar</th><th>Total</th></tr>
           </thead>
           <tbody id="historyTbody"></tbody>
         </table>
@@ -1011,7 +1071,8 @@
 
   var state = {
     size:'regular', milk:'full-cream', shots:'single', variant:'gula-aren',
-    sugar:'normal-sugar', ice:'normal', temp:'cold', qty:1, delivery:'pickup', payment:'cod'
+    sugar:'normal-sugar', ice:'normal', temp:'cold', qty:1, delivery:'pickup', payment:'cod',
+    custName:'', custPhone:'', custAddress:''
   };
   var iceBeforeHot = 'normal';
 
@@ -1040,7 +1101,7 @@
 
   function computeUnitPrice(cfg){
     cfg = cfg || state;
-    return PRICES.size[cfg.size] + PRICES.milk[cfg.milk] + PRICES.shots[cfg.shots] + PRICES.variant[cfg.variant];
+    return PRICES.size[cfg.size] + PRICES.milk[cfg.milk] + Math.max(PRICES.shots[cfg.shots], PRICES.variant[cfg.variant]);
   }
 
   function computeCartTotal(){
@@ -1091,6 +1152,9 @@
       }),
       delivery: LABELS.delivery[state.delivery],
       payment: LABELS.payment[state.payment],
+      custName: state.custName,
+      custPhone: state.custPhone,
+      custAddress: state.custAddress,
       total: computeCartTotal()
     };
     transactions.push(record);
@@ -1104,6 +1168,12 @@
       + ' ' + d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
   }
 
+  function escapeHtml(str){
+    return String(str || '').replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
   function renderHistory(){
     var tbody = document.getElementById('historyTbody');
     var revenue = transactions.reduce(function(s, t){ return s + t.total; }, 0);
@@ -1111,14 +1181,17 @@
     document.getElementById('historyRevenue').textContent = idr(revenue);
 
     if (transactions.length === 0){
-      tbody.innerHTML = '<tr class="history-empty-row"><td colspan="5">Belum ada transaksi tercatat.</td></tr>';
+      tbody.innerHTML = '<tr class="history-empty-row"><td colspan="6">Belum ada transaksi tercatat.</td></tr>';
       return;
     }
 
     tbody.innerHTML = transactions.slice().reverse().map(function(t){
       var itemsStr = t.items.map(function(it){ return it.qty + 'x ' + it.variant; }).join('<br>');
+      var custStr = escapeHtml(t.custName || '-') + '<br><span style="opacity:0.6">' + escapeHtml(t.custPhone || '-') + '</span>'
+        + (t.custAddress ? '<br><span style="opacity:0.6">' + escapeHtml(t.custAddress) + '</span>' : '');
       return '<tr>'
         + '<td>' + formatTs(t.ts) + '</td>'
+        + '<td>' + custStr + '</td>'
         + '<td>' + itemsStr + '</td>'
         + '<td>' + t.delivery + '</td>'
         + '<td>' + t.payment + '</td>'
@@ -1134,12 +1207,12 @@
   }
 
   function exportCsv(){
-    var rows = [['No', 'Waktu', 'Item', 'Delivery', 'Pembayaran', 'Total (Rp)']];
+    var rows = [['No', 'Waktu', 'Nama', 'No. HP', 'Alamat', 'Item', 'Delivery', 'Pembayaran', 'Total (Rp)']];
     transactions.forEach(function(t, i){
       var itemsStr = t.items.map(function(it){
         return it.qty + 'x ' + it.variant + ' (' + it.temp + ', ' + it.shots + ', ' + it.sugar + (it.ice !== '-' ? ', ' + it.ice : '') + ')';
       }).join('; ');
-      rows.push([i + 1, formatTs(t.ts), itemsStr, t.delivery, t.payment, t.total]);
+      rows.push([i + 1, formatTs(t.ts), t.custName || '', t.custPhone || '', t.custAddress || '', itemsStr, t.delivery, t.payment, t.total]);
     });
     var csv = rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\r\n');
     var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1269,6 +1342,9 @@
     lines.push(alreadyPaid
       ? 'Halo Famuha Coffee, saya sudah melakukan pembayaran via QRIS untuk pesanan berikut:'
       : 'Halo Famuha Coffee, saya mau pesan:');
+    lines.push('- Nama: ' + state.custName);
+    lines.push('- No. HP: ' + state.custPhone);
+    if (state.custAddress.trim()) lines.push('- Alamat: ' + state.custAddress);
     cart.forEach(function(item){
       lines.push('- ' + item.qty + 'x ' + LABELS.variant[item.variant] + ' (' + LABELS.temp[item.temp] + ', ' + LABELS.shots[item.shots] + ', ' + LABELS.sugar[item.sugar] + (item.temp === 'hot' ? '' : ', ' + LABELS.ice[item.ice]) + ') — ' + idr(item.unitPrice * item.qty));
     });
@@ -1389,6 +1465,37 @@
     update();
   });
 
+  var custNameEl = document.getElementById('custName');
+  var custPhoneEl = document.getElementById('custPhone');
+  var custAddressEl = document.getElementById('custAddress');
+  custNameEl.addEventListener('input', function(){
+    state.custName = custNameEl.value;
+    custNameEl.classList.remove('field-error');
+  });
+  custPhoneEl.addEventListener('input', function(){
+    state.custPhone = custPhoneEl.value;
+    custPhoneEl.classList.remove('field-error');
+  });
+  custAddressEl.addEventListener('input', function(){
+    state.custAddress = custAddressEl.value;
+  });
+
+  function validateCustomerInfo(){
+    var ok = true;
+    if (!state.custName.trim()){
+      custNameEl.classList.add('field-error');
+      ok = false;
+    }
+    if (!state.custPhone.trim()){
+      custPhoneEl.classList.add('field-error');
+      ok = false;
+    }
+    if (!ok){
+      document.getElementById('customerGroup').scrollIntoView({ behavior:'smooth', block:'center' });
+    }
+    return ok;
+  }
+
   document.getElementById('addCartBtn').addEventListener('click', function(){
     cart.push({
       id: cartIdSeq++,
@@ -1437,10 +1544,15 @@
         void document.getElementById('addCartBtn').offsetWidth;
         document.getElementById('addCartBtn').classList.add('flash');
         document.getElementById('addCartBtn').scrollIntoView({ behavior:'smooth', block:'center' });
+      } else if (!validateCustomerInfo()){
+        e.preventDefault();
       } else {
+        e.preventDefault();
         var total = computeCartTotal();
         var isQris = state.payment === 'qris';
-        recordTransaction();
+        var waMsg = encodeURIComponent(buildWaMessage(total, false));
+        window.open('https://wa.me/' + WA_NUMBER + '?text=' + waMsg, '_blank');
+        if (!isQris) recordTransaction();
         showThankyou(
           isQris
             ? 'Terima kasih untuk order-nya! Pesananmu sudah kami terima di WhatsApp. Silakan scan QRIS untuk menyelesaikan pembayaran.'
@@ -1463,8 +1575,14 @@
       void document.getElementById('addCartBtn').offsetWidth;
       document.getElementById('addCartBtn').classList.add('flash');
       document.getElementById('addCartBtn').scrollIntoView({ behavior:'smooth', block:'center' });
+    } else if (!validateCustomerInfo()){
+      e.preventDefault();
     } else {
+      e.preventDefault();
       var total = computeCartTotal();
+      var paidMsg = encodeURIComponent(buildWaMessage(total, true));
+      window.open('https://wa.me/' + WA_NUMBER + '?text=' + paidMsg, '_blank');
+      recordTransaction();
       showThankyou('Terima kasih! Konfirmasi pembayaran QRIS kamu sudah kami terima di WhatsApp dan sedang kami cek.', total);
       cart = [];
       state.qty = 1;
