@@ -200,6 +200,16 @@
   .field-input.field-error{
     border-color:#e07a6b;
   }
+  .delivery-note{
+    margin-top:10px;
+    font-size:11.5px;
+    line-height:1.5;
+    color: rgba(243,230,211,0.55);
+    background: rgba(201,161,90,0.08);
+    border: 1px solid rgba(201,161,90,0.25);
+    border-radius:8px;
+    padding:8px 10px;
+  }
   .choice.selected{
     border-color: var(--gold);
     background: rgba(201,161,90,0.14);
@@ -912,12 +922,37 @@
           <label class="choice" data-value="pickup">
             <input type="radio" name="delivery" value="pickup" checked>
             <span class="name">Ambil Sendiri</span>
+            <span class="price">Siap ±10 menit</span>
           </label>
           <label class="choice" data-value="delivered">
             <input type="radio" name="delivery" value="delivered">
             <span class="name">Diantar</span>
-            <span class="price">Maks. 10 menit</span>
+            <span class="price">Maks. 10 menit · Radius 5 km</span>
           </label>
+          <label class="choice" data-value="gosend">
+            <input type="radio" name="delivery" value="gosend">
+            <span class="name">Dijemput GoSend</span>
+            <span class="price">Estimasi total 30–50 menit · Ongkir terpisah</span>
+          </label>
+          <label class="choice" data-value="grabexpress">
+            <input type="radio" name="delivery" value="grabexpress">
+            <span class="name">Dijemput GrabExpress</span>
+            <span class="price">Estimasi total 30–50 menit · Ongkir terpisah</span>
+          </label>
+        </div>
+        <div class="delivery-note" id="pickupNote">📍 Lokasi Famuha Coffee: Perumahan TranBoge Village Blok F4</div>
+        <div class="delivery-note" id="deliveredNote" hidden>Layanan antar (COD) hanya berlaku untuk radius maksimal 5 km dari Famuha Coffee. Pastikan alamat sudah diisi di atas.</div>
+        <div class="delivery-note" id="deliveryNote" hidden>Setelah pesanan siap, kami akan order driver untuk menjemput dan mengantar ke alamatmu. Ongkos kirim dibayar terpisah ke driver (di luar total pesanan ini) — pastikan alamat sudah diisi di atas.</div>
+        <div class="field" id="areaField" hidden style="margin-top:12px;">
+          <span class="field-label">Area Pengiriman</span>
+          <select id="deliveryArea" class="field-input">
+            <option value="">Pilih area...</option>
+            <option value="jakarta">Jakarta</option>
+            <option value="depok">Depok</option>
+            <option value="bogor">Bogor</option>
+            <option value="bekasi">Bekasi</option>
+          </select>
+          <div class="delivery-note" id="ongkirEstimate" hidden></div>
         </div>
       </div>
 
@@ -1040,6 +1075,13 @@
     variant: { pistachio: 2000, hazelnut: 2000, vanilla: 2000, 'gula-aren': 2000, 'black-americano': 0, 'mont-blanc-orange': 5000 }
   };
 
+  var ONGKIR = {
+    jakarta: { label:'Jakarta', min: 30000, max: 50000 },
+    depok: { label:'Depok', min: 15000, max: 25000 },
+    bogor: { label:'Bogor', min: 15000, max: 25000 },
+    bekasi: { label:'Bekasi', min: 30000, max: 50000 }
+  };
+
   var LABELS = {
     size: { small:'Small', regular:'Regular', large:'Large' },
     milk: { 'full-cream':'Full Cream', oat:'Oat Milk', almond:'Almond Milk', coconut:'Coconut Milk' },
@@ -1048,7 +1090,7 @@
     variant: { pistachio:'Pistachio Latte', hazelnut:'Hazelnut Latte', vanilla:'Vanilla Latte', 'gula-aren':'Gula Aren Latte', 'black-americano':'Black Americano', 'mont-blanc-orange':'Mont Blanc Orange' },
     sugar: { 'no-sugar':'No Sugar', 'less-sugar':'Less Sugar', 'normal-sugar':'Normal Sugar' },
     temp: { cold:'Dingin (Cold)', hot:'Panas (Hot)' },
-    delivery: { pickup:'Ambil Sendiri', delivered:'Diantar (maks. 10 menit)' },
+    delivery: { pickup:'Ambil Sendiri', delivered:'Diantar', gosend:'Dijemput GoSend', grabexpress:'Dijemput GrabExpress' },
     payment: { cod:'COD', qris:'QRIS' }
   };
 
@@ -1072,7 +1114,7 @@
   var state = {
     size:'regular', milk:'full-cream', shots:'single', variant:'gula-aren',
     sugar:'normal-sugar', ice:'normal', temp:'cold', qty:1, delivery:'pickup', payment:'cod',
-    custName:'', custPhone:'', custAddress:''
+    custName:'', custPhone:'', custAddress:'', deliveryArea:''
   };
   var iceBeforeHot = 'normal';
 
@@ -1151,6 +1193,7 @@
         };
       }),
       delivery: LABELS.delivery[state.delivery],
+      deliveryArea: ONGKIR[state.deliveryArea] ? ONGKIR[state.deliveryArea].label : '',
       payment: LABELS.payment[state.payment],
       custName: state.custName,
       custPhone: state.custPhone,
@@ -1193,7 +1236,7 @@
         + '<td>' + formatTs(t.ts) + '</td>'
         + '<td>' + custStr + '</td>'
         + '<td>' + itemsStr + '</td>'
-        + '<td>' + t.delivery + '</td>'
+        + '<td>' + t.delivery + (t.deliveryArea ? '<br><span style="opacity:0.6">' + escapeHtml(t.deliveryArea) + '</span>' : '') + '</td>'
         + '<td>' + t.payment + '</td>'
         + '<td>' + idr(t.total) + '</td>'
         + '</tr>';
@@ -1207,12 +1250,12 @@
   }
 
   function exportCsv(){
-    var rows = [['No', 'Waktu', 'Nama', 'No. HP', 'Alamat', 'Item', 'Delivery', 'Pembayaran', 'Total (Rp)']];
+    var rows = [['No', 'Waktu', 'Nama', 'No. HP', 'Alamat', 'Item', 'Delivery', 'Area', 'Pembayaran', 'Total (Rp)']];
     transactions.forEach(function(t, i){
       var itemsStr = t.items.map(function(it){
         return it.qty + 'x ' + it.variant + ' (' + it.temp + ', ' + it.shots + ', ' + it.sugar + (it.ice !== '-' ? ', ' + it.ice : '') + ')';
       }).join('; ');
-      rows.push([i + 1, formatTs(t.ts), t.custName || '', t.custPhone || '', t.custAddress || '', itemsStr, t.delivery, t.payment, t.total]);
+      rows.push([i + 1, formatTs(t.ts), t.custName || '', t.custPhone || '', t.custAddress || '', itemsStr, t.delivery, t.deliveryArea || '', t.payment, t.total]);
     });
     var csv = rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\r\n');
     var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1349,6 +1392,10 @@
       lines.push('- ' + item.qty + 'x ' + LABELS.variant[item.variant] + ' (' + LABELS.temp[item.temp] + ', ' + LABELS.shots[item.shots] + ', ' + LABELS.sugar[item.sugar] + (item.temp === 'hot' ? '' : ', ' + LABELS.ice[item.ice]) + ') — ' + idr(item.unitPrice * item.qty));
     });
     lines.push('- Delivery: ' + LABELS.delivery[state.delivery]);
+    if (ONGKIR[state.deliveryArea]){
+      var od = ONGKIR[state.deliveryArea];
+      lines.push('- Area: ' + od.label + ' (estimasi ongkir ' + idr(od.min) + '–' + idr(od.max) + ', dibayar terpisah)');
+    }
     lines.push('- Pembayaran: ' + LABELS.payment[state.payment]);
     lines.push('Total: ' + idr(total));
     if (alreadyPaid) lines.push('Mohon dikonfirmasi ya, terima kasih 🙏');
@@ -1451,9 +1498,40 @@
       refreshChoiceVisuals(row);
       if (group === 'temp') applyTempEffect();
       if (group === 'variant') applyVariantEffect();
+      if (group === 'delivery') updateDeliveryUI();
       update();
     });
     refreshChoiceVisuals(row);
+  });
+
+  function updateDeliveryUI(){
+    var isCourier = (state.delivery === 'gosend' || state.delivery === 'grabexpress');
+    document.getElementById('pickupNote').hidden = (state.delivery !== 'pickup');
+    document.getElementById('deliveredNote').hidden = (state.delivery !== 'delivered');
+    document.getElementById('deliveryNote').hidden = !isCourier;
+    document.getElementById('areaField').hidden = !isCourier;
+    if (!isCourier){
+      state.deliveryArea = '';
+      document.getElementById('deliveryArea').value = '';
+    }
+    renderOngkirEstimate();
+  }
+
+  function renderOngkirEstimate(){
+    var el = document.getElementById('ongkirEstimate');
+    var data = ONGKIR[state.deliveryArea];
+    if (!data){
+      el.hidden = true;
+      el.textContent = '';
+      return;
+    }
+    el.hidden = false;
+    el.textContent = 'Estimasi ongkir ke ' + data.label + ': ' + idr(data.min) + '–' + idr(data.max) + ' (dibayar terpisah ke driver, harga final mengikuti aplikasi).';
+  }
+
+  document.getElementById('deliveryArea').addEventListener('change', function(){
+    state.deliveryArea = this.value;
+    renderOngkirEstimate();
   });
 
   document.getElementById('qtyMinus').addEventListener('click', function(){
