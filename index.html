@@ -174,6 +174,7 @@
     flex-direction:column;
     gap:6px;
   }
+  .field[hidden]{ display:none; }
   .field-label{
     font-size:12px;
     color: rgba(243,230,211,0.75);
@@ -288,7 +289,7 @@
   }
   .add-cart-btn:hover{ background: rgba(201,161,90,0.14); }
   .add-cart-btn:active{ transform: scale(0.98); }
-  .add-cart-btn.flash{ animation: addFlash 0.4s ease; }
+  .add-cart-btn.flash, .paid-btn.flash{ animation: addFlash 0.4s ease; }
   @keyframes addFlash{
     0%{ background: rgba(201,161,90,0.4); }
     100%{ background: transparent; }
@@ -911,6 +912,7 @@
             <input type="text" id="custAddress" class="field-input" placeholder="Alamat pengiriman (jika perlu)" autocomplete="street-address">
           </label>
         </div>
+        <div class="delivery-note" id="loyaltyBanner" hidden style="margin-top:12px; border-color: var(--gold); color: var(--gold-2);"></div>
       </div>
 
       <div class="group">
@@ -1110,13 +1112,17 @@
   var QTY_MIN = 1, QTY_MAX = 50;
 
   var WA_NUMBER = '6285882216147';
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbwOnGK3QJ_pSW5zWh1GNW2wncc0NM9gNCHGhWPIkzFG794-j6lv1snBE7Yiq9DMQ9Fd/exec';
+  var GAS_ACCESS_KEY = 'famuha2026';
 
   var state = {
     size:'regular', milk:'full-cream', shots:'single', variant:'gula-aren',
     sugar:'normal-sugar', ice:'normal', temp:'cold', qty:1, delivery:'pickup', payment:'cod',
-    custName:'', custPhone:'', custAddress:'', deliveryArea:''
+    custName:'', custPhone:'', custAddress:'', deliveryArea:'',
+    firstPurchaseDiscount:false, fifthReward:false, custChecked:false
   };
   var iceBeforeHot = 'normal';
+  var qrisPaidConfirmed = false;
 
   var cart = [];
   var cartIdSeq = 1;
@@ -1147,9 +1153,13 @@
   }
 
   function computeCartTotal(){
-    return cart.reduce(function(sum, item){
+    var subtotal = cart.reduce(function(sum, item){
       return sum + item.unitPrice * item.qty;
     }, 0);
+    if (subtotal > 0 && state.firstPurchaseDiscount){
+      subtotal = Math.max(0, subtotal - 5000);
+    }
+    return subtotal;
   }
 
   // ---------------- Transaction recording (persisted, shared) ----------------
@@ -1202,7 +1212,31 @@
     };
     transactions.push(record);
     saveTransactions();
+    sendTransactionToSheet_(record);
     return record;
+  }
+
+  function sendTransactionToSheet_(record){
+    if (!GAS_URL) return;
+    var itemsSummary = record.items.map(function(it){
+      return it.qty + 'x ' + it.variant + ' (' + it.temp + ', ' + it.shots + ', ' + it.sugar + (it.ice !== '-' ? ', ' + it.ice : '') + ')';
+    }).join('; ');
+    var payload = {
+      custName: record.custName,
+      custPhone: record.custPhone,
+      custAddress: record.custAddress,
+      itemsSummary: itemsSummary,
+      delivery: record.delivery,
+      deliveryArea: record.deliveryArea,
+      payment: record.payment,
+      firstPurchaseDiscount: state.firstPurchaseDiscount,
+      fifthReward: state.fifthReward,
+      total: record.total
+    };
+    fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }).catch(function(){ /* diam saja kalau gagal kirim ke Sheet, transaksi tetap tercatat lokal */ });
   }
 
   function formatTs(iso){
@@ -1219,26 +1253,75 @@
 
   function renderHistory(){
     var tbody = document.getElementById('historyTbody');
-    var revenue = transactions.reduce(function(s, t){ return s + t.total; }, 0);
-    document.getElementById('historyCount').textContent = transactions.length;
+    tbody.innerHTML = '<tr class="history-empty-row"><td colspan="6">Memuat riwayat dari Google Sheet…</td></tr>';
+
+    if (!GAS_URL){
+      renderHistoryRows_(transactions.slice().reverse().map(localTxToRow_));
+      return;
+    }
+
+    fetch(GAS_URL + '?action=history&key=' + encodeURIComponent(GAS_ACCESS_KEY))
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if (!data || !data.ok){
+          renderHistoryRows_(transactions.slice().reverse().map(localTxToRow_));
+          return;
+        }
+        var rows = data.rows.slice().reverse().map(function(r){
+          return {
+            ts: r.ts,
+            custName: r.custName,
+            custPhone: r.custPhone,
+            custAddress: r.custAddress,
+            itemsStr: r.itemsSummary,
+            delivery: r.delivery,
+            deliveryArea: r.deliveryArea,
+            payment: r.payment,
+            total: r.total
+          };
+        });
+        renderHistoryRows_(rows);
+      })
+      .catch(function(){
+        renderHistoryRows_(transactions.slice().reverse().map(localTxToRow_));
+      });
+  }
+
+  function localTxToRow_(t){
+    return {
+      ts: t.ts,
+      custName: t.custName,
+      custPhone: t.custPhone,
+      custAddress: t.custAddress,
+      itemsStr: t.items.map(function(it){ return it.qty + 'x ' + it.variant; }).join('; '),
+      delivery: t.delivery,
+      deliveryArea: t.deliveryArea,
+      payment: t.payment,
+      total: t.total
+    };
+  }
+
+  function renderHistoryRows_(rows){
+    var tbody = document.getElementById('historyTbody');
+    var revenue = rows.reduce(function(s, t){ return s + (Number(t.total) || 0); }, 0);
+    document.getElementById('historyCount').textContent = rows.length;
     document.getElementById('historyRevenue').textContent = idr(revenue);
 
-    if (transactions.length === 0){
+    if (rows.length === 0){
       tbody.innerHTML = '<tr class="history-empty-row"><td colspan="6">Belum ada transaksi tercatat.</td></tr>';
       return;
     }
 
-    tbody.innerHTML = transactions.slice().reverse().map(function(t){
-      var itemsStr = t.items.map(function(it){ return it.qty + 'x ' + it.variant; }).join('<br>');
+    tbody.innerHTML = rows.map(function(t){
       var custStr = escapeHtml(t.custName || '-') + '<br><span style="opacity:0.6">' + escapeHtml(t.custPhone || '-') + '</span>'
         + (t.custAddress ? '<br><span style="opacity:0.6">' + escapeHtml(t.custAddress) + '</span>' : '');
       return '<tr>'
         + '<td>' + formatTs(t.ts) + '</td>'
         + '<td>' + custStr + '</td>'
-        + '<td>' + itemsStr + '</td>'
-        + '<td>' + t.delivery + (t.deliveryArea ? '<br><span style="opacity:0.6">' + escapeHtml(t.deliveryArea) + '</span>' : '') + '</td>'
-        + '<td>' + t.payment + '</td>'
-        + '<td>' + idr(t.total) + '</td>'
+        + '<td>' + escapeHtml(t.itemsStr).replace(/; /g, '<br>') + '</td>'
+        + '<td>' + escapeHtml(t.delivery) + (t.deliveryArea ? '<br><span style="opacity:0.6">' + escapeHtml(t.deliveryArea) + '</span>' : '') + '</td>'
+        + '<td>' + escapeHtml(t.payment) + '</td>'
+        + '<td>' + idr(Number(t.total) || 0) + '</td>'
         + '</tr>';
     }).join('');
   }
@@ -1397,6 +1480,8 @@
       lines.push('- Area: ' + od.label + ' (estimasi ongkir ' + idr(od.min) + '–' + idr(od.max) + ', dibayar terpisah)');
     }
     lines.push('- Pembayaran: ' + LABELS.payment[state.payment]);
+    if (state.firstPurchaseDiscount) lines.push('🎉 Diskon pembelian pertama: -Rp 5.000 (sudah dipotong dari total)');
+    if (state.fifthReward) lines.push('🎁 GRATIS 1 CUP (reward pembelian ke-5) — mohon diproses oleh kasir');
     lines.push('Total: ' + idr(total));
     if (alreadyPaid) lines.push('Mohon dikonfirmasi ya, terima kasih 🙏');
     return lines.join('\n');
@@ -1418,6 +1503,15 @@
     updateCtaLinks(total);
     document.getElementById('qrisPanel').hidden = (state.payment !== 'qris');
     document.getElementById('paidBtn').classList.toggle('disabled', cart.length === 0);
+
+    var waLocked = (state.payment === 'qris' && !qrisPaidConfirmed) || cart.length === 0;
+    document.getElementById('ctaBtn').classList.toggle('disabled', waLocked);
+    document.getElementById('ctaBtnMobile').classList.toggle('disabled', waLocked);
+    var waHint = (state.payment === 'qris' && !qrisPaidConfirmed && cart.length > 0)
+      ? 'Scan QRIS lalu tekan "Saya Sudah Bayar" dulu sebelum pesan via WhatsApp'
+      : 'Tambahkan minimal 1 varian ke pesanan · Konfirmasi akhir via WhatsApp';
+    document.querySelectorAll('.cta-note').forEach(function(el){ el.textContent = waHint; });
+
     document.getElementById('currentLinePrice').textContent = idr(computeUnitPrice(state) * state.qty);
   }
 
@@ -1499,6 +1593,7 @@
       if (group === 'temp') applyTempEffect();
       if (group === 'variant') applyVariantEffect();
       if (group === 'delivery') updateDeliveryUI();
+      if (group === 'payment') qrisPaidConfirmed = false;
       update();
     });
     refreshChoiceVisuals(row);
@@ -1553,10 +1648,51 @@
   custPhoneEl.addEventListener('input', function(){
     state.custPhone = custPhoneEl.value;
     custPhoneEl.classList.remove('field-error');
+    state.custChecked = false;
+    document.getElementById('loyaltyBanner').hidden = true;
+  });
+  custPhoneEl.addEventListener('blur', function(){
+    checkLoyaltyStatus();
   });
   custAddressEl.addEventListener('input', function(){
     state.custAddress = custAddressEl.value;
   });
+
+  function checkLoyaltyStatus(){
+    var phone = state.custPhone.replace(/[^0-9]/g, '');
+    var banner = document.getElementById('loyaltyBanner');
+    if (phone.length < 8 || !GAS_URL){
+      state.firstPurchaseDiscount = false;
+      state.fifthReward = false;
+      state.custChecked = false;
+      banner.hidden = true;
+      update();
+      return;
+    }
+    fetch(GAS_URL + '?phone=' + encodeURIComponent(phone))
+      .then(function(res){
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(data){
+        console.log('[loyalty check] response:', data);
+        if (!data || !data.ok) return;
+        state.custChecked = true;
+        state.firstPurchaseDiscount = !!data.isFirstPurchase;
+        state.fifthReward = !!data.isFifthReward;
+        if (state.firstPurchaseDiscount){
+          banner.hidden = false;
+          banner.textContent = '🎉 Pembelian pertama! Kamu dapat diskon Rp 5.000, otomatis kepotong dari total.';
+        } else if (state.fifthReward){
+          banner.hidden = false;
+          banner.textContent = '🎁 Pembelian ke-' + data.nextOrderNumber + '! Kamu berhak dapat GRATIS 1 CUP — tunjukkan pesan WhatsApp ke kasir.';
+        } else {
+          banner.hidden = true;
+        }
+        update();
+      })
+      .catch(function(err){ console.error('[loyalty check] gagal cek status pelanggan:', err); });
+  }
 
   function validateCustomerInfo(){
     var ok = true;
@@ -1622,48 +1758,52 @@
         void document.getElementById('addCartBtn').offsetWidth;
         document.getElementById('addCartBtn').classList.add('flash');
         document.getElementById('addCartBtn').scrollIntoView({ behavior:'smooth', block:'center' });
+      } else if (state.payment === 'qris' && !qrisPaidConfirmed){
+        e.preventDefault();
+        var paidBtnEl = document.getElementById('paidBtn');
+        paidBtnEl.classList.remove('flash');
+        void paidBtnEl.offsetWidth;
+        paidBtnEl.classList.add('flash');
+        paidBtnEl.scrollIntoView({ behavior:'smooth', block:'center' });
       } else if (!validateCustomerInfo()){
         e.preventDefault();
       } else {
         e.preventDefault();
         var total = computeCartTotal();
         var isQris = state.payment === 'qris';
-        var waMsg = encodeURIComponent(buildWaMessage(total, false));
+        var waMsg = encodeURIComponent(buildWaMessage(total, isQris));
         window.open('https://wa.me/' + WA_NUMBER + '?text=' + waMsg, '_blank');
-        if (!isQris) recordTransaction();
+        recordTransaction();
         showThankyou(
           isQris
-            ? 'Terima kasih untuk order-nya! Pesananmu sudah kami terima di WhatsApp. Silakan scan QRIS untuk menyelesaikan pembayaran.'
+            ? 'Terima kasih! Konfirmasi pembayaran QRIS kamu sudah kami terima di WhatsApp dan sedang kami cek.'
             : 'Terima kasih untuk order-nya! Pesananmu sudah kami terima di WhatsApp dan akan segera diproses.',
           total
         );
-        if (!isQris){
-          cart = [];
-          state.qty = 1;
-          update();
-        }
+        cart = [];
+        state.qty = 1;
+        state.firstPurchaseDiscount = false;
+        state.fifthReward = false;
+        document.getElementById('loyaltyBanner').hidden = true;
+        qrisPaidConfirmed = false;
+        update();
       }
     });
   });
 
   document.getElementById('paidBtn').addEventListener('click', function(e){
+    e.preventDefault();
     if (cart.length === 0){
-      e.preventDefault();
       document.getElementById('addCartBtn').classList.remove('flash');
       void document.getElementById('addCartBtn').offsetWidth;
       document.getElementById('addCartBtn').classList.add('flash');
       document.getElementById('addCartBtn').scrollIntoView({ behavior:'smooth', block:'center' });
     } else if (!validateCustomerInfo()){
-      e.preventDefault();
+      // validation message already shown by validateCustomerInfo
     } else {
-      e.preventDefault();
+      qrisPaidConfirmed = true;
       var total = computeCartTotal();
-      var paidMsg = encodeURIComponent(buildWaMessage(total, true));
-      window.open('https://wa.me/' + WA_NUMBER + '?text=' + paidMsg, '_blank');
-      recordTransaction();
-      showThankyou('Terima kasih! Konfirmasi pembayaran QRIS kamu sudah kami terima di WhatsApp dan sedang kami cek.', total);
-      cart = [];
-      state.qty = 1;
+      showThankyou('Terima kasih sudah melakukan pembayaran! Silakan klik "Pesan via WhatsApp" untuk konfirmasi ke kami.', total);
       update();
     }
   });
