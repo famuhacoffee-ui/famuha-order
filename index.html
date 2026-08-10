@@ -1119,7 +1119,7 @@
     size:'regular', milk:'full-cream', shots:'single', variant:'gula-aren',
     sugar:'normal-sugar', ice:'normal', temp:'cold', qty:1, delivery:'pickup', payment:'cod',
     custName:'', custPhone:'', custAddress:'', deliveryArea:'',
-    firstPurchaseDiscount:false, fifthReward:false, custChecked:false
+    firstPurchaseDiscount:false, fifthReward:false, custChecked:false, nextOrderNumber:null
   };
   var iceBeforeHot = 'normal';
   var qrisPaidConfirmed = false;
@@ -1152,11 +1152,15 @@
     return PRICES.size[cfg.size] + PRICES.milk[cfg.milk] + Math.max(PRICES.shots[cfg.shots], PRICES.variant[cfg.variant]);
   }
 
+  function cartHasExcludedFromFirstDiscount_(){
+    return cart.some(function(item){ return item.variant === 'mont-blanc-orange'; });
+  }
+
   function computeCartTotal(){
     var subtotal = cart.reduce(function(sum, item){
       return sum + item.unitPrice * item.qty;
     }, 0);
-    if (subtotal > 0 && state.firstPurchaseDiscount){
+    if (subtotal > 0 && state.firstPurchaseDiscount && !cartHasExcludedFromFirstDiscount_()){
       subtotal = Math.max(0, subtotal - 5000);
     }
     return subtotal;
@@ -1171,19 +1175,51 @@
   var HISTORY_PIN = '8630';
   var historyUnlocked = false;
 
+  function hasCloudStorage_(){
+    return (typeof window !== 'undefined') && window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function';
+  }
+
+  function loadTransactionsLocal_(){
+    try {
+      var raw = localStorage.getItem(TX_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e){
+      return [];
+    }
+  }
+
+  function saveTransactionsLocal_(){
+    try {
+      localStorage.setItem(TX_KEY, JSON.stringify(transactions));
+    } catch (e){
+      console.error('[riwayat lokal] gagal menyimpan ke localStorage:', e);
+    }
+  }
+
   function loadTransactions(){
+    if (!hasCloudStorage_()){
+      transactions = loadTransactionsLocal_();
+      return Promise.resolve();
+    }
     return window.storage.get(TX_KEY, true)
       .then(function(result){
         transactions = (result && result.value) ? JSON.parse(result.value) : [];
       })
       .catch(function(){
-        transactions = [];
+        transactions = loadTransactionsLocal_();
       });
   }
 
   function saveTransactions(){
+    if (!hasCloudStorage_()){
+      saveTransactionsLocal_();
+      return Promise.resolve();
+    }
     return window.storage.set(TX_KEY, JSON.stringify(transactions), true)
-      .catch(function(err){ console.error('Gagal menyimpan riwayat transaksi', err); });
+      .catch(function(err){
+        console.error('[riwayat] gagal menyimpan ke cloud storage, fallback ke localStorage:', err);
+        saveTransactionsLocal_();
+      });
   }
 
   function recordTransaction(){
@@ -1444,6 +1480,7 @@
     }
 
     var total = computeCartTotal();
+    refreshLoyaltyBanner_();
     document.getElementById('totalPrice').textContent = idr(total);
     document.getElementById('mobileTotal').textContent = idr(total);
     document.getElementById('qtyValue').textContent = state.qty;
@@ -1482,7 +1519,7 @@
       lines.push('- Area: ' + od.label + ' (estimasi ongkir ' + idr(od.min) + '–' + idr(od.max) + ', dibayar terpisah)');
     }
     lines.push('- Pembayaran: ' + LABELS.payment[state.payment]);
-    if (state.firstPurchaseDiscount) lines.push('🎉 Diskon pembelian pertama: -Rp 5.000 (sudah dipotong dari total)');
+    if (state.firstPurchaseDiscount && !cartHasExcludedFromFirstDiscount_()) lines.push('🎉 Diskon pembelian pertama: -Rp 5.000 (sudah dipotong dari total)');
     if (state.fifthReward) lines.push('🎁 GRATIS 1 CUP (reward pembelian ke-5) — mohon diproses oleh kasir');
     lines.push('Total: ' + idr(total));
     if (alreadyPaid) lines.push('Mohon dikonfirmasi ya, terima kasih 🙏');
@@ -1660,6 +1697,21 @@
     state.custAddress = custAddressEl.value;
   });
 
+  function refreshLoyaltyBanner_(){
+    var banner = document.getElementById('loyaltyBanner');
+    if (state.firstPurchaseDiscount){
+      banner.hidden = false;
+      banner.textContent = cartHasExcludedFromFirstDiscount_()
+        ? 'ℹ️ Diskon pembelian pertama tidak berlaku untuk menu Mont Blanc Orange.'
+        : '🎉 Pembelian pertama! Kamu dapat diskon Rp 5.000, otomatis kepotong dari total.';
+    } else if (state.fifthReward){
+      banner.hidden = false;
+      banner.textContent = '🎁 Pembelian ke-' + (state.nextOrderNumber || 5) + '! Kamu berhak dapat GRATIS 1 CUP — tunjukkan pesan WhatsApp ke kasir.';
+    } else {
+      banner.hidden = true;
+    }
+  }
+
   function checkLoyaltyStatus(){
     var phone = state.custPhone.replace(/[^0-9]/g, '');
     var banner = document.getElementById('loyaltyBanner');
@@ -1682,15 +1734,8 @@
         state.custChecked = true;
         state.firstPurchaseDiscount = !!data.isFirstPurchase;
         state.fifthReward = !!data.isFifthReward;
-        if (state.firstPurchaseDiscount){
-          banner.hidden = false;
-          banner.textContent = '🎉 Pembelian pertama! Kamu dapat diskon Rp 5.000, otomatis kepotong dari total.';
-        } else if (state.fifthReward){
-          banner.hidden = false;
-          banner.textContent = '🎁 Pembelian ke-' + data.nextOrderNumber + '! Kamu berhak dapat GRATIS 1 CUP — tunjukkan pesan WhatsApp ke kasir.';
-        } else {
-          banner.hidden = true;
-        }
+        state.nextOrderNumber = data.nextOrderNumber || null;
+        refreshLoyaltyBanner_();
         update();
       })
       .catch(function(err){ console.error('[loyalty check] gagal cek status pelanggan:', err); });
