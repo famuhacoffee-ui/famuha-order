@@ -790,6 +790,10 @@
             <input type="radio" name="variant" value="mont-blanc-orange">
             <span class="name">Mont Blanc Orange</span>
           </label>
+          <label class="choice" data-value="cold-brew">
+            <input type="radio" name="variant" value="cold-brew">
+            <span class="name">Cold Brew</span>
+          </label>
         </div>
       </div>
 
@@ -1074,7 +1078,7 @@
     size: { small: 18000, regular: 20000, large: 29000 },
     milk: { 'full-cream': 0, oat: 3000, almond: 3000, coconut: 3000 },
     shots: { single: 0, double: 4000, triple: 5000 },
-    variant: { pistachio: 2000, hazelnut: 2000, vanilla: 2000, 'gula-aren': 2000, 'black-americano': 0, 'mont-blanc-orange': 5000 }
+    variant: { pistachio: 2000, hazelnut: 2000, vanilla: 2000, 'gula-aren': 2000, 'black-americano': 0, 'mont-blanc-orange': 5000, 'cold-brew': 4000 }
   };
 
   var ONGKIR = {
@@ -1089,7 +1093,7 @@
     milk: { 'full-cream':'Full Cream', oat:'Oat Milk', almond:'Almond Milk', coconut:'Coconut Milk' },
     shots: { single:'Single Shot', double:'Double Shot', triple:'Signature Shot' },
     ice: { none:'Tanpa Es', normal:'Es Normal', extra:'Extra Es' },
-    variant: { pistachio:'Pistachio Latte', hazelnut:'Hazelnut Latte', vanilla:'Vanilla Latte', 'gula-aren':'Gula Aren Latte', 'black-americano':'Black Americano', 'mont-blanc-orange':'Mont Blanc Orange' },
+    variant: { pistachio:'Pistachio Latte', hazelnut:'Hazelnut Latte', vanilla:'Vanilla Latte', 'gula-aren':'Gula Aren Latte', 'black-americano':'Black Americano', 'mont-blanc-orange':'Mont Blanc Orange', 'cold-brew':'Cold Brew' },
     sugar: { 'no-sugar':'No Sugar', 'less-sugar':'Less Sugar', 'normal-sugar':'Normal Sugar' },
     temp: { cold:'Dingin (Cold)', hot:'Panas (Hot)' },
     delivery: { pickup:'Ambil Sendiri', delivered:'Diantar', gosend:'Dijemput GoSend', grabexpress:'Dijemput GrabExpress' },
@@ -1102,7 +1106,8 @@
     vanilla: [230,216,182],
     'gula-aren': [178,120,56],
     'black-americano': [58,36,24],
-    'mont-blanc-orange': [224,146,64]
+    'mont-blanc-orange': [224,146,64],
+    'cold-brew': [74,46,28]
   };
   var ESPRESSO_COLOR = [43,26,18];
   var SHOT_WEIGHT = { single:0.25, double:0.45, triple:0.68 };
@@ -1153,7 +1158,7 @@
   }
 
   function cartHasExcludedFromFirstDiscount_(){
-    return cart.some(function(item){ return item.variant === 'mont-blanc-orange'; });
+    return cart.some(function(item){ return item.variant === 'mont-blanc-orange' || item.variant === 'cold-brew'; });
   }
 
   function computeCartTotal(){
@@ -1587,7 +1592,8 @@
 
   var VARIANT_LOCKS = {
     'black-americano': { shots: 'single', sugar: 'no-sugar' },
-    'mont-blanc-orange': { shots: 'single', sugar: 'normal-sugar', temp: 'cold' }
+    'mont-blanc-orange': { shots: 'single', sugar: 'normal-sugar', temp: 'cold' },
+    'cold-brew': { shots: 'single', sugar: 'no-sugar', temp: 'cold' }
   };
   var savedBeforeLock = { shots: 'single', sugar: 'normal-sugar', temp: 'cold' };
 
@@ -1702,7 +1708,7 @@
     if (state.firstPurchaseDiscount){
       banner.hidden = false;
       banner.textContent = cartHasExcludedFromFirstDiscount_()
-        ? 'ℹ️ Diskon pembelian pertama tidak berlaku untuk menu Mont Blanc Orange.'
+        ? 'ℹ️ Diskon pembelian pertama tidak berlaku untuk menu Mont Blanc Orange atau Cold Brew.'
         : '🎉 Pembelian pertama! Kamu dapat diskon Rp 5.000, otomatis kepotong dari total.';
     } else if (state.fifthReward){
       banner.hidden = false;
