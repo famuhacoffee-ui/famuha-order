@@ -204,6 +204,7 @@
     flex-direction:column;
     gap:12px;
   }
+  .field-row[hidden]{ display:none; }
   .field{
     display:flex;
     flex-direction:column;
@@ -1121,7 +1122,7 @@
         <div class="field-row" id="scheduleFields" hidden style="margin-top:12px;">
           <label class="field">
             <span class="field-label">Tanggal</span>
-            <input type="date" id="scheduleDate" class="field-input">
+            <input type="date" id="scheduleDate" class="field-input" inputmode="none" autocomplete="off" onkeydown="return false;" onpaste="return false;">
           </label>
           <label class="field">
             <span class="field-label">Jam</span>
@@ -2073,6 +2074,17 @@
     this.classList.remove('field-error');
     update();
   });
+  // Tanggal hanya bisa dipilih lewat calendar picker, tidak lewat ketik manual
+  (function(){
+    var dateField = document.getElementById('scheduleDate');
+    function openPicker(){
+      if (typeof dateField.showPicker === 'function'){
+        try { dateField.showPicker(); } catch(e){}
+      }
+    }
+    dateField.addEventListener('click', openPicker);
+    dateField.addEventListener('focus', openPicker);
+  })();
   document.getElementById('scheduleTime').addEventListener('change', function(){
     state.scheduleTime = this.value;
     this.classList.remove('field-error');
