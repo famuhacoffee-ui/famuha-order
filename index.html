@@ -780,6 +780,78 @@
   }
   .history-clear-btn:hover{ background: rgba(230,120,90,0.12); }
 
+  /* ---------- Admin panel ---------- */
+  .admin-card{
+    max-width:520px;
+    text-align:left;
+  }
+  .admin-card .overlay-logo,
+  .admin-card .overlay-title{
+    text-align:center;
+  }
+  .admin-section-title{
+    font-size:12px;
+    font-weight:700;
+    color: var(--gold-2);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin:16px 0 8px;
+  }
+  .admin-section-title:first-of-type{ margin-top:6px; }
+  .admin-fields-wrap{
+    max-height:340px;
+    overflow-y:auto;
+    padding-right:4px;
+    margin-bottom:14px;
+  }
+  .admin-field-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:7px 2px;
+    border-top:1px solid rgba(243,230,211,0.1);
+  }
+  .admin-field-row label{
+    font-size:12.5px;
+    color: rgba(243,230,211,0.85);
+  }
+  .admin-field-row input[type="number"]{
+    width:96px;
+    background: rgba(0,0,0,0.25);
+    border:1px solid rgba(243,230,211,0.2);
+    border-radius:8px;
+    padding:7px 9px;
+    color: var(--text);
+    font-family: inherit;
+    font-size:13px;
+    text-align:right;
+  }
+  .admin-field-row input[type="number"]:focus{ outline:none; border-color: var(--gold); }
+  .admin-toggle-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 2px;
+  }
+  .admin-toggle-row input[type="checkbox"]{
+    width:16px;
+    height:16px;
+    accent-color: var(--gold);
+  }
+  .admin-toggle-row label{
+    font-size:12.5px;
+    color: rgba(243,230,211,0.85);
+  }
+  .admin-status{
+    font-size:12px;
+    text-align:center;
+    min-height:16px;
+    margin-bottom:8px;
+  }
+  .admin-status.ok{ color:#8fd19e; }
+  .admin-status.err{ color:#e6816a; }
+
   /* ---------- PIN gate ---------- */
   .pin-card{ max-width:320px; }
   .pin-input{
@@ -814,6 +886,7 @@
 
   <div class="hero">
     <button type="button" class="history-btn" id="historyBtn">📊 Riwayat Transaksi</button>
+    <button type="button" class="history-btn" id="adminBtn" style="right:auto; left:16px;">⚙️ Admin</button>
     <div class="eyebrow">Famuha Coffee Roastery</div>
     <h1 class="serif">Build Your Own Iced Latte</h1>
     <p>Susun kombinasi favoritmu — preview dan harga langsung berubah sesuai pilihanmu.</p>
@@ -1028,6 +1101,37 @@
         </div>
       </div>
 
+      <div class="group" id="timingGroup">
+        <div class="group-head">
+          <div class="group-title serif">Waktu Pesanan</div>
+          <div class="group-hint">Wajib pilih 1</div>
+        </div>
+        <div class="choice-row" data-group="orderTiming" data-type="radio">
+          <label class="choice" data-value="now">
+            <input type="radio" name="orderTiming" value="now" checked>
+            <span class="name">Sekarang</span>
+            <span class="price">Diproses langsung</span>
+          </label>
+          <label class="choice" data-value="scheduled">
+            <input type="radio" name="orderTiming" value="scheduled">
+            <span class="name">Jadwalkan</span>
+            <span class="price">Hari ini – 7 hari ke depan</span>
+          </label>
+        </div>
+        <div class="field-row" id="scheduleFields" hidden style="margin-top:12px;">
+          <label class="field">
+            <span class="field-label">Tanggal</span>
+            <input type="date" id="scheduleDate" class="field-input">
+          </label>
+          <label class="field">
+            <span class="field-label">Jam</span>
+            <input type="time" id="scheduleTime" class="field-input">
+          </label>
+        </div>
+        <div class="delivery-note" id="scheduleNote" hidden></div>
+        <div class="delivery-note" id="scheduleLockedNote" hidden>Jadwal tidak tersedia untuk delivery GoSend/GrabExpress — pesanan diproses sekarang.</div>
+      </div>
+
       <div class="group">
         <div class="group-head">
           <div class="group-title serif">Metode Pembayaran</div>
@@ -1137,6 +1241,21 @@
     </div>
   </div>
 
+  <div class="overlay" id="adminOverlay">
+    <div class="overlay-card admin-card">
+      <div class="overlay-logo serif">FAMUHA COFFEE</div>
+      <div class="overlay-title serif">Admin — Harga &amp; Diskon</div>
+
+      <div class="admin-fields-wrap" id="adminFields"></div>
+
+      <div class="admin-status" id="adminStatus"></div>
+
+      <button type="button" class="cta-btn" id="adminSaveBtn">Simpan Perubahan</button>
+      <button type="button" class="history-clear-btn pin-cancel" id="adminClose">Tutup</button>
+      <div class="overlay-note">Perubahan tersimpan di server dan berlaku untuk semua perangkat.</div>
+    </div>
+  </div>
+
 <script>
 (function(){
   "use strict";
@@ -1189,14 +1308,21 @@
   var GAS_URL = 'https://script.google.com/macros/s/AKfycbwOnGK3QJ_pSW5zWh1GNW2wncc0NM9gNCHGhWPIkzFG794-j6lv1snBE7Yiq9DMQ9Fd/exec';
   // Saklar promo diskon pembelian pertama (Rp 5.000). Set ke true untuk mengaktifkan lagi.
   var FIRST_PURCHASE_PROMO_ENABLED = false;
+  // Nominal diskon pembelian pertama. Bisa diubah lewat panel Admin (tersambung
+  // ke Google Sheet); nilai ini hanya dipakai sebagai fallback awal.
+  var FIRST_PURCHASE_DISCOUNT_AMOUNT = 5000;
   var GAS_ACCESS_KEY = 'famuha2026';
 
   var state = {
     size:'regular', milk:'full-cream', shots:'single', variant:'gula-aren',
     sugar:'normal-sugar', ice:'normal', temp:'cold', qty:1, delivery:'pickup', payment:'cod',
     custName:'', custPhone:'', custAddress:'', deliveryArea:'',
+    orderTiming:'now', scheduleDate:'', scheduleTime:'',
     firstPurchaseDiscount:false, fifthReward:false, custChecked:false, nextOrderNumber:null
   };
+  var MAX_SCHEDULE_DAYS_AHEAD = 7;
+  var SCHEDULE_TIME_MIN = '08:00';
+  var SCHEDULE_TIME_MAX = '21:00';
   var iceBeforeHot = 'normal';
   var qrisPaidConfirmed = false;
 
@@ -1232,6 +1358,20 @@
     return total;
   }
 
+  function shotsPriceLabel_(v){
+    return v === 0 ? 'Termasuk' : ('+' + idr(v));
+  }
+
+  function refreshShotsPriceLabels(){
+    var row = document.querySelector('#shotsGroup .choice-row');
+    if (!row) return;
+    row.querySelectorAll('.choice').forEach(function(c){
+      var val = c.dataset.value;
+      var priceEl = c.querySelector('.price');
+      if (priceEl && PRICES.shots[val] !== undefined) priceEl.textContent = shotsPriceLabel_(PRICES.shots[val]);
+    });
+  }
+
   function cartHasExcludedFromFirstDiscount_(){
     return cart.some(function(item){ return item.variant === 'mont-blanc-orange' || item.variant === 'cold-brew' || item.variant === 'cappuccino'; });
   }
@@ -1241,7 +1381,7 @@
       return sum + item.unitPrice * item.qty;
     }, 0);
     if (subtotal > 0 && state.firstPurchaseDiscount && !cartHasExcludedFromFirstDiscount_()){
-      subtotal = Math.max(0, subtotal - 5000);
+      subtotal = Math.max(0, subtotal - FIRST_PURCHASE_DISCOUNT_AMOUNT);
     }
     return subtotal;
   }
@@ -1254,6 +1394,12 @@
   // keamanan sesungguhnya — siapa pun yang membuka "view source" bisa melihatnya.
   var HISTORY_PIN = '8630';
   var historyUnlocked = false;
+
+  // PIN terpisah untuk panel Admin (mengubah harga & diskon). Ganti sesuai
+  // keinginanmu — harus sama persis dengan ADMIN_PIN di Apps Script server.
+  var ADMIN_PIN = '8630';
+  var adminUnlocked = false;
+  var pendingPinAction = 'history'; // 'history' | 'admin'
 
   function hasCloudStorage_(){
     return (typeof window !== 'undefined') && window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function';
@@ -1321,6 +1467,9 @@
       delivery: LABELS.delivery[state.delivery],
       deliveryArea: ONGKIR[state.deliveryArea] ? ONGKIR[state.deliveryArea].label : '',
       payment: LABELS.payment[state.payment],
+      orderTiming: state.orderTiming,
+      scheduleDate: state.orderTiming === 'scheduled' ? state.scheduleDate : '',
+      scheduleTime: state.orderTiming === 'scheduled' ? state.scheduleTime : '',
       custName: state.custName,
       custPhone: state.custPhone,
       custAddress: state.custAddress,
@@ -1337,6 +1486,10 @@
     var itemsSummary = record.items.map(function(it){
       return it.qty + 'x ' + it.variant + ' (' + it.temp + ', ' + it.shots + ', ' + it.sugar + (it.ice !== '-' ? ', ' + it.ice : '') + ')';
     }).join('; ');
+    if (record.orderTiming === 'scheduled' && record.scheduleDate){
+      var scheduleTag = '[Jadwal: ' + formatScheduleLabel_(record.scheduleDate, record.scheduleTime) + '] ';
+      itemsSummary = scheduleTag + itemsSummary;
+    }
     var payload = {
       custName: record.custName,
       custPhone: record.custPhone,
@@ -1602,6 +1755,9 @@
     lines.push('- Nama: ' + state.custName);
     lines.push('- No. HP: ' + state.custPhone);
     if (state.custAddress.trim()) lines.push('- Alamat: ' + state.custAddress);
+    if (state.orderTiming === 'scheduled' && state.scheduleDate){
+      lines.push('- Jadwal: ' + formatScheduleLabel_(state.scheduleDate, state.scheduleTime));
+    }
     cart.forEach(function(item){
       lines.push('- ' + item.qty + 'x ' + LABELS.variant[item.variant] + ' (' + LABELS.temp[item.temp] + ', ' + LABELS.shots[item.shots] + ', ' + LABELS.sugar[item.sugar] + (item.temp === 'hot' ? '' : ', ' + LABELS.ice[item.ice]) + ') — ' + idr(item.unitPrice * item.qty));
     });
@@ -1611,7 +1767,7 @@
       lines.push('- Area: ' + od.label + ' (estimasi ongkir ' + idr(od.min) + '–' + idr(od.max) + ', dibayar terpisah)');
     }
     lines.push('- Pembayaran: ' + LABELS.payment[state.payment]);
-    if (state.firstPurchaseDiscount && !cartHasExcludedFromFirstDiscount_()) lines.push('🎉 Diskon pembelian pertama: -Rp 5.000 (sudah dipotong dari total)');
+    if (state.firstPurchaseDiscount && !cartHasExcludedFromFirstDiscount_()) lines.push('🎉 Diskon pembelian pertama: -' + idr(FIRST_PURCHASE_DISCOUNT_AMOUNT) + ' (sudah dipotong dari total)');
     if (state.fifthReward) lines.push('🎁 GRATIS 1 CUP (reward pembelian ke-5) — mohon diproses oleh kasir');
     lines.push('Total: ' + idr(total));
     if (alreadyPaid) lines.push('Mohon dikonfirmasi ya, terima kasih 🙏');
@@ -1635,12 +1791,20 @@
     document.getElementById('qrisPanel').hidden = (state.payment !== 'qris');
     document.getElementById('paidBtn').classList.toggle('disabled', cart.length === 0);
 
-    var waLocked = (state.payment === 'qris' && !qrisPaidConfirmed) || cart.length === 0;
+    var scheduleOk = isScheduleValid_();
+    var waLocked = (state.payment === 'qris' && !qrisPaidConfirmed) || cart.length === 0 || !scheduleOk;
     document.getElementById('ctaBtn').classList.toggle('disabled', waLocked);
     document.getElementById('ctaBtnMobile').classList.toggle('disabled', waLocked);
-    var waHint = (state.payment === 'qris' && !qrisPaidConfirmed && cart.length > 0)
-      ? 'Scan QRIS lalu tekan "Saya Sudah Bayar" dulu sebelum pesan via WhatsApp'
-      : 'Tambahkan minimal 1 varian ke pesanan · Konfirmasi akhir via WhatsApp';
+    var waHint;
+    if (cart.length === 0){
+      waHint = 'Tambahkan minimal 1 varian ke pesanan · Konfirmasi akhir via WhatsApp';
+    } else if (state.payment === 'qris' && !qrisPaidConfirmed){
+      waHint = 'Scan QRIS lalu tekan "Saya Sudah Bayar" dulu sebelum pesan via WhatsApp';
+    } else if (!scheduleOk){
+      waHint = 'Lengkapi tanggal & jam jadwal pesanan dulu (jam operasional ' + SCHEDULE_TIME_MIN + '–' + SCHEDULE_TIME_MAX + ') sebelum pesan via WhatsApp';
+    } else {
+      waHint = 'Tambahkan minimal 1 varian ke pesanan · Konfirmasi akhir via WhatsApp';
+    }
     document.querySelectorAll('.cta-note').forEach(function(el){ el.textContent = waHint; });
 
     document.getElementById('currentLinePrice').textContent = idr(computeUnitPrice(state) * state.qty);
@@ -1775,6 +1939,7 @@
       if (group === 'temp') applyTempEffect();
       if (group === 'variant') applyVariantEffect();
       if (group === 'delivery') updateDeliveryUI();
+      if (group === 'orderTiming') updateTimingUI();
       if (group === 'payment') qrisPaidConfirmed = false;
       update();
     });
@@ -1792,6 +1957,7 @@
       document.getElementById('deliveryArea').value = '';
     }
     renderOngkirEstimate();
+    updateTimingUI();
   }
 
   function renderOngkirEstimate(){
@@ -1809,6 +1975,108 @@
   document.getElementById('deliveryArea').addEventListener('change', function(){
     state.deliveryArea = this.value;
     renderOngkirEstimate();
+  });
+
+  function pad2_(n){ return n < 10 ? '0' + n : '' + n; }
+
+  function todayDateStr_(){
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2_(d.getMonth() + 1) + '-' + pad2_(d.getDate());
+  }
+
+  function maxScheduleDateStr_(){
+    var d = new Date();
+    d.setDate(d.getDate() + MAX_SCHEDULE_DAYS_AHEAD);
+    return d.getFullYear() + '-' + pad2_(d.getMonth() + 1) + '-' + pad2_(d.getDate());
+  }
+
+  function currentTimeStr_(){
+    var d = new Date();
+    return pad2_(d.getHours()) + ':' + pad2_(d.getMinutes());
+  }
+
+  function formatDateLabel_(isoDateStr){
+    var parts = isoDateStr.split('-');
+    var d = new Date(parseInt(parts[0],10), parseInt(parts[1],10) - 1, parseInt(parts[2],10));
+    return d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+  }
+
+  // Format lengkap dipakai di pesan WhatsApp & riwayat, contoh: "Kamis, 20 Agustus pukul 15:00"
+  function formatScheduleLabel_(isoDateStr, timeStr){
+    var parts = isoDateStr.split('-');
+    var d = new Date(parseInt(parts[0],10), parseInt(parts[1],10) - 1, parseInt(parts[2],10));
+    var label = d.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
+    return label + (timeStr ? ' pukul ' + timeStr : '');
+  }
+
+  function isScheduleValid_(){
+    if (state.orderTiming !== 'scheduled') return true;
+    if (!state.scheduleDate || !state.scheduleTime) return false;
+    var minDate = todayDateStr_();
+    var maxDate = maxScheduleDateStr_();
+    if (state.scheduleDate < minDate || state.scheduleDate > maxDate) return false;
+    if (state.scheduleTime < SCHEDULE_TIME_MIN || state.scheduleTime > SCHEDULE_TIME_MAX) return false;
+    if (state.scheduleDate === minDate && state.scheduleTime < currentTimeStr_()) return false;
+    return true;
+  }
+
+  function updateTimingUI(){
+    var isCourier = (state.delivery === 'gosend' || state.delivery === 'grabexpress');
+    var timingGroup = document.getElementById('timingGroup');
+    var timingInputs = document.querySelectorAll('#timingGroup input[name="orderTiming"]');
+    var scheduleLockedNote = document.getElementById('scheduleLockedNote');
+
+    if (isCourier){
+      if (state.orderTiming === 'scheduled'){
+        state.orderTiming = 'now';
+        var nowRadio = document.querySelector('#timingGroup input[value="now"]');
+        if (nowRadio) nowRadio.checked = true;
+        refreshChoiceVisuals(document.querySelector('#timingGroup .choice-row'));
+      }
+      timingGroup.classList.add('group-disabled');
+      timingInputs.forEach(function(inp){ inp.disabled = true; });
+      scheduleLockedNote.hidden = false;
+    } else {
+      timingGroup.classList.remove('group-disabled');
+      timingInputs.forEach(function(inp){ inp.disabled = false; });
+      scheduleLockedNote.hidden = true;
+    }
+
+    var isScheduled = state.orderTiming === 'scheduled';
+    document.getElementById('scheduleFields').hidden = !isScheduled;
+    var noteEl = document.getElementById('scheduleNote');
+    var dateInput = document.getElementById('scheduleDate');
+    var timeInput = document.getElementById('scheduleTime');
+
+    if (isScheduled){
+      var minDate = todayDateStr_();
+      var maxDate = maxScheduleDateStr_();
+      dateInput.min = minDate;
+      dateInput.max = maxDate;
+      timeInput.min = SCHEDULE_TIME_MIN;
+      timeInput.max = SCHEDULE_TIME_MAX;
+      if (!state.scheduleDate){
+        state.scheduleDate = minDate;
+        dateInput.value = minDate;
+      }
+      noteEl.hidden = false;
+      noteEl.textContent = '🗓️ Pilih tanggal (' + formatDateLabel_(minDate) + ' – ' + formatDateLabel_(maxDate) + ') dan jam antara ' + SCHEDULE_TIME_MIN + '–' + SCHEDULE_TIME_MAX + '.';
+      dateInput.classList.remove('field-error');
+      timeInput.classList.remove('field-error');
+    } else {
+      noteEl.hidden = true;
+    }
+  }
+
+  document.getElementById('scheduleDate').addEventListener('change', function(){
+    state.scheduleDate = this.value;
+    this.classList.remove('field-error');
+    update();
+  });
+  document.getElementById('scheduleTime').addEventListener('change', function(){
+    state.scheduleTime = this.value;
+    this.classList.remove('field-error');
+    update();
   });
 
   document.getElementById('qtyMinus').addEventListener('click', function(){
@@ -1846,7 +2114,7 @@
       banner.hidden = false;
       banner.textContent = cartHasExcludedFromFirstDiscount_()
         ? 'ℹ️ Diskon pembelian pertama tidak berlaku untuk menu Mont Blanc Orange, Cold Brew, atau Cappuccino.'
-        : '🎉 Pembelian pertama! Kamu dapat diskon Rp 5.000, otomatis kepotong dari total.';
+        : '🎉 Pembelian pertama! Kamu dapat diskon ' + idr(FIRST_PURCHASE_DISCOUNT_AMOUNT) + ', otomatis kepotong dari total.';
     } else if (state.fifthReward){
       banner.hidden = false;
       banner.textContent = '🎁 Pembelian ke-' + (state.nextOrderNumber || 5) + '! Kamu berhak dapat GRATIS 1 CUP — tunjukkan pesan WhatsApp ke kasir.';
@@ -1884,18 +2152,270 @@
       .catch(function(err){ console.error('[loyalty check] gagal cek status pelanggan:', err); });
   }
 
+  // ---------------- Admin config (harga & diskon, tersambung Google Sheet) ----------------
+  var CONFIG_CACHE_KEY = 'famuha-config-cache';
+
+  // Skema field yang ditampilkan di panel Admin. path = lokasi nilainya di
+  // dalam PRICES / variabel terkait, section = judul grup di form.
+  var ADMIN_FIELD_SCHEMA = [
+    { section: 'Harga Dasar', path: ['PRICES','size','regular'], label: 'Harga Dasar (Regular)' },
+    { section: 'Espresso Shot', path: ['PRICES','shots','single'], label: 'Single Shot' },
+    { section: 'Espresso Shot', path: ['PRICES','shots','double'], label: 'Double Shot' },
+    { section: 'Espresso Shot', path: ['PRICES','shots','triple'], label: 'Signature Shot' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','pistachio'], label: 'Pistachio Latte' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','hazelnut'], label: 'Hazelnut Latte' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','vanilla'], label: 'Vanilla Latte' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','cappuccino'], label: 'Cappuccino' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','gula-aren'], label: 'Gula Aren Latte' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','black-americano'], label: 'Black Americano' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','mont-blanc-orange'], label: 'Mont Blanc Orange' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','cold-brew'], label: 'Cold Brew' },
+    { section: 'Promo Cappuccino', path: ['CAPPUCCINO_HOT_DISCOUNT'], label: 'Potongan Cappuccino Panas' }
+  ];
+
+  function getByPath_(root, path){
+    var obj = root;
+    for (var i = 0; i < path.length; i++) obj = obj[path[i]];
+    return obj;
+  }
+  function setByPath_(root, path, value){
+    var obj = root;
+    for (var i = 0; i < path.length - 1; i++) obj = obj[path[i]];
+    obj[path[path.length - 1]] = value;
+  }
+
+  // "Namespace" supaya getByPath_/setByPath_ bisa menjangkau variabel top-level
+  // seperti CAPPUCCINO_HOT_DISCOUNT lewat satu objek yang sama.
+  function configRoot_(){
+    return {
+      PRICES: PRICES,
+      CAPPUCCINO_HOT_DISCOUNT: CAPPUCCINO_HOT_DISCOUNT
+    };
+  }
+
+  function buildConfigPayload_(){
+    return {
+      prices: {
+        size: PRICES.size,
+        milk: PRICES.milk,
+        shots: PRICES.shots,
+        variant: PRICES.variant
+      },
+      cappuccinoHotDiscount: CAPPUCCINO_HOT_DISCOUNT,
+      firstPurchase: {
+        enabled: FIRST_PURCHASE_PROMO_ENABLED,
+        amount: FIRST_PURCHASE_DISCOUNT_AMOUNT
+      }
+    };
+  }
+
+  function applyConfig(cfg){
+    if (!cfg) return;
+    if (cfg.prices){
+      if (cfg.prices.size) Object.assign(PRICES.size, cfg.prices.size);
+      if (cfg.prices.milk) Object.assign(PRICES.milk, cfg.prices.milk);
+      if (cfg.prices.shots) Object.assign(PRICES.shots, cfg.prices.shots);
+      if (cfg.prices.variant) Object.assign(PRICES.variant, cfg.prices.variant);
+    }
+    if (typeof cfg.cappuccinoHotDiscount === 'number') CAPPUCCINO_HOT_DISCOUNT = cfg.cappuccinoHotDiscount;
+    if (cfg.firstPurchase){
+      if (typeof cfg.firstPurchase.enabled === 'boolean') FIRST_PURCHASE_PROMO_ENABLED = cfg.firstPurchase.enabled;
+      if (typeof cfg.firstPurchase.amount === 'number') FIRST_PURCHASE_DISCOUNT_AMOUNT = cfg.firstPurchase.amount;
+    }
+    refreshShotsPriceLabels();
+    update();
+  }
+
+  function loadConfig(){
+    // 1) Pakai cache lokal dulu supaya harga langsung tampil tanpa nunggu network.
+    try {
+      var cached = localStorage.getItem(CONFIG_CACHE_KEY);
+      if (cached) applyConfig(JSON.parse(cached));
+    } catch (err){ /* abaikan, lanjut pakai default bawaan */ }
+
+    // 2) Ambil versi terbaru dari server. Kalau gagal (offline / GAS belum
+    // di-setup), aplikasi tetap jalan pakai harga default / cache terakhir.
+    if (!GAS_URL) return;
+    fetch(GAS_URL + '?action=config')
+      .then(function(res){
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(data){
+        if (!data || !data.ok || !data.config) return;
+        applyConfig(data.config);
+        try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(data.config)); } catch (err){}
+      })
+      .catch(function(err){ console.error('[config] gagal memuat konfigurasi harga:', err); });
+  }
+
+  function renderAdminForm(){
+    var wrap = document.getElementById('adminFields');
+    wrap.innerHTML = '';
+    var lastSection = null;
+    var root = configRoot_();
+
+    ADMIN_FIELD_SCHEMA.forEach(function(field, idx){
+      if (field.section !== lastSection){
+        var h = document.createElement('div');
+        h.className = 'admin-section-title';
+        h.textContent = field.section;
+        wrap.appendChild(h);
+        lastSection = field.section;
+      }
+      var row = document.createElement('div');
+      row.className = 'admin-field-row';
+      var label = document.createElement('label');
+      label.textContent = field.label;
+      label.setAttribute('for', 'adminField' + idx);
+      var input = document.createElement('input');
+      input.type = 'number';
+      input.id = 'adminField' + idx;
+      input.min = '0';
+      input.step = '500';
+      input.value = getByPath_(root, field.path);
+      input.dataset.fieldIndex = idx;
+      row.appendChild(label);
+      row.appendChild(input);
+      wrap.appendChild(row);
+    });
+
+    var promoHeader = document.createElement('div');
+    promoHeader.className = 'admin-section-title';
+    promoHeader.textContent = 'Promo Pembelian Pertama';
+    wrap.appendChild(promoHeader);
+
+    var toggleRow = document.createElement('div');
+    toggleRow.className = 'admin-toggle-row';
+    var toggle = document.createElement('input');
+    toggle.type = 'checkbox';
+    toggle.id = 'adminFirstPurchaseEnabled';
+    toggle.checked = FIRST_PURCHASE_PROMO_ENABLED;
+    var toggleLabel = document.createElement('label');
+    toggleLabel.setAttribute('for', 'adminFirstPurchaseEnabled');
+    toggleLabel.textContent = 'Aktifkan diskon pembelian pertama';
+    toggleRow.appendChild(toggle);
+    toggleRow.appendChild(toggleLabel);
+    wrap.appendChild(toggleRow);
+
+    var amountRow = document.createElement('div');
+    amountRow.className = 'admin-field-row';
+    var amountLabel = document.createElement('label');
+    amountLabel.textContent = 'Nominal Diskon';
+    amountLabel.setAttribute('for', 'adminFirstPurchaseAmount');
+    var amountInput = document.createElement('input');
+    amountInput.type = 'number';
+    amountInput.id = 'adminFirstPurchaseAmount';
+    amountInput.min = '0';
+    amountInput.step = '500';
+    amountInput.value = FIRST_PURCHASE_DISCOUNT_AMOUNT;
+    amountRow.appendChild(amountLabel);
+    amountRow.appendChild(amountInput);
+    wrap.appendChild(amountRow);
+  }
+
+  function openAdmin(){
+    renderAdminForm();
+    document.getElementById('adminStatus').textContent = '';
+    document.getElementById('adminStatus').className = 'admin-status';
+    document.getElementById('adminOverlay').classList.add('show');
+  }
+
+  function collectAdminFormValues_(){
+    var root = { PRICES: JSON.parse(JSON.stringify(PRICES)), CAPPUCCINO_HOT_DISCOUNT: CAPPUCCINO_HOT_DISCOUNT };
+    ADMIN_FIELD_SCHEMA.forEach(function(field, idx){
+      var input = document.getElementById('adminField' + idx);
+      var val = parseInt(input.value, 10);
+      if (isNaN(val) || val < 0) val = 0;
+      setByPath_(root, field.path, val);
+    });
+    return {
+      prices: {
+        size: root.PRICES.size,
+        milk: root.PRICES.milk,
+        shots: root.PRICES.shots,
+        variant: root.PRICES.variant
+      },
+      cappuccinoHotDiscount: root.CAPPUCCINO_HOT_DISCOUNT,
+      firstPurchase: {
+        enabled: document.getElementById('adminFirstPurchaseEnabled').checked,
+        amount: (function(){
+          var v = parseInt(document.getElementById('adminFirstPurchaseAmount').value, 10);
+          return isNaN(v) || v < 0 ? 0 : v;
+        })()
+      }
+    };
+  }
+
+  function saveAdminConfig(){
+    var statusEl = document.getElementById('adminStatus');
+    if (!GAS_URL){
+      statusEl.textContent = 'GAS_URL belum diatur, tidak bisa menyimpan ke server.';
+      statusEl.className = 'admin-status err';
+      return;
+    }
+    var newConfig = collectAdminFormValues_();
+    var saveBtn = document.getElementById('adminSaveBtn');
+    saveBtn.textContent = 'Menyimpan...';
+    saveBtn.classList.add('disabled');
+    statusEl.textContent = '';
+    statusEl.className = 'admin-status';
+
+    fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'updateConfig', pin: ADMIN_PIN, config: newConfig })
+    })
+      .then(function(res){
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(data){
+        if (!data || !data.ok){
+          statusEl.textContent = (data && data.error) ? data.error : 'Gagal menyimpan perubahan.';
+          statusEl.className = 'admin-status err';
+          return;
+        }
+        applyConfig(data.config || newConfig);
+        try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(data.config || newConfig)); } catch (err){}
+        statusEl.textContent = 'Tersimpan! Perubahan langsung berlaku.';
+        statusEl.className = 'admin-status ok';
+      })
+      .catch(function(err){
+        console.error('[admin] gagal menyimpan konfigurasi:', err);
+        statusEl.textContent = 'Gagal terhubung ke server. Coba lagi.';
+        statusEl.className = 'admin-status err';
+      })
+      .finally(function(){
+        saveBtn.textContent = 'Simpan Perubahan';
+        saveBtn.classList.remove('disabled');
+      });
+  }
+
   function validateCustomerInfo(){
     var ok = true;
+    var custInfoInvalid = false;
     if (!state.custName.trim()){
       custNameEl.classList.add('field-error');
       ok = false;
+      custInfoInvalid = true;
     }
     if (!state.custPhone.trim()){
       custPhoneEl.classList.add('field-error');
       ok = false;
+      custInfoInvalid = true;
     }
-    if (!ok){
+    var scheduleInvalid = false;
+    if (state.orderTiming === 'scheduled' && !isScheduleValid_()){
+      document.getElementById('scheduleDate').classList.add('field-error');
+      document.getElementById('scheduleTime').classList.add('field-error');
+      ok = false;
+      scheduleInvalid = true;
+    }
+    if (custInfoInvalid){
       document.getElementById('customerGroup').scrollIntoView({ behavior:'smooth', block:'center' });
+    } else if (scheduleInvalid){
+      document.getElementById('timingGroup').scrollIntoView({ behavior:'smooth', block:'center' });
     }
     return ok;
   }
@@ -2003,23 +2523,42 @@
     loadTransactions().then(renderHistory);
   }
 
+  function requestPinFor(action){
+    pendingPinAction = action;
+    document.getElementById('pinError').classList.remove('show');
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinOverlay').classList.add('show');
+    setTimeout(function(){ document.getElementById('pinInput').focus(); }, 100);
+  }
+
   document.getElementById('historyBtn').addEventListener('click', function(){
     if (historyUnlocked){
       openHistory();
       return;
     }
-    document.getElementById('pinError').classList.remove('show');
-    document.getElementById('pinInput').value = '';
-    document.getElementById('pinOverlay').classList.add('show');
-    setTimeout(function(){ document.getElementById('pinInput').focus(); }, 100);
+    requestPinFor('history');
+  });
+
+  document.getElementById('adminBtn').addEventListener('click', function(){
+    if (adminUnlocked){
+      openAdmin();
+      return;
+    }
+    requestPinFor('admin');
   });
 
   function checkPin(){
     var input = document.getElementById('pinInput');
-    if (input.value === HISTORY_PIN){
-      historyUnlocked = true;
+    var expectedPin = pendingPinAction === 'admin' ? ADMIN_PIN : HISTORY_PIN;
+    if (input.value === expectedPin){
       document.getElementById('pinOverlay').classList.remove('show');
-      openHistory();
+      if (pendingPinAction === 'admin'){
+        adminUnlocked = true;
+        openAdmin();
+      } else {
+        historyUnlocked = true;
+        openHistory();
+      }
     } else {
       document.getElementById('pinError').classList.add('show');
       input.value = '';
@@ -2044,6 +2583,15 @@
   document.getElementById('historyOverlay').addEventListener('click', function(e){
     if (e.target === this) this.classList.remove('show');
   });
+
+  document.getElementById('adminSaveBtn').addEventListener('click', saveAdminConfig);
+  document.getElementById('adminClose').addEventListener('click', function(){
+    document.getElementById('adminOverlay').classList.remove('show');
+  });
+  document.getElementById('adminOverlay').addEventListener('click', function(e){
+    if (e.target === this) this.classList.remove('show');
+  });
+
   document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
   document.getElementById('clearHistoryBtn').addEventListener('click', function(){
     if (transactions.length === 0) return;
@@ -2055,6 +2603,8 @@
   });
 
   update();
+  updateTimingUI();
+  loadConfig();
 })();
 </script>
 </body>
