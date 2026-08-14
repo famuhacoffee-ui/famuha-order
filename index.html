@@ -872,6 +872,17 @@
   }
   .admin-status.ok{ color:#8fd19e; }
   .admin-status.err{ color:#e6816a; }
+  .admin-sync-status{
+    font-size:11px;
+    text-align:center;
+    padding:7px 10px;
+    border-radius:9px;
+    margin:10px 0 4px;
+    border:1px solid transparent;
+  }
+  .admin-sync-status.ok{ color:#8fd19e; background: rgba(143,209,158,0.1); border-color: rgba(143,209,158,0.3); }
+  .admin-sync-status.error{ color:#e6816a; background: rgba(230,129,106,0.1); border-color: rgba(230,129,106,0.3); }
+  .admin-sync-status.pending{ color: rgba(243,230,211,0.5); }
 
   /* ---------- PIN gate ---------- */
   .pin-card{ max-width:320px; }
@@ -1269,6 +1280,7 @@
     <div class="overlay-card admin-card">
       <div class="overlay-logo serif">FAMUHA COFFEE</div>
       <div class="overlay-title serif">Admin — Harga &amp; Diskon</div>
+      <div class="admin-sync-status" id="adminSyncStatus"></div>
 
       <div class="admin-fields-wrap" id="adminFields"></div>
 
@@ -2291,6 +2303,23 @@
     update();
   }
 
+  var configSyncStatus = { state: 'pending', message: 'Belum coba sinkron ke server.', time: null };
+
+  function setConfigSyncStatus_(state, message){
+    configSyncStatus = { state: state, message: message, time: new Date() };
+    var el = document.getElementById('adminSyncStatus');
+    if (el) renderSyncStatus_();
+  }
+
+  function renderSyncStatus_(){
+    var el = document.getElementById('adminSyncStatus');
+    if (!el) return;
+    var timeStr = configSyncStatus.time ? (pad2_(configSyncStatus.time.getHours()) + ':' + pad2_(configSyncStatus.time.getMinutes())) : '';
+    var icon = configSyncStatus.state === 'ok' ? '✅' : configSyncStatus.state === 'error' ? '⚠️' : '⏳';
+    el.textContent = icon + ' ' + configSyncStatus.message + (timeStr ? ' (pukul ' + timeStr + ')' : '');
+    el.className = 'admin-sync-status ' + configSyncStatus.state;
+  }
+
   function loadConfig(){
     // 1) Pakai cache lokal dulu supaya harga langsung tampil tanpa nunggu network.
     try {
@@ -2300,18 +2329,28 @@
 
     // 2) Ambil versi terbaru dari server. Kalau gagal (offline / GAS belum
     // di-setup), aplikasi tetap jalan pakai harga default / cache terakhir.
-    if (!GAS_URL) return;
+    if (!GAS_URL){
+      setConfigSyncStatus_('error', 'GAS_URL belum diatur — pakai harga default/cache.');
+      return;
+    }
     fetch(GAS_URL + '?action=config')
       .then(function(res){
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
       })
       .then(function(data){
-        if (!data || !data.ok || !data.config) return;
+        if (!data || !data.ok || !data.config){
+          setConfigSyncStatus_('error', 'Server merespons tapi format data tidak sesuai — pakai harga default/cache.');
+          return;
+        }
         applyConfig(data.config);
         try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(data.config)); } catch (err){}
+        setConfigSyncStatus_('ok', 'Tersinkron dari server.');
       })
-      .catch(function(err){ console.error('[config] gagal memuat konfigurasi harga:', err); });
+      .catch(function(err){
+        console.error('[config] gagal memuat konfigurasi harga:', err);
+        setConfigSyncStatus_('error', 'Gagal terhubung ke server (' + err.message + ') — pakai harga default/cache terakhir, BUKAN harga terbaru.');
+      });
   }
 
   function renderAdminForm(){
@@ -2381,6 +2420,7 @@
 
   function openAdmin(){
     renderAdminForm();
+    renderSyncStatus_();
     document.getElementById('adminStatus').textContent = '';
     document.getElementById('adminStatus').className = 'admin-status';
     document.getElementById('adminOverlay').classList.add('show');
@@ -2443,11 +2483,13 @@
         }
         applyConfig(data.config || newConfig);
         try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(data.config || newConfig)); } catch (err){}
+        setConfigSyncStatus_('ok', 'Tersimpan & tersinkron ke server.');
         statusEl.textContent = 'Tersimpan! Perubahan langsung berlaku.';
         statusEl.className = 'admin-status ok';
       })
       .catch(function(err){
         console.error('[admin] gagal menyimpan konfigurasi:', err);
+        setConfigSyncStatus_('error', 'Gagal menyimpan ke server (' + err.message + ') — perubahan BELUM tersimpan.');
         statusEl.textContent = 'Gagal terhubung ke server. Coba lagi.';
         statusEl.className = 'admin-status err';
       })
