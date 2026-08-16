@@ -35,6 +35,77 @@
   }
   .serif{ font-family: 'Fraunces', Georgia, 'Times New Roman', serif; font-optical-sizing: auto; }
 
+  /* ---------- Kemerdekaan RI (dekoratif) ---------- */
+  .independence-bunting{
+    height: 26px;
+    width:100%;
+    background-color: var(--espresso);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='30'><line x1='0' y1='3' x2='44' y2='3' stroke='rgba(246,236,220,0.35)' stroke-width='1'/><polygon points='6,3 18,3 12,23' fill='%23CE1126'/><polygon points='26,3 38,3 32,23' fill='%23F6ECDC'/></svg>");
+    background-repeat: repeat-x;
+    background-position: top center;
+  }
+  .independence-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:6px 14px 6px 6px;
+    border-radius:999px;
+    background: linear-gradient(90deg, #CE1126 0%, #CE1126 50%, #F6ECDC 50%, #F6ECDC 100%);
+    border:1px solid rgba(246,236,220,0.55);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    margin-bottom:12px;
+    animation: heroFadeUp 0.7s cubic-bezier(.2,.9,.3,1) both;
+  }
+  .independence-badge .flag-chip{
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background: linear-gradient(180deg, #CE1126 0%, #CE1126 50%, #F6ECDC 50%, #F6ECDC 100%);
+    border:1px solid rgba(20,12,7,0.35);
+    flex-shrink:0;
+  }
+  .independence-badge span.label{
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:0.3px;
+    color:#2a1108;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .store-status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:6px 14px;
+    border-radius:999px;
+    background: rgba(20,12,7,0.55);
+    border:1px solid rgba(243,230,211,0.25);
+    backdrop-filter: blur(6px);
+    margin-bottom:12px;
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:0.3px;
+    color: var(--cream);
+  }
+  .store-status-badge .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background: #8a8a8a;
+    flex-shrink:0;
+    box-shadow: 0 0 0 0 rgba(0,0,0,0);
+  }
+  .store-status-badge.open .dot{
+    background: #3fbf5f;
+    box-shadow: 0 0 8px 1px rgba(63,191,95,0.7);
+  }
+  .store-status-badge.closed .dot{
+    background: #e0503f;
+    box-shadow: 0 0 8px 1px rgba(224,80,63,0.6);
+  }
+  .store-status-badge.closed{
+    border-color: rgba(224,80,63,0.4);
+  }
+
   /* ---------- Hero ---------- */
   .hero{
     position:relative;
@@ -315,26 +386,6 @@
     color: var(--gold-2);
     margin-top:8px;
     font-variant-numeric: tabular-nums;
-  }
-  .promo-strip{
-    text-align:center;
-    font-size:11.5px;
-    line-height:1.5;
-    color: rgba(243,230,211,0.8);
-    margin-top:10px;
-    background: rgba(224,138,79,0.1);
-    border: 1px solid rgba(224,138,79,0.4);
-    border-radius:10px;
-    padding:7px 10px;
-  }
-  .promo-strike{
-    text-decoration: line-through;
-    color: rgba(243,230,211,0.5);
-  }
-  .cart-item-promo{
-    font-size:11px;
-    color: rgba(243,230,211,0.6);
-    margin-top:2px;
   }
   .add-cart-btn{
     display:block;
@@ -872,17 +923,6 @@
   }
   .admin-status.ok{ color:#8fd19e; }
   .admin-status.err{ color:#e6816a; }
-  .admin-sync-status{
-    font-size:11px;
-    text-align:center;
-    padding:7px 10px;
-    border-radius:9px;
-    margin:10px 0 4px;
-    border:1px solid transparent;
-  }
-  .admin-sync-status.ok{ color:#8fd19e; background: rgba(143,209,158,0.1); border-color: rgba(143,209,158,0.3); }
-  .admin-sync-status.error{ color:#e6816a; background: rgba(230,129,106,0.1); border-color: rgba(230,129,106,0.3); }
-  .admin-sync-status.pending{ color: rgba(243,230,211,0.5); }
 
   /* ---------- PIN gate ---------- */
   .pin-card{ max-width:320px; }
@@ -916,9 +956,12 @@
 </head>
 <body>
 
+  <div class="independence-bunting"></div>
   <div class="hero">
     <button type="button" class="history-btn" id="historyBtn">📊 Riwayat Transaksi</button>
     <button type="button" class="history-btn" id="adminBtn" style="right:auto; left:16px;">⚙️ Admin</button>
+    <div class="independence-badge"><span class="flag-chip"></span><span class="label">Dirgahayu RI ke-81 🇮🇩</span></div>
+    <div class="store-status-badge" id="storeStatusBadge"><span class="dot"></span><span id="storeStatusText">Memuat status toko...</span></div>
     <div class="eyebrow">Famuha Coffee Roastery</div>
     <h1 class="serif">Build Your Own Iced Latte</h1>
     <p>Susun kombinasi favoritmu — preview dan harga langsung berubah sesuai pilihanmu.</p>
@@ -1063,9 +1106,6 @@
           <button type="button" class="qty-btn" id="qtyMinus" aria-label="Kurangi jumlah">−</button>
           <div class="qty-value" id="qtyValue">1</div>
           <button type="button" class="qty-btn" id="qtyPlus" aria-label="Tambah jumlah">+</button>
-        </div>
-        <div class="promo-strip" id="promoStrip" hidden>
-          🔥 Promo Cappuccino Panas — harga normal <span class="promo-strike" id="promoNormalPrice"></span>, hemat <span id="promoSaveAmount"></span>
         </div>
         <div class="current-line-price" id="currentLinePrice">Rp 20.000</div>
         <button type="button" class="add-cart-btn" id="addCartBtn">+ Tambah ke Pesanan</button>
@@ -1280,7 +1320,6 @@
     <div class="overlay-card admin-card">
       <div class="overlay-logo serif">FAMUHA COFFEE</div>
       <div class="overlay-title serif">Admin — Harga &amp; Diskon</div>
-      <div class="admin-sync-status" id="adminSyncStatus"></div>
 
       <div class="admin-fields-wrap" id="adminFields"></div>
 
@@ -1348,6 +1387,9 @@
   // ke Google Sheet); nilai ini hanya dipakai sebagai fallback awal.
   var FIRST_PURCHASE_DISCOUNT_AMOUNT = 5000;
   var GAS_ACCESS_KEY = 'famuha2026';
+  // Status buka/tutup toko. Diatur lewat panel Admin, tersambung ke Google Sheet
+  // supaya customer bisa lihat status ini di halaman order.
+  var STORE_OPEN = true;
 
   var state = {
     size:'regular', milk:'full-cream', shots:'single', variant:'gula-aren',
@@ -1747,15 +1789,10 @@
       listEl.innerHTML = cart.map(function(item){
         var meta = [LABELS.temp[item.temp], LABELS.shots[item.shots], LABELS.sugar[item.sugar], item.temp === 'hot' ? null : LABELS.ice[item.ice]].filter(Boolean).join(' · ');
         var lineTotal = item.unitPrice * item.qty;
-        var isPromoItem = (item.variant === 'cappuccino' && item.temp === 'hot' && CAPPUCCINO_HOT_DISCOUNT > 0);
-        var promoNote = isPromoItem
-          ? '<div class="cart-item-promo">🔥 Promo — normal <span class="promo-strike">' + idr((item.unitPrice + CAPPUCCINO_HOT_DISCOUNT) * item.qty) + '</span></div>'
-          : '';
         return '<div class="cart-item" data-id="' + item.id + '">'
           + '<div class="cart-item-info">'
           +   '<div class="cart-item-name">' + item.qty + 'x ' + LABELS.variant[item.variant] + '</div>'
           +   '<div class="cart-item-meta">' + meta + '</div>'
-          +   promoNote
           + '</div>'
           + '<div class="cart-item-right">'
           +   '<span class="cart-item-price">' + idr(lineTotal) + '</span>'
@@ -1825,19 +1862,35 @@
     document.getElementById('paidBtn').href = 'https://wa.me/' + WA_NUMBER + '?text=' + paidMsg;
   }
 
+  function updateStoreStatusBadge_(){
+    var badge = document.getElementById('storeStatusBadge');
+    var text = document.getElementById('storeStatusText');
+    if (!badge || !text) return;
+    if (STORE_OPEN){
+      badge.className = 'store-status-badge open';
+      text.textContent = 'Sedang Buka';
+    } else {
+      badge.className = 'store-status-badge closed';
+      text.textContent = 'Sedang Tutup';
+    }
+  }
+
   function update(){
     renderSvg();
     var total = renderCart();
     updateCtaLinks(total);
+    updateStoreStatusBadge_();
     document.getElementById('qrisPanel').hidden = (state.payment !== 'qris');
     document.getElementById('paidBtn').classList.toggle('disabled', cart.length === 0);
 
     var scheduleOk = isScheduleValid_();
-    var waLocked = (state.payment === 'qris' && !qrisPaidConfirmed) || cart.length === 0 || !scheduleOk;
+    var waLocked = (state.payment === 'qris' && !qrisPaidConfirmed) || cart.length === 0 || !scheduleOk || !STORE_OPEN;
     document.getElementById('ctaBtn').classList.toggle('disabled', waLocked);
     document.getElementById('ctaBtnMobile').classList.toggle('disabled', waLocked);
     var waHint;
-    if (cart.length === 0){
+    if (!STORE_OPEN){
+      waHint = 'Toko sedang tutup saat ini — belum bisa menerima pesanan.';
+    } else if (cart.length === 0){
       waHint = 'Tambahkan minimal 1 varian ke pesanan · Konfirmasi akhir via WhatsApp';
     } else if (state.payment === 'qris' && !qrisPaidConfirmed){
       waHint = 'Scan QRIS lalu tekan "Saya Sudah Bayar" dulu sebelum pesan via WhatsApp';
@@ -1848,19 +1901,7 @@
     }
     document.querySelectorAll('.cta-note').forEach(function(el){ el.textContent = waHint; });
 
-    var unitPriceNow = computeUnitPrice(state);
-    document.getElementById('currentLinePrice').textContent = idr(unitPriceNow * state.qty);
-
-    var isHotCappuccinoPromo = (state.variant === 'cappuccino' && state.temp === 'hot' && CAPPUCCINO_HOT_DISCOUNT > 0);
-    var promoStrip = document.getElementById('promoStrip');
-    if (isHotCappuccinoPromo){
-      var normalUnitPrice = unitPriceNow + CAPPUCCINO_HOT_DISCOUNT;
-      document.getElementById('promoNormalPrice').textContent = idr(normalUnitPrice);
-      document.getElementById('promoSaveAmount').textContent = idr(CAPPUCCINO_HOT_DISCOUNT);
-      promoStrip.hidden = false;
-    } else {
-      promoStrip.hidden = true;
-    }
+    document.getElementById('currentLinePrice').textContent = idr(computeUnitPrice(state) * state.qty);
   }
 
   // ---------------- Wire up controls ----------------
@@ -2273,18 +2314,6 @@
     };
   }
 
-  function recomputeCartPrices_(){
-    cart.forEach(function(item){
-      item.unitPrice = computeUnitPrice({
-        size: 'regular',
-        milk: 'full-cream',
-        shots: item.shots,
-        variant: item.variant,
-        temp: item.temp
-      });
-    });
-  }
-
   function applyConfig(cfg){
     if (!cfg) return;
     if (cfg.prices){
@@ -2298,26 +2327,9 @@
       if (typeof cfg.firstPurchase.enabled === 'boolean') FIRST_PURCHASE_PROMO_ENABLED = cfg.firstPurchase.enabled;
       if (typeof cfg.firstPurchase.amount === 'number') FIRST_PURCHASE_DISCOUNT_AMOUNT = cfg.firstPurchase.amount;
     }
-    recomputeCartPrices_();
+    if (typeof cfg.storeOpen === 'boolean') STORE_OPEN = cfg.storeOpen;
     refreshShotsPriceLabels();
     update();
-  }
-
-  var configSyncStatus = { state: 'pending', message: 'Belum coba sinkron ke server.', time: null };
-
-  function setConfigSyncStatus_(state, message){
-    configSyncStatus = { state: state, message: message, time: new Date() };
-    var el = document.getElementById('adminSyncStatus');
-    if (el) renderSyncStatus_();
-  }
-
-  function renderSyncStatus_(){
-    var el = document.getElementById('adminSyncStatus');
-    if (!el) return;
-    var timeStr = configSyncStatus.time ? (pad2_(configSyncStatus.time.getHours()) + ':' + pad2_(configSyncStatus.time.getMinutes())) : '';
-    var icon = configSyncStatus.state === 'ok' ? '✅' : configSyncStatus.state === 'error' ? '⚠️' : '⏳';
-    el.textContent = icon + ' ' + configSyncStatus.message + (timeStr ? ' (pukul ' + timeStr + ')' : '');
-    el.className = 'admin-sync-status ' + configSyncStatus.state;
   }
 
   function loadConfig(){
@@ -2329,28 +2341,18 @@
 
     // 2) Ambil versi terbaru dari server. Kalau gagal (offline / GAS belum
     // di-setup), aplikasi tetap jalan pakai harga default / cache terakhir.
-    if (!GAS_URL){
-      setConfigSyncStatus_('error', 'GAS_URL belum diatur — pakai harga default/cache.');
-      return;
-    }
+    if (!GAS_URL) return;
     fetch(GAS_URL + '?action=config')
       .then(function(res){
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
       })
       .then(function(data){
-        if (!data || !data.ok || !data.config){
-          setConfigSyncStatus_('error', 'Server merespons tapi format data tidak sesuai — pakai harga default/cache.');
-          return;
-        }
+        if (!data || !data.ok || !data.config) return;
         applyConfig(data.config);
         try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(data.config)); } catch (err){}
-        setConfigSyncStatus_('ok', 'Tersinkron dari server.');
       })
-      .catch(function(err){
-        console.error('[config] gagal memuat konfigurasi harga:', err);
-        setConfigSyncStatus_('error', 'Gagal terhubung ke server (' + err.message + ') — pakai harga default/cache terakhir, BUKAN harga terbaru.');
-      });
+      .catch(function(err){ console.error('[config] gagal memuat konfigurasi harga:', err); });
   }
 
   function renderAdminForm(){
@@ -2416,11 +2418,28 @@
     amountRow.appendChild(amountLabel);
     amountRow.appendChild(amountInput);
     wrap.appendChild(amountRow);
+
+    var storeHeader = document.createElement('div');
+    storeHeader.className = 'admin-section-title';
+    storeHeader.textContent = 'Status Toko';
+    wrap.appendChild(storeHeader);
+
+    var storeToggleRow = document.createElement('div');
+    storeToggleRow.className = 'admin-toggle-row';
+    var storeToggle = document.createElement('input');
+    storeToggle.type = 'checkbox';
+    storeToggle.id = 'adminStoreOpen';
+    storeToggle.checked = STORE_OPEN;
+    var storeToggleLabel = document.createElement('label');
+    storeToggleLabel.setAttribute('for', 'adminStoreOpen');
+    storeToggleLabel.textContent = 'Toko sedang Buka (uncheck untuk tandai Tutup)';
+    storeToggleRow.appendChild(storeToggle);
+    storeToggleRow.appendChild(storeToggleLabel);
+    wrap.appendChild(storeToggleRow);
   }
 
   function openAdmin(){
     renderAdminForm();
-    renderSyncStatus_();
     document.getElementById('adminStatus').textContent = '';
     document.getElementById('adminStatus').className = 'admin-status';
     document.getElementById('adminOverlay').classList.add('show');
@@ -2448,7 +2467,8 @@
           var v = parseInt(document.getElementById('adminFirstPurchaseAmount').value, 10);
           return isNaN(v) || v < 0 ? 0 : v;
         })()
-      }
+      },
+      storeOpen: document.getElementById('adminStoreOpen').checked
     };
   }
 
@@ -2483,13 +2503,11 @@
         }
         applyConfig(data.config || newConfig);
         try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(data.config || newConfig)); } catch (err){}
-        setConfigSyncStatus_('ok', 'Tersimpan & tersinkron ke server.');
         statusEl.textContent = 'Tersimpan! Perubahan langsung berlaku.';
         statusEl.className = 'admin-status ok';
       })
       .catch(function(err){
         console.error('[admin] gagal menyimpan konfigurasi:', err);
-        setConfigSyncStatus_('error', 'Gagal menyimpan ke server (' + err.message + ') — perubahan BELUM tersimpan.');
         statusEl.textContent = 'Gagal terhubung ke server. Coba lagi.';
         statusEl.className = 'admin-status err';
       })
