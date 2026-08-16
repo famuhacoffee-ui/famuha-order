@@ -105,6 +105,27 @@
   .store-status-badge.closed{
     border-color: rgba(224,80,63,0.4);
   }
+  .promo-flag-icon{
+    display:inline-block;
+    width:16px;
+    height:11px;
+    margin-left:6px;
+    vertical-align:middle;
+    border-radius:2px;
+    overflow:hidden;
+    background: linear-gradient(180deg, #CE1126 0%, #CE1126 50%, #F6ECDC 50%, #F6ECDC 100%);
+    border:1px solid rgba(0,0,0,0.25);
+  }
+  .promo-1708-banner{
+    margin-top:10px;
+    padding:10px 14px;
+    border-radius:10px;
+    background: linear-gradient(90deg, rgba(206,17,38,0.18) 0%, rgba(246,236,220,0.12) 100%);
+    border:1px solid rgba(206,17,38,0.4);
+    font-size:13px;
+    line-height:1.5;
+    color: var(--cream);
+  }
 
   /* ---------- Hero ---------- */
   .hero{
@@ -673,11 +694,44 @@
     backdrop-filter: blur(10px);
     border-top: 1px solid rgba(232,200,132,0.32);
     box-shadow: 0 -12px 30px rgba(0,0,0,0.35);
-    padding: 12px 16px;
+    padding: 10px 16px 12px;
+    flex-direction:column;
+    gap:10px;
+    z-index:50;
+  }
+  .mobile-bar-row{
+    display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:12px;
-    z-index:50;
+    gap:10px;
+  }
+  .mobile-bar-add{
+    padding-bottom:10px;
+    border-bottom: 1px dashed rgba(243,230,211,0.2);
+    flex-wrap: wrap;
+    row-gap:8px;
+  }
+  .qty-control-sm{
+    transform: scale(0.8);
+    transform-origin: left center;
+    flex-shrink:0;
+  }
+  .mobile-line-price{
+    flex:1;
+    min-width:70px;
+    text-align:center;
+    font-size:13px;
+    font-weight:700;
+    color: var(--gold-2);
+    font-variant-numeric: tabular-nums;
+    white-space:nowrap;
+  }
+  .add-cart-btn-sm{
+    width:auto;
+    padding:9px 14px;
+    font-size:11.5px;
+    white-space:nowrap;
+    flex-shrink:0;
   }
   .mobile-bar .mtotal{
     font-size:16px;
@@ -701,6 +755,8 @@
   @media(max-width:879px){
     .preview-card{ position:static; }
     .mobile-bar{ display:flex; }
+    #qtyAddGroup{ display:none; }
+    body{ padding-bottom: 172px; }
   }
 
   /* ---------- Thank-you overlay ---------- */
@@ -960,7 +1016,7 @@
   <div class="hero">
     <button type="button" class="history-btn" id="historyBtn">📊 Riwayat Transaksi</button>
     <button type="button" class="history-btn" id="adminBtn" style="right:auto; left:16px;">⚙️ Admin</button>
-    <div class="independence-badge"><span class="flag-chip"></span><span class="label">Dirgahayu RI ke-81 🇮🇩</span></div>
+    <div class="independence-badge"><span class="flag-chip"></span><span class="label">Dirgahayu RI ke-81</span></div>
     <div class="store-status-badge" id="storeStatusBadge"><span class="dot"></span><span id="storeStatusText">Memuat status toko...</span></div>
     <div class="eyebrow">Famuha Coffee Roastery</div>
     <h1 class="serif">Build Your Own Iced Latte</h1>
@@ -991,10 +1047,12 @@
           <label class="choice" data-value="cappuccino">
             <input type="radio" name="variant" value="cappuccino">
             <span class="name">Cappuccino</span>
+            <span class="promo-flag-icon" id="promoFlagCappuccino" title="Promo 17 Agustus: Cappuccino Hot Rp17.000" hidden></span>
           </label>
           <label class="choice" data-value="gula-aren">
             <input type="radio" name="variant" value="gula-aren" checked>
             <span class="name">Gula Aren Latte</span>
+            <span class="promo-flag-icon" id="promoFlagGulaAren" title="Promo 17 Agustus: Gula Aren Latte Single Shot Rp17.000" hidden></span>
           </label>
           <label class="choice" data-value="black-americano">
             <input type="radio" name="variant" value="black-americano">
@@ -1008,6 +1066,9 @@
             <input type="radio" name="variant" value="cold-brew">
             <span class="name">Cold Brew</span>
           </label>
+        </div>
+        <div class="promo-1708-banner" id="promo1708Banner" hidden>
+          <span class="promo-flag-icon" style="margin-left:0;margin-right:6px;"></span><b>Promo 17 Agustus:</b> Gula Aren Latte (Single Shot) &amp; Cappuccino Hot cuma <b>Rp17.000</b>! Berlaku 16–17 Agustus, maksimal 1x transaksi per pelanggan.
         </div>
       </div>
 
@@ -1097,7 +1158,7 @@
         </div>
       </div>
 
-      <div class="group">
+      <div class="group" id="qtyAddGroup">
         <div class="group-head">
           <div class="group-title serif">Jumlah &amp; Tambah ke Pesanan</div>
           <div class="group-hint">Qty untuk varian ini</div>
@@ -1258,8 +1319,19 @@
   </div>
 
   <div class="mobile-bar">
-    <div class="mtotal"><small>Total</small><span id="mobileTotal">Rp 0</span></div>
-    <a href="#" target="_blank" class="cta-btn" id="ctaBtnMobile">Pesan via WhatsApp</a>
+    <div class="mobile-bar-row mobile-bar-add">
+      <div class="qty-control qty-control-sm">
+        <button type="button" class="qty-btn" id="qtyMinusM" aria-label="Kurangi jumlah">−</button>
+        <div class="qty-value" id="qtyValueM">1</div>
+        <button type="button" class="qty-btn" id="qtyPlusM" aria-label="Tambah jumlah">+</button>
+      </div>
+      <div class="mobile-line-price" id="currentLinePriceM">Rp 20.000</div>
+      <button type="button" class="add-cart-btn add-cart-btn-sm" id="addCartBtnM">+ Tambah ke Keranjang</button>
+    </div>
+    <div class="mobile-bar-row mobile-bar-checkout">
+      <div class="mtotal"><small>Total</small><span id="mobileTotal">Rp 0</span></div>
+      <a href="#" target="_blank" class="cta-btn" id="ctaBtnMobile">Pesan via WhatsApp</a>
+    </div>
   </div>
 
   <div class="overlay" id="thankyouOverlay">
@@ -1429,8 +1501,44 @@
 
   var CAPPUCCINO_HOT_DISCOUNT = 2000;
 
+  // ---------------- Promo 17 Agustus (mulai hari ini s/d 17 Agustus, 1x pakai per pelanggan) ----------------
+  var PROMO_1708_START = '2026-08-16';
+  var PROMO_1708_END = '2026-08-17';
+  var PROMO_1708_PRICE = 17000;
+  var PROMO_1708_USED_KEY = 'famuha-promo-1708-used';
+
+  function promo1708TodayStr_(){
+    var d = new Date();
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    var dd = String(d.getDate()).padStart(2, '0');
+    return d.getFullYear() + '-' + mm + '-' + dd;
+  }
+  function promo1708DateOk_(){
+    var today = promo1708TodayStr_();
+    return today >= PROMO_1708_START && today <= PROMO_1708_END;
+  }
+  function promo1708Used_(){
+    try { return localStorage.getItem(PROMO_1708_USED_KEY) === '1'; } catch (e){ return false; }
+  }
+  function markPromo1708Used_(){
+    try { localStorage.setItem(PROMO_1708_USED_KEY, '1'); } catch (e){}
+  }
+  // Aktif hanya di tanggal promo DAN belum pernah dipakai di perangkat/browser ini.
+  // Catatan: pengecekan "1x pakai" ini berbasis localStorage per perangkat/browser,
+  // jadi bukan penegakan sisi-server yang absolut (customer bisa saja memakai
+  // perangkat/browser lain atau menghapus data browser).
+  function promo1708Active_(){
+    return promo1708DateOk_() && !promo1708Used_();
+  }
+  function isPromo1708Eligible_(cfg){
+    if (cfg.variant === 'gula-aren' && cfg.shots === 'single') return true;
+    if (cfg.variant === 'cappuccino' && cfg.temp === 'hot') return true;
+    return false;
+  }
+
   function computeUnitPrice(cfg){
     cfg = cfg || state;
+    if (promo1708Active_() && isPromo1708Eligible_(cfg)) return PROMO_1708_PRICE;
     var total = PRICES.size[cfg.size] + PRICES.milk[cfg.milk] + Math.max(PRICES.shots[cfg.shots], PRICES.variant[cfg.variant]);
     if (cfg.variant === 'cappuccino' && cfg.temp === 'hot') total -= CAPPUCCINO_HOT_DISCOUNT;
     return total;
@@ -1807,6 +1915,8 @@
     document.getElementById('totalPrice').textContent = idr(total);
     document.getElementById('mobileTotal').textContent = idr(total);
     document.getElementById('qtyValue').textContent = state.qty;
+    var qtyValueM = document.getElementById('qtyValueM');
+    if (qtyValueM) qtyValueM.textContent = state.qty;
     document.getElementById('qrisTotal').textContent = idr(total);
     document.getElementById('paymentNote').textContent = state.payment === 'qris'
       ? 'Kode QRIS akan dikirim setelah pesanan dikonfirmasi via WhatsApp.'
@@ -1875,11 +1985,30 @@
     }
   }
 
+  function updatePromo1708UI_(){
+    var active = promo1708Active_();
+    var flagCappuccino = document.getElementById('promoFlagCappuccino');
+    var flagGulaAren = document.getElementById('promoFlagGulaAren');
+    var banner = document.getElementById('promo1708Banner');
+    if (flagCappuccino) flagCappuccino.hidden = !active;
+    if (flagGulaAren) flagGulaAren.hidden = !active;
+    if (banner){
+      banner.hidden = !active;
+      if (promo1708DateOk_() && promo1708Used_()){
+        banner.hidden = false;
+        banner.innerHTML = '<span class="promo-flag-icon" style="margin-left:0;margin-right:6px;"></span>Promo 17 Agustus sudah kamu gunakan hari ini — harga kembali normal untuk transaksi berikutnya.';
+      } else if (active){
+        banner.innerHTML = '<span class="promo-flag-icon" style="margin-left:0;margin-right:6px;"></span><b>Promo 17 Agustus:</b> Gula Aren Latte (Single Shot) &amp; Cappuccino Hot cuma <b>Rp17.000</b>! Berlaku 16–17 Agustus, maksimal 1x transaksi per pelanggan.';
+      }
+    }
+  }
+
   function update(){
     renderSvg();
     var total = renderCart();
     updateCtaLinks(total);
     updateStoreStatusBadge_();
+    updatePromo1708UI_();
     document.getElementById('qrisPanel').hidden = (state.payment !== 'qris');
     document.getElementById('paidBtn').classList.toggle('disabled', cart.length === 0);
 
@@ -1902,6 +2031,8 @@
     document.querySelectorAll('.cta-note').forEach(function(el){ el.textContent = waHint; });
 
     document.getElementById('currentLinePrice').textContent = idr(computeUnitPrice(state) * state.qty);
+    var currentLinePriceM = document.getElementById('currentLinePriceM');
+    if (currentLinePriceM) currentLinePriceM.textContent = idr(computeUnitPrice(state) * state.qty);
   }
 
   // ---------------- Wire up controls ----------------
@@ -2189,6 +2320,16 @@
     update();
   });
   document.getElementById('qtyPlus').addEventListener('click', function(){
+    state.qty = Math.min(QTY_MAX, state.qty + 1);
+    update();
+  });
+  var qtyMinusM = document.getElementById('qtyMinusM');
+  var qtyPlusM = document.getElementById('qtyPlusM');
+  if (qtyMinusM) qtyMinusM.addEventListener('click', function(){
+    state.qty = Math.max(QTY_MIN, state.qty - 1);
+    update();
+  });
+  if (qtyPlusM) qtyPlusM.addEventListener('click', function(){
     state.qty = Math.min(QTY_MAX, state.qty + 1);
     update();
   });
@@ -2545,7 +2686,7 @@
     return ok;
   }
 
-  document.getElementById('addCartBtn').addEventListener('click', function(){
+  function addCurrentItemToCart_(triggerBtn){
     cart.push({
       id: cartIdSeq++,
       variant: state.variant,
@@ -2557,10 +2698,20 @@
       unitPrice: computeUnitPrice(state)
     });
     state.qty = 1;
-    this.classList.remove('flash');
-    void this.offsetWidth;
-    this.classList.add('flash');
+    [document.getElementById('addCartBtn'), document.getElementById('addCartBtnM')].forEach(function(btn){
+      if (!btn) return;
+      btn.classList.remove('flash');
+      void btn.offsetWidth;
+      btn.classList.add('flash');
+    });
     update();
+  }
+  document.getElementById('addCartBtn').addEventListener('click', function(){
+    addCurrentItemToCart_();
+  });
+  var addCartBtnM = document.getElementById('addCartBtnM');
+  if (addCartBtnM) addCartBtnM.addEventListener('click', function(){
+    addCurrentItemToCart_();
   });
 
   document.getElementById('cartList').addEventListener('click', function(e){
@@ -2589,10 +2740,18 @@
     btn.addEventListener('click', function(e){
       if (cart.length === 0){
         e.preventDefault();
-        document.getElementById('addCartBtn').classList.remove('flash');
-        void document.getElementById('addCartBtn').offsetWidth;
-        document.getElementById('addCartBtn').classList.add('flash');
-        document.getElementById('addCartBtn').scrollIntoView({ behavior:'smooth', block:'center' });
+        [document.getElementById('addCartBtn'), document.getElementById('addCartBtnM')].forEach(function(btn){
+          if (!btn) return;
+          btn.classList.remove('flash');
+          void btn.offsetWidth;
+          btn.classList.add('flash');
+        });
+        var visibleAddBtn = document.getElementById('addCartBtn');
+        if (visibleAddBtn.offsetParent === null){
+          var mBtn = document.getElementById('addCartBtnM');
+          if (mBtn) visibleAddBtn = mBtn;
+        }
+        visibleAddBtn.scrollIntoView({ behavior:'smooth', block:'center' });
       } else if (state.payment === 'qris' && !qrisPaidConfirmed){
         e.preventDefault();
         var paidBtnEl = document.getElementById('paidBtn');
@@ -2609,6 +2768,9 @@
         var waMsg = encodeURIComponent(buildWaMessage(total, isQris));
         window.open('https://wa.me/' + WA_NUMBER + '?text=' + waMsg, '_blank');
         recordTransaction();
+        if (cart.some(function(item){ return item.unitPrice === PROMO_1708_PRICE; })){
+          markPromo1708Used_();
+        }
         showThankyou(
           isQris
             ? 'Terima kasih! Konfirmasi pembayaran QRIS kamu sudah kami terima di WhatsApp dan sedang kami cek.'
@@ -2629,10 +2791,18 @@
   document.getElementById('paidBtn').addEventListener('click', function(e){
     e.preventDefault();
     if (cart.length === 0){
-      document.getElementById('addCartBtn').classList.remove('flash');
-      void document.getElementById('addCartBtn').offsetWidth;
-      document.getElementById('addCartBtn').classList.add('flash');
-      document.getElementById('addCartBtn').scrollIntoView({ behavior:'smooth', block:'center' });
+      [document.getElementById('addCartBtn'), document.getElementById('addCartBtnM')].forEach(function(btn){
+        if (!btn) return;
+        btn.classList.remove('flash');
+        void btn.offsetWidth;
+        btn.classList.add('flash');
+      });
+      var visibleAddBtn2 = document.getElementById('addCartBtn');
+      if (visibleAddBtn2.offsetParent === null){
+        var mBtn2 = document.getElementById('addCartBtnM');
+        if (mBtn2) visibleAddBtn2 = mBtn2;
+      }
+      visibleAddBtn2.scrollIntoView({ behavior:'smooth', block:'center' });
     } else if (!validateCustomerInfo()){
       // validation message already shown by validateCustomerInfo
     } else {
