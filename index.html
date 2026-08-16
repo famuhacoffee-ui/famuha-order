@@ -1725,7 +1725,8 @@
     sugar:'normal-sugar', ice:'normal', temp:'cold', qty:1, delivery:'pickup', payment:'cod',
     custName:'', custPhone:'', custAddress:'', deliveryArea:'',
     orderTiming:'now', scheduleDate:'', scheduleTime:'',
-    firstPurchaseDiscount:false, fifthReward:false, custChecked:false, nextOrderNumber:null
+    firstPurchaseDiscount:false, fifthReward:false, custChecked:false, nextOrderNumber:null,
+    promo1708UsedServer:false, promo1708ServerChecked:false
   };
   var MAX_SCHEDULE_DAYS_AHEAD = 7;
   var SCHEDULE_TIME_MIN = '08:00';
@@ -1775,15 +1776,22 @@
     return today >= PROMO_1708_START && today <= PROMO_1708_END;
   }
   function promo1708Used_(){
+    // Sumber kebenaran utama: hasil cek dari server (Google Sheet), berbasis
+    // No HP pelanggan — ini yang menentukan penegakan "1x per pelanggan" secara
+    // nyata, tidak bisa dihindari dengan ganti browser/device.
+    if (state.promo1708ServerChecked) return state.promo1708UsedServer;
+    // Sebelum No HP diisi/dicek ke server, localStorage dipakai sebagai fallback
+    // ringan (mis. mencegah kedip UI) — TAPI ini tidak pernah jadi keputusan
+    // akhir begitu status server sudah didapat.
     try { return localStorage.getItem(PROMO_1708_USED_KEY) === '1'; } catch (e){ return false; }
   }
   function markPromo1708Used_(){
     try { localStorage.setItem(PROMO_1708_USED_KEY, '1'); } catch (e){}
+    state.promo1708UsedServer = true;
+    state.promo1708ServerChecked = true;
   }
-  // Aktif hanya di tanggal promo DAN belum pernah dipakai di perangkat/browser ini.
-  // Catatan: pengecekan "1x pakai" ini berbasis localStorage per perangkat/browser,
-  // jadi bukan penegakan sisi-server yang absolut (customer bisa saja memakai
-  // perangkat/browser lain atau menghapus data browser).
+  // Aktif hanya di tanggal promo DAN belum pernah dipakai oleh nomor HP ini
+  // (dicek ke server lewat checkLoyaltyStatus / GAS_URL?phone=...).
   function promo1708Active_(){
     return promo1708DateOk_() && !promo1708Used_();
   }
@@ -1933,6 +1941,7 @@
       var scheduleTag = '[Jadwal: ' + formatScheduleLabel_(record.scheduleDate, record.scheduleTime) + '] ';
       itemsSummary = scheduleTag + itemsSummary;
     }
+    var usedPromo1708 = cart.some(function(item){ return item.unitPrice === PROMO_1708_PRICE; });
     var payload = {
       custName: record.custName,
       custPhone: record.custPhone,
@@ -1943,7 +1952,8 @@
       payment: record.payment,
       firstPurchaseDiscount: state.firstPurchaseDiscount,
       fifthReward: state.fifthReward,
-      total: record.total
+      total: record.total,
+      usedIndependencePromo: usedPromo1708
     };
     fetch(GAS_URL, {
       method: 'POST',
@@ -2633,6 +2643,9 @@
       state.firstPurchaseDiscount = false;
       state.fifthReward = false;
       state.custChecked = false;
+      // Nomor HP belum valid/lengkap -> belum bisa dipastikan ke server,
+      // jangan anggap promo 17 Agustus otomatis aktif atau tidak.
+      state.promo1708ServerChecked = false;
       banner.hidden = true;
       update();
       return;
@@ -2649,7 +2662,12 @@
         state.firstPurchaseDiscount = FIRST_PURCHASE_PROMO_ENABLED && !!data.isFirstPurchase;
         state.fifthReward = !!data.isFifthReward;
         state.nextOrderNumber = data.nextOrderNumber || null;
+        // Status resmi dari server untuk promo 17 Agustus — ini yang menentukan
+        // apakah nomor HP ini sudah pernah pakai promo, terlepas dari device/browser.
+        state.promo1708UsedServer = !!data.usedIndependencePromo;
+        state.promo1708ServerChecked = true;
         refreshLoyaltyBanner_();
+        updatePromo1708UI_();
         update();
       })
       .catch(function(err){ console.error('[loyalty check] gagal cek status pelanggan:', err); });
