@@ -759,6 +759,224 @@
     body{ padding-bottom: 172px; }
   }
 
+  /* ---------- Tanya Kami (floating) ---------- */
+  .ask-fab-wrap{
+    position:fixed;
+    right:18px;
+    bottom:26px;
+    z-index:60;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:10px;
+  }
+  @media(max-width:879px){
+    .ask-fab-wrap{ bottom:184px; right:14px; }
+  }
+  .ask-fab{
+    width:58px;
+    height:58px;
+    border-radius:50%;
+    border:1px solid rgba(232,200,132,0.4);
+    background: rgba(224,138,79,0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--cream);
+    font-size:24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow: 0 10px 22px rgba(224,138,79,0.25), 0 0 0 1px rgba(20,12,7,0.12);
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s, background 0.2s;
+    font-family:inherit;
+    opacity:0.62;
+  }
+  .ask-fab:hover, .ask-fab:focus-visible, .ask-fab-wrap.open .ask-fab{
+    opacity:1;
+    background: linear-gradient(160deg, var(--accent), var(--accent-2));
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 16px 34px rgba(224,138,79,0.5);
+  }
+  .ask-fab:active{ transform: scale(0.96); }
+  .ask-fab .ask-fab-badge{
+    position:absolute;
+    top:-4px;
+    left:-4px;
+    background: #e0503f;
+    color:#fff;
+    font-size:9px;
+    font-weight:800;
+    letter-spacing:0.3px;
+    padding:3px 6px;
+    border-radius:999px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+    animation: heroFadeUp 0.6s cubic-bezier(.2,.9,.3,1) both;
+  }
+  .ask-menu{
+    display:none;
+    flex-direction:column;
+    gap:8px;
+    background: rgba(42,26,16,0.38);
+    backdrop-filter: blur(14px) saturate(1.1);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+    border:1px solid rgba(232,200,132,0.28);
+    border-radius:16px;
+    padding:10px;
+    box-shadow: 0 16px 34px rgba(0,0,0,0.25);
+    min-width:200px;
+    animation: heroFadeUp 0.25s cubic-bezier(.2,.9,.3,1) both;
+  }
+  .ask-menu.show{ display:flex; }
+  .ask-menu-title{
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color: rgba(243,230,211,0.75);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    padding:4px 6px 2px;
+  }
+  .ask-menu-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background: rgba(20,12,7,0.32);
+    border:1px solid rgba(246,236,220,0.14);
+    border-radius:12px;
+    padding:10px 12px;
+    cursor:pointer;
+    color: var(--cream);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.55);
+    font-family:inherit;
+    font-size:13px;
+    font-weight:600;
+    text-align:left;
+    text-decoration:none;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  }
+  .ask-menu-item:hover{ background: rgba(20,12,7,0.5); border-color: rgba(232,200,132,0.45); transform: translateX(-2px); }
+  .ask-menu-item .icon{ font-size:19px; flex-shrink:0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+  .ask-menu-item .txt small{ display:block; font-weight:400; font-size:10.5px; color: rgba(243,230,211,0.65); margin-top:1px; }
+
+  /* ---------- Chat AI overlay ---------- */
+  .ask-chat-card{
+    max-width:380px;
+    width:100%;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    max-height:82vh;
+    overflow:hidden;
+    text-align:left;
+  }
+  .ask-chat-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:16px 18px;
+    border-bottom:1px solid rgba(246,236,220,0.12);
+  }
+  .ask-chat-head .who{ display:flex; align-items:center; gap:10px; }
+  .ask-chat-head .who .avatar{
+    width:36px; height:36px; border-radius:50%;
+    background: linear-gradient(160deg, var(--accent), var(--accent-2));
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+    flex-shrink:0;
+  }
+  .ask-chat-head .who .name{ font-weight:700; font-size:13.5px; color:var(--cream); }
+  .ask-chat-head .who .sub{ font-size:10.5px; color: rgba(243,230,211,0.5); }
+  .ask-chat-close{
+    background:none; border:none; color: rgba(243,230,211,0.6);
+    font-size:20px; line-height:1; cursor:pointer; padding:4px;
+  }
+  .ask-chat-close:hover{ color: var(--cream); }
+  .ask-chat-body{
+    flex:1;
+    overflow-y:auto;
+    padding:16px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .ask-msg{
+    max-width:82%;
+    padding:9px 12px;
+    border-radius:14px;
+    font-size:13px;
+    line-height:1.5;
+    white-space:pre-line;
+  }
+  .ask-msg.bot{
+    align-self:flex-start;
+    background: rgba(246,236,220,0.08);
+    border:1px solid rgba(246,236,220,0.12);
+    border-bottom-left-radius:4px;
+    color: var(--cream);
+  }
+  .ask-msg.user{
+    align-self:flex-end;
+    background: linear-gradient(160deg, var(--accent), var(--accent-2));
+    border-bottom-right-radius:4px;
+    color:#fff;
+  }
+  .ask-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    padding:0 18px 12px;
+  }
+  .ask-chip{
+    background: rgba(246,236,220,0.08);
+    border:1px solid rgba(232,200,132,0.3);
+    color: var(--gold-3);
+    font-size:11px;
+    font-weight:600;
+    padding:6px 10px;
+    border-radius:999px;
+    cursor:pointer;
+    font-family:inherit;
+    white-space:nowrap;
+  }
+  .ask-chip:hover{ background: rgba(246,236,220,0.14); }
+  .ask-chat-foot{
+    display:flex;
+    gap:8px;
+    padding:12px 14px;
+    border-top:1px solid rgba(246,236,220,0.12);
+  }
+  .ask-chat-input{
+    flex:1;
+    background: rgba(20,12,7,0.5);
+    border:1px solid rgba(246,236,220,0.18);
+    border-radius:12px;
+    padding:10px 13px;
+    color: var(--cream);
+    font-size:13px;
+    font-family:inherit;
+    outline:none;
+  }
+  .ask-chat-input:focus{ border-color: var(--gold-2); }
+  .ask-chat-send{
+    background: linear-gradient(160deg, var(--accent), var(--accent-2));
+    border:none;
+    color:#fff;
+    width:42px;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:17px;
+    flex-shrink:0;
+  }
+  .ask-chat-send:hover{ filter:brightness(1.08); }
+  .ask-chat-tolinie{
+    margin:0 18px 14px;
+    text-align:center;
+    font-size:11px;
+    color: rgba(243,230,211,0.4);
+  }
+  .ask-chat-tolinie a{ color: var(--gold-2); font-weight:600; text-decoration:none; }
+
   /* ---------- Thank-you overlay ---------- */
   .overlay{
     position:fixed;
@@ -1400,6 +1618,45 @@
       <button type="button" class="cta-btn" id="adminSaveBtn">Simpan Perubahan</button>
       <button type="button" class="history-clear-btn pin-cancel" id="adminClose">Tutup</button>
       <div class="overlay-note">Perubahan tersimpan di server dan berlaku untuk semua perangkat.</div>
+    </div>
+  </div>
+
+  <!-- Tanya Kami: floating button + menu pilihan -->
+  <div class="ask-fab-wrap">
+    <div class="ask-menu" id="askMenu">
+      <div class="ask-menu-title">Tanya Kami</div>
+      <button type="button" class="ask-menu-item" id="askAiBtn">
+        <span class="icon">🤖</span>
+        <span class="txt">Tanya AI<br><small>Jawaban otomatis, 24 jam</small></span>
+      </button>
+      <a href="#" target="_blank" rel="noopener" class="ask-menu-item" id="askAdminBtn">
+        <span class="icon">💬</span>
+        <span class="txt">Tanya Admin<br><small>Chat langsung via WhatsApp</small></span>
+      </a>
+    </div>
+    <button type="button" class="ask-fab" id="askFab" aria-label="Tanya Kami">💬</button>
+  </div>
+
+  <!-- Tanya Kami: overlay chat AI -->
+  <div class="overlay" id="askChatOverlay">
+    <div class="overlay-card ask-chat-card">
+      <div class="ask-chat-head">
+        <div class="who">
+          <div class="avatar">🤖</div>
+          <div>
+            <div class="name">Asisten Famuha</div>
+            <div class="sub">Biasanya balas seketika</div>
+          </div>
+        </div>
+        <button type="button" class="ask-chat-close" id="askChatClose">✕</button>
+      </div>
+      <div class="ask-chat-body" id="askChatBody"></div>
+      <div class="ask-chips" id="askChatChips"></div>
+      <div class="ask-chat-tolinie">Butuh bantuan lebih detail? <a href="#" target="_blank" rel="noopener" id="askChatToAdmin">Chat admin di WhatsApp</a></div>
+      <div class="ask-chat-foot">
+        <input type="text" class="ask-chat-input" id="askChatInput" placeholder="Tulis pertanyaanmu..." autocomplete="off">
+        <button type="button" class="ask-chat-send" id="askChatSend">➤</button>
+      </div>
     </div>
   </div>
 
@@ -2896,6 +3153,156 @@
     saveTransactions();
     renderHistory();
   });
+
+  // ================= Tanya Kami (floating button) =================
+  (function initAskWidget(){
+    var askFab = document.getElementById('askFab');
+    var askMenu = document.getElementById('askMenu');
+    var askAiBtn = document.getElementById('askAiBtn');
+    var askAdminBtn = document.getElementById('askAdminBtn');
+    var askChatOverlay = document.getElementById('askChatOverlay');
+    var askChatClose = document.getElementById('askChatClose');
+    var askChatBody = document.getElementById('askChatBody');
+    var askChatChips = document.getElementById('askChatChips');
+    var askChatInput = document.getElementById('askChatInput');
+    var askChatSend = document.getElementById('askChatSend');
+    var askChatToAdmin = document.getElementById('askChatToAdmin');
+
+    function waLink(msg){
+      return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(msg);
+    }
+    var ADMIN_GREETING = 'Halo Famuha Coffee, saya mau tanya-tanya seputar order 🙂';
+    askAdminBtn.href = waLink(ADMIN_GREETING);
+    askChatToAdmin.href = waLink(ADMIN_GREETING);
+
+    // ---- toggle menu ----
+    var askFabWrap = askFab.closest('.ask-fab-wrap');
+    askFab.addEventListener('click', function(){
+      askMenu.classList.toggle('show');
+      askFabWrap.classList.toggle('open', askMenu.classList.contains('show'));
+    });
+    document.addEventListener('click', function(e){
+      if (!askMenu.contains(e.target) && e.target !== askFab && askMenu.classList.contains('show')){
+        askMenu.classList.remove('show');
+        askFabWrap.classList.remove('open');
+      }
+    });
+
+    // ---- open AI chat ----
+    var chatStarted = false;
+    askAiBtn.addEventListener('click', function(){
+      askMenu.classList.remove('show');
+      askChatOverlay.classList.add('show');
+      if (!chatStarted){
+        chatStarted = true;
+        botSay('Halo! 👋 Aku asisten otomatis Famuha Coffee. Aku bisa bantu jawab pertanyaan seputar menu, harga, jam buka, delivery, sampai cara order. Mau tanya apa?');
+        renderChips();
+      }
+      setTimeout(function(){ askChatInput.focus(); }, 200);
+    });
+    askChatClose.addEventListener('click', function(){
+      askChatOverlay.classList.remove('show');
+    });
+    askChatOverlay.addEventListener('click', function(e){
+      if (e.target === askChatOverlay) askChatOverlay.classList.remove('show');
+    });
+
+    function addMsg(text, who){
+      var div = document.createElement('div');
+      div.className = 'ask-msg ' + who;
+      div.textContent = text;
+      askChatBody.appendChild(div);
+      askChatBody.scrollTop = askChatBody.scrollHeight;
+    }
+    function botSay(text){ addMsg(text, 'bot'); }
+    function userSay(text){ addMsg(text, 'user'); }
+
+    var QUICK = [
+      { label:'Menu & Harga', q:'menu dan harga' },
+      { label:'Jam Operasional', q:'jam buka' },
+      { label:'Cara Order', q:'cara order' },
+      { label:'Ongkir & Area', q:'ongkir delivery' },
+      { label:'Order Jadwal', q:'order jadwal' },
+      { label:'Promo', q:'promo' }
+    ];
+    function renderChips(){
+      askChatChips.innerHTML = '';
+      QUICK.forEach(function(item){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'ask-chip';
+        b.textContent = item.label;
+        b.addEventListener('click', function(){ handleUserQuestion(item.q, item.label); });
+        askChatChips.appendChild(b);
+      });
+    }
+
+    function rupiah(n){
+      return 'Rp' + Number(n).toLocaleString('id-ID');
+    }
+
+    function answerAI(raw){
+      var q = (raw || '').toLowerCase();
+
+      if (/(halo|hai|hi|pagi|siang|sore|malam)/.test(q) && q.length < 12){
+        return 'Halo juga! 😊 Mau tanya soal apa? Menu, harga, jam buka, delivery, atau cara order semua bisa aku bantu jawab.';
+      }
+      if (/(jam|buka|tutup|operasional)/.test(q)){
+        return 'Famuha Coffee buka setiap hari jam ' + SCHEDULE_TIME_MIN + '–' + SCHEDULE_TIME_MAX + ' WIB.\nSaat ini status toko: ' + (STORE_OPEN ? 'Buka ✅' : 'Tutup ❌') + '.';
+      }
+      if (/(menu|varian|rasa|harga|price)/.test(q)){
+        return 'Menu andalan kami: Pistachio, Hazelnut, Vanilla, Cappuccino, Gula Aren, Black Americano, Mont Blanc Orange, Cold Brew.\nHarga size Small mulai ' + rupiah(PRICES.size.small) + ', Regular ' + rupiah(PRICES.size.regular) + ', Large ' + rupiah(PRICES.size.large) + ' (harga dasar, belum termasuk topping/susu/shot tambahan).\nKamu bisa custom langsung lewat form "Build Your Own Iced Latte" di halaman ini.';
+      }
+      if (/(ongkir|antar|kirim|delivery|area|jangkau)/.test(q)){
+        var lines = Object.keys(ONGKIR).map(function(k){
+          var o = ONGKIR[k];
+          return '• ' + o.label + ': ' + rupiah(o.min) + '–' + rupiah(o.max);
+        });
+        return 'Kami melayani delivery ke area berikut (estimasi ongkir):\n' + lines.join('\n') + '\nBisa juga Ambil Sendiri di toko, atau lewat GoSend/GrabExpress.';
+      }
+      if (/(jadwal|reschedule|pesan dulu|nanti diambil|nanti diantar)/.test(q)){
+        return 'Kamu bisa jadwalkan pesanan sampai H+' + MAX_SCHEDULE_DAYS_AHEAD + ' hari ke depan, dengan jam bebas selama masih jam operasional (' + SCHEDULE_TIME_MIN + '–' + SCHEDULE_TIME_MAX + ').\nFitur ini tersedia untuk delivery "Ambil Sendiri" & "Diantar". Untuk GoSend/GrabExpress hanya bisa real-time (sekarang).\nTinggal pilih "Jadwalkan" di bagian Waktu Pesanan pada form order.';
+      }
+      if (/(promo|diskon|voucher)/.test(q)){
+        if (FIRST_PURCHASE_PROMO_ENABLED){
+          return 'Saat ini ada promo diskon ' + rupiah(FIRST_PURCHASE_DISCOUNT_AMOUNT) + ' untuk pembelian pertamamu! Diskon otomatis muncul di ringkasan pesanan saat kamu order.';
+        }
+        return 'Untuk info promo terbaru, coba cek halaman order — kalau sedang ada promo aktif, biasanya muncul otomatis di ringkasan pesanan. Kalau mau dipastikan langsung, chat admin kami ya.';
+      }
+      if (/(cara order|cara pesan|gimana order|gimana pesan|order gimana)/.test(q)){
+        return 'Cara order gampang kok:\n1. Pilih size, susu, shot, varian rasa, gula & es di form.\n2. Klik "Tambah ke Keranjang".\n3. Isi data diri & pilih metode delivery + pembayaran.\n4. Klik "Pesan via WhatsApp" — chat otomatis terkirim ke admin kami untuk konfirmasi.';
+      }
+      if (/(bayar|pembayaran|qris|cod|transfer)/.test(q)){
+        return 'Pembayaran bisa lewat COD (bayar di tempat/saat diantar) atau QRIS. Pilih metode pembayaran ini di bagian akhir form order sebelum checkout.';
+      }
+      if (/(admin|cs|manusia|orang|whatsapp|wa )/.test(q)){
+        return 'Kalau mau ngobrol langsung sama admin kami, klik tombol "Chat admin di WhatsApp" di bawah ya 👇';
+      }
+      return null;
+    }
+
+    function handleUserQuestion(text, displayText){
+      userSay(displayText || text);
+      var ans = answerAI(text);
+      setTimeout(function(){
+        if (ans){
+          botSay(ans);
+        } else {
+          botSay('Hmm, aku belum yakin jawabannya 🙏 Coba tanya soal menu, harga, jam buka, delivery, promo, atau cara order — atau langsung chat admin kami aja lewat tombol di bawah.');
+        }
+      }, 350);
+    }
+
+    askChatSend.addEventListener('click', function(){
+      var val = askChatInput.value.trim();
+      if (!val) return;
+      askChatInput.value = '';
+      handleUserQuestion(val);
+    });
+    askChatInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') askChatSend.click();
+    });
+  })();
 
   update();
   updateTimingUI();
