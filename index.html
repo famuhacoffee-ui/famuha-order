@@ -1234,7 +1234,7 @@
   <div class="hero">
     <button type="button" class="history-btn" id="historyBtn">📊 Riwayat Transaksi</button>
     <button type="button" class="history-btn" id="adminBtn" style="right:auto; left:16px;">⚙️ Admin</button>
-    <div class="independence-badge"><span class="flag-chip"></span><span class="label">Dirgahayu RI ke-81</span></div>
+    
     <div class="store-status-badge" id="storeStatusBadge"><span class="dot"></span><span id="storeStatusText">Memuat status toko...</span></div>
     <div class="eyebrow">Famuha Coffee Roastery</div>
     <h1 class="serif">Build Your Own Iced Latte</h1>
@@ -1265,12 +1265,12 @@
           <label class="choice" data-value="cappuccino">
             <input type="radio" name="variant" value="cappuccino">
             <span class="name">Cappuccino</span>
-            <span class="promo-flag-icon" id="promoFlagCappuccino" title="Promo 17 Agustus: Cappuccino Hot Rp17.000" hidden></span>
+            
           </label>
           <label class="choice" data-value="gula-aren">
             <input type="radio" name="variant" value="gula-aren" checked>
             <span class="name">Gula Aren Latte</span>
-            <span class="promo-flag-icon" id="promoFlagGulaAren" title="Promo 17 Agustus: Gula Aren Latte Single Shot Rp17.000" hidden></span>
+            
           </label>
           <label class="choice" data-value="black-americano">
             <input type="radio" name="variant" value="black-americano">
@@ -1286,7 +1286,7 @@
           </label>
         </div>
         <div class="promo-1708-banner" id="promo1708Banner" hidden>
-          <span class="promo-flag-icon" style="margin-left:0;margin-right:6px;"></span><b>Promo 17 Agustus:</b> Gula Aren Latte (Single Shot) &amp; Cappuccino Hot cuma <b>Rp17.000</b>! Berlaku 16–17 Agustus, maksimal 1x transaksi per pelanggan.
+          <b>Promo 17 Agustus:</b> Gula Aren Latte (Single Shot) &amp; Cappuccino Hot cuma <b>Rp17.000</b>! Berlaku 16–17 Agustus, maksimal 1x transaksi per pelanggan.
         </div>
       </div>
 
@@ -1757,7 +1757,7 @@
     return mixColor(base, ESPRESSO_COLOR, t);
   }
 
-  var CAPPUCCINO_HOT_DISCOUNT = 2000;
+  var CAPPUCCINO_HOT_DISCOUNT = 0;
 
   // ---------------- Promo 17 Agustus (mulai hari ini s/d 17 Agustus, 1x pakai per pelanggan) ----------------
   var PROMO_1708_START = '2026-08-16';
@@ -1793,7 +1793,7 @@
   // Aktif hanya di tanggal promo DAN belum pernah dipakai oleh nomor HP ini
   // (dicek ke server lewat checkLoyaltyStatus / GAS_URL?phone=...).
   function promo1708Active_(){
-    return promo1708DateOk_() && !promo1708Used_();
+    return false;
   }
   function isPromo1708Eligible_(cfg){
     if (cfg.variant === 'gula-aren' && cfg.shots === 'single') return true;
@@ -2263,9 +2263,9 @@
       banner.hidden = !active;
       if (promo1708DateOk_() && promo1708Used_()){
         banner.hidden = false;
-        banner.innerHTML = '<span class="promo-flag-icon" style="margin-left:0;margin-right:6px;"></span>Promo 17 Agustus sudah kamu gunakan hari ini — harga kembali normal untuk transaksi berikutnya.';
+        banner.innerHTML = 'Promo 17 Agustus sudah kamu gunakan hari ini — harga kembali normal untuk transaksi berikutnya.';
       } else if (active){
-        banner.innerHTML = '<span class="promo-flag-icon" style="margin-left:0;margin-right:6px;"></span><b>Promo 17 Agustus:</b> Gula Aren Latte (Single Shot) &amp; Cappuccino Hot cuma <b>Rp17.000</b>! Berlaku 16–17 Agustus, maksimal 1x transaksi per pelanggan.';
+        banner.innerHTML = '<b>Promo 17 Agustus:</b> Gula Aren Latte (Single Shot) &amp; Cappuccino Hot cuma <b>Rp17.000</b>! Berlaku 16–17 Agustus, maksimal 1x transaksi per pelanggan.';
       }
     }
   }
