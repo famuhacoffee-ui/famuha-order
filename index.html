@@ -1,27 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-TWC4D9T103"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-TWC4D9T103');
-  </script>
-
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Famuha Coffee - Build Your Own Iced Latte</title>
-
-  <style>
-    ...
-/* <meta charset="UTF-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Famuha Coffee — Build Your Own Iced Latte</title>
-<style> */
+<style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap');
   :root{
     --ink:#140c07;
@@ -1264,9 +1247,12 @@
 #discountPopup .card{background:linear-gradient(180deg,#7a4a16,#3e220a);text-align:center}
 #discountPopup #discountAmountText{color:#f0d9a3}
 .note{font-size:12px;opacity:.9;margin-top:12px}
+#welcomeToast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,12px);z-index:999999;background:linear-gradient(90deg,#5b3a29,#3c2418);color:#F7F0E8;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px 20px;box-shadow:0 15px 35px rgba(0,0,0,.4);font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .35s ease, transform .35s ease;max-width:88vw;text-align:center}
+#welcomeToast.show{opacity:1;transform:translate(-50%,0)}
 </style></head>
-<body><div id='welcomePopup'><div class='card'><div style='text-align:center;font-size:42px'>☕</div><h2>Selamat Datang di Famuha Coffee</h2><p><b>Untuk memberikan pengalaman pemesanan yang lebih baik, silakan lengkapi data berikut sebelum melanjutkan.</b></p><label>Nama Lengkap</label><input id='customerName' placeholder='Masukkan nama Anda'><label>Nomor WhatsApp</label><input id='customerPhone' placeholder='Contoh: 0812xxxxxxxx'><div class='note'>🔒 Data Anda kami gunakan untuk keperluan pemesanan dan verifikasi promo.</div><button id='welcomeStartBtn'>Mulai Pesan</button></div></div>
+<body><div id='welcomePopup' style='display:none'><div class='card'><div style='text-align:center;font-size:42px'>☕</div><h2>Selamat Datang di Famuha Coffee</h2><p><b>Untuk memberikan pengalaman pemesanan yang lebih baik, silakan lengkapi data berikut sebelum melanjutkan.</b></p><label>Nama Lengkap</label><input id='customerName' placeholder='Masukkan nama Anda'><label>Nomor WhatsApp</label><input id='customerPhone' placeholder='Contoh: 0812xxxxxxxx'><div class='note'>🔒 Data Anda kami gunakan untuk keperluan pemesanan dan verifikasi promo.</div><button id='welcomeStartBtn'>Mulai Pesan</button></div></div>
 <div id='discountPopup' style='display:none'><div class='card'><div style='text-align:center;font-size:42px'>🎉</div><h2>Diskon Pembelian Pertama!</h2><p>Selamat, nomor WhatsApp kamu belum pernah tercatat order di Famuha Coffee. Kamu dapat <b id='discountAmountText'>diskon spesial</b> untuk pesanan pertamamu — otomatis kepotong saat checkout nanti.</p><button id='discountCloseBtn'>Yuk, Mulai Pesan!</button></div></div>
+<div id='welcomeToast'></div>
 
   <div class="hero">
     <button type="button" class="history-btn" id="historyBtn">📊 Riwayat Transaksi</button>
@@ -1775,6 +1761,8 @@
   var SCHEDULE_TIME_MAX = '21:00';
   var iceBeforeHot = 'normal';
   var qrisPaidConfirmed = false;
+  var loyaltyCheckToken = 0; // dinaikkan tiap kali status loyalty di-cek ulang atau di-reset,
+                              // supaya jawaban fetch yang datang telat (basi/race) bisa diabaikan.
 
   var cart = [];
   var cartIdSeq = 1;
@@ -1992,7 +1980,7 @@
     var usedPromo1708 = cart.some(function(item){ return item.unitPrice === PROMO_1708_PRICE; });
     var payload = {
       custName: record.custName,
-      custPhone: record.custPhone,
+      custPhone: (record.custPhone || '').replace(/[^0-9]/g, ''),
       custAddress: record.custAddress,
       itemsSummary: itemsSummary,
       delivery: record.delivery,
@@ -2700,6 +2688,7 @@
     var phone = state.custPhone.replace(/[^0-9]/g, '');
     var banner = document.getElementById('loyaltyBanner');
     if (phone.length < 8 || !GAS_URL){
+      loyaltyCheckToken++;
       state.firstPurchaseDiscount = false;
       state.firstPurchaseAlreadyUsed = false;
       state.fifthReward = false;
@@ -2711,6 +2700,7 @@
       update();
       return;
     }
+    var myToken = ++loyaltyCheckToken;
     fetch(GAS_URL + '?phone=' + encodeURIComponent(phone))
       .then(function(res){
         if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -2718,6 +2708,10 @@
       })
       .then(function(data){
         console.log('[loyalty check] response:', data);
+        if (myToken !== loyaltyCheckToken){
+          console.log('[loyalty check] jawaban basi (sudah ada cek/reset lain setelahnya), diabaikan.');
+          return;
+        }
         if (!data || !data.ok) return;
         state.custChecked = true;
         state.firstPurchaseDiscount = FIRST_PURCHASE_PROMO_ENABLED && !!data.isFirstPurchase;
@@ -2736,11 +2730,14 @@
   }
 
   // ---------------- Buku Tamu (popup nama & no. WhatsApp saat website dibuka) ----------------
-  // Alur: Website dibuka -> Popup Buku Tamu -> klik "Mulai Pesan" -> GET GAS_URL?phone=...
-  //   -> isFirstPurchase? true: tampilkan Popup Diskon | false: langsung masuk ke halaman order.
+  // Alur pengunjung BARU: Website dibuka -> Popup Buku Tamu -> klik "Mulai Pesan"
+  //   -> GET GAS_URL?phone=... -> isFirstPurchase? true: tampilkan Popup Diskon | false: langsung masuk.
+  // Alur pengunjung LAMA (nama & no. WA sudah tersimpan di device): popup dilewati,
+  //   cukup toast "Selamat datang kembali", sambil tetap cek promo di background.
   function initGuestbook_(){
     var welcomePopup = document.getElementById('welcomePopup');
     var startBtn = document.getElementById('welcomeStartBtn');
+    var toastEl = document.getElementById('welcomeToast');
     if (!welcomePopup || !startBtn) return;
 
     var nameInput = document.getElementById('customerName');
@@ -2749,9 +2746,6 @@
     var discountAmountEl = document.getElementById('discountAmountText');
     var discountCloseBtn = document.getElementById('discountCloseBtn');
 
-    function closeWelcome_(){
-      welcomePopup.remove();
-    }
     function showDiscountPopup_(){
       if (discountAmountEl) discountAmountEl.textContent = idr(FIRST_PURCHASE_DISCOUNT_AMOUNT);
       if (discountPopup) discountPopup.style.display = 'flex';
@@ -2761,6 +2755,86 @@
         if (discountPopup) discountPopup.style.display = 'none';
       });
     }
+
+    function showToast_(message){
+      if (!toastEl) return;
+      toastEl.textContent = message;
+      toastEl.classList.add('show');
+      setTimeout(function(){ toastEl.classList.remove('show'); }, 3200);
+    }
+
+    // Cek status loyalty ke server (dipakai baik untuk pengunjung baru maupun lama).
+    // silent=true berarti tidak menampilkan popup buku tamu apa pun -- hanya
+    // menyalakan promo (diskon / banner) kalau memang berhak.
+    function runLoyaltyCheck_(digits, opts){
+      opts = opts || {};
+      if (!GAS_URL){
+        if (opts.onDone) opts.onDone();
+        return;
+      }
+      var myToken = ++loyaltyCheckToken;
+      fetch(GAS_URL + '?phone=' + encodeURIComponent(digits))
+        .then(function(res){
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function(data){
+          console.log('[buku tamu] cek status pelanggan:', data);
+          if (opts.onDone) opts.onDone();
+          if (myToken !== loyaltyCheckToken){
+            console.log('[buku tamu] jawaban basi (sudah ada cek/reset lain setelahnya), diabaikan.');
+            return;
+          }
+          if (data && data.ok && FIRST_PURCHASE_PROMO_ENABLED && data.isFirstPurchase){
+            state.custChecked = true;
+            state.firstPurchaseDiscount = true;
+            state.firstPurchaseAlreadyUsed = false;
+            state.fifthReward = !!data.isFifthReward;
+            state.nextOrderNumber = data.nextOrderNumber || null;
+            state.promo1708UsedServer = !!data.usedIndependencePromo;
+            state.promo1708ServerChecked = true;
+            refreshLoyaltyBanner_();
+            if (typeof updatePromo1708UI_ === 'function') updatePromo1708UI_();
+            update();
+            showDiscountPopup_();
+          } else if (data && data.ok){
+            // Bukan pembelian pertama (atau promo sedang off) -- tetap simpan info
+            // reward lain (mis. pembelian ke-5) supaya banner terkait tetap muncul.
+            state.custChecked = true;
+            state.firstPurchaseDiscount = false;
+            state.firstPurchaseAlreadyUsed = !!FIRST_PURCHASE_PROMO_ENABLED;
+            state.fifthReward = !!data.isFifthReward;
+            state.nextOrderNumber = data.nextOrderNumber || null;
+            state.promo1708UsedServer = !!data.usedIndependencePromo;
+            state.promo1708ServerChecked = true;
+            refreshLoyaltyBanner_();
+            if (typeof updatePromo1708UI_ === 'function') updatePromo1708UI_();
+            update();
+          }
+        })
+        .catch(function(err){
+          console.error('[buku tamu] gagal mengecek status pelanggan, lanjut tanpa cek promo:', err);
+          if (opts.onDone) opts.onDone();
+        });
+    }
+
+    var storedName = (localStorage.getItem('customerName') || '').trim();
+    var storedPhone = (localStorage.getItem('customerPhone') || '').trim();
+
+    if (storedName && storedPhone){
+      // Pengunjung lama -- lewati popup, cukup toast, cek promo diam-diam.
+      if (custNameEl){ custNameEl.value = storedName; state.custName = storedName; }
+      if (custPhoneEl){ custPhoneEl.value = storedPhone; state.custPhone = storedPhone; }
+      showToast_('Selamat datang kembali, ' + storedName + '! 👋');
+      var storedDigits = storedPhone.replace(/[^0-9]/g, '');
+      if (storedDigits.length >= 10){
+        runLoyaltyCheck_(storedDigits);
+      }
+      return;
+    }
+
+    // Pengunjung baru -- tampilkan popup buku tamu seperti biasa.
+    welcomePopup.style.display = 'flex';
 
     startBtn.addEventListener('click', function(){
       var n = (nameInput.value || '').trim();
@@ -2780,37 +2854,9 @@
       startBtn.disabled = true;
       startBtn.textContent = 'Mengecek...';
 
-      if (!GAS_URL){
-        closeWelcome_();
-        return;
-      }
-
-      fetch(GAS_URL + '?phone=' + encodeURIComponent(digits))
-        .then(function(res){
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          return res.json();
-        })
-        .then(function(data){
-          console.log('[buku tamu] cek pembelian pertama:', data);
-          closeWelcome_();
-          if (data && data.ok && FIRST_PURCHASE_PROMO_ENABLED && data.isFirstPurchase){
-            state.custChecked = true;
-            state.firstPurchaseDiscount = true;
-            state.firstPurchaseAlreadyUsed = false;
-            state.fifthReward = !!data.isFifthReward;
-            state.nextOrderNumber = data.nextOrderNumber || null;
-            state.promo1708UsedServer = !!data.usedIndependencePromo;
-            state.promo1708ServerChecked = true;
-            refreshLoyaltyBanner_();
-            if (typeof updatePromo1708UI_ === 'function') updatePromo1708UI_();
-            update();
-            showDiscountPopup_();
-          }
-        })
-        .catch(function(err){
-          console.error('[buku tamu] gagal mengecek status pelanggan, lanjut tanpa cek promo:', err);
-          closeWelcome_();
-        });
+      runLoyaltyCheck_(digits, {
+        onDone: function(){ welcomePopup.remove(); }
+      });
     });
   }
 
@@ -3195,8 +3241,9 @@
         );
         cart = [];
         state.qty = 1;
+        loyaltyCheckToken++; // batalkan/abaikan cek status promo yang mungkin masih berjalan
         state.firstPurchaseDiscount = false;
-        state.firstPurchaseAlreadyUsed = false;
+        state.firstPurchaseAlreadyUsed = true;
         state.fifthReward = false;
         document.getElementById('loyaltyBanner').hidden = true;
         qrisPaidConfirmed = false;
