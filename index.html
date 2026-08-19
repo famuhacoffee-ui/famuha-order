@@ -1281,17 +1281,17 @@
         <div class="choice-row" data-group="shots" data-type="radio">
           <label class="choice" data-value="single">
             <input type="radio" name="shots" value="single" checked>
-            <span class="name">Single</span>
+            <span class="name">Single Shot</span>
             <span class="price">Termasuk</span>
           </label>
           <label class="choice" data-value="double">
             <input type="radio" name="shots" value="double">
-            <span class="name">Double</span>
+            <span class="name">Double Shot</span>
             <span class="price">+Rp 4.000</span>
           </label>
           <label class="choice" data-value="triple">
             <input type="radio" name="shots" value="triple">
-            <span class="name">Signature</span>
+            <span class="name">Triple Shot</span>
             <span class="price">+Rp 5.000</span>
           </label>
         </div>
@@ -1666,7 +1666,7 @@
   var LABELS = {
     size: { small:'Small', regular:'Regular', large:'Large' },
     milk: { 'full-cream':'Full Cream', oat:'Oat Milk', almond:'Almond Milk', coconut:'Coconut Milk' },
-    shots: { single:'Single Shot', double:'Double Shot', triple:'Signature Shot' },
+    shots: { single:'Single Shot', double:'Double Shot', triple:'Triple Shot' },
     ice: { none:'Tanpa Es', normal:'Es Normal', extra:'Extra Es' },
     variant: { pistachio:'Pistachio Latte', hazelnut:'Hazelnut Latte', vanilla:'Vanilla Latte', cappuccino:'Cappuccino', 'gula-aren':'Gula Aren Latte', 'black-americano':'Black Americano', 'mont-blanc-orange':'Mont Blanc Orange', 'cold-brew':'Cold Brew' },
     sugar: { 'no-sugar':'No Sugar', 'less-sugar':'Less Sugar', 'normal-sugar':'Normal Sugar' },
@@ -2677,6 +2677,26 @@
     var welcomeBackNameEl = document.getElementById('welcomeBackName');
     var welcomeBackCloseBtn = document.getElementById('welcomeBackCloseBtn');
 
+    // Isi otomatis dari kunjungan sebelumnya, supaya (a) customer tidak perlu
+    // ketik ulang, dan (b) format nomor yang dibandingkan ke status verified
+    // persis sama seperti waktu pertama kali verifikasi OTP berhasil.
+    try {
+      var savedName = localStorage.getItem('customerName');
+      var savedPhone = localStorage.getItem('customerPhone');
+      if (savedName && nameInput) nameInput.value = savedName;
+      if (savedPhone && phoneInput) phoneInput.value = savedPhone;
+    } catch (e){}
+
+    // Nomor HP disamakan formatnya (buang karakter non-angka, buang 0 di depan,
+    // pastikan berawalan 62) sebelum dibandingkan dengan status verified —
+    // supaya "0812...", "+62812...", dan "62812..." dianggap nomor yang sama.
+    function normalizePhoneLocal_(raw){
+      var d = String(raw || '').replace(/[^0-9]/g, '');
+      d = d.replace(/^0+/, '');
+      if (d.indexOf('62') !== 0) d = '62' + d;
+      return d;
+    }
+
     function closeWelcome_(){
       welcomePopup.remove();
     }
@@ -2830,10 +2850,12 @@
       }
 
       // Nomor ini sudah pernah diverifikasi lewat OTP di device/browser ini
-      // sebelumnya -> tidak perlu kirim OTP ulang tiap buka web.
+      // sebelumnya -> tidak perlu kirim OTP ulang tiap buka web. Dibandingkan
+      // pakai format yang sudah disamakan supaya "0812...", "+62812...",
+      // dan "62812..." tetap dianggap nomor yang sama.
       var verifiedPhone = localStorage.getItem('waVerifiedPhone');
       var verifiedFlag = localStorage.getItem('waVerified');
-      if (verifiedFlag === '1' && verifiedPhone === digits){
+      if (verifiedFlag === '1' && verifiedPhone === normalizePhoneLocal_(digits)){
         proceedAfterVerified_(n, digits, pRaw);
         return;
       }
@@ -2888,7 +2910,7 @@
               return;
             }
             localStorage.setItem('waVerified', '1');
-            localStorage.setItem('waVerifiedPhone', pendingDigits_);
+            localStorage.setItem('waVerifiedPhone', normalizePhoneLocal_(pendingDigits_));
             proceedAfterVerified_(pendingName_, pendingDigits_, pendingRaw_);
           })
           .catch(function(){
@@ -2932,7 +2954,7 @@
     { section: 'Harga Dasar', path: ['PRICES','size','regular'], label: 'Harga Dasar (Regular)' },
     { section: 'Espresso Shot', path: ['PRICES','shots','single'], label: 'Single Shot' },
     { section: 'Espresso Shot', path: ['PRICES','shots','double'], label: 'Double Shot' },
-    { section: 'Espresso Shot', path: ['PRICES','shots','triple'], label: 'Signature Shot' },
+    { section: 'Espresso Shot', path: ['PRICES','shots','triple'], label: 'Triple Shot' },
     { section: 'Tambahan Varian', path: ['PRICES','variant','pistachio'], label: 'Pistachio Latte' },
     { section: 'Tambahan Varian', path: ['PRICES','variant','hazelnut'], label: 'Hazelnut Latte' },
     { section: 'Tambahan Varian', path: ['PRICES','variant','vanilla'], label: 'Vanilla Latte' },
