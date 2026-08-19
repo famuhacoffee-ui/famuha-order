@@ -2822,6 +2822,21 @@
       });
     }
 
+    function registerGuestToSheet_(name, phoneDigits, phoneRaw){
+      if (!GAS_URL) return;
+      fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'registerGuest',
+          custName: name,
+          custPhone: phoneRaw,
+          ts: new Date().toISOString()
+        })
+      })
+        .then(function(res){ console.log('[buku tamu] data tersimpan ke Sheet, status:', res.status); })
+        .catch(function(err){ console.error('[buku tamu] gagal simpan ke Sheet:', err); });
+    }
+
     startBtn.addEventListener('click', function(){
       var n = (nameInput.value || '').trim();
       var pRaw = (phoneInput.value || '').trim();
@@ -2836,6 +2851,10 @@
       // Sinkronkan ke form pemesanan supaya customer tidak perlu isi ulang.
       if (custNameEl){ custNameEl.value = n; state.custName = n; }
       if (custPhoneEl){ custPhoneEl.value = pRaw; state.custPhone = pRaw; }
+
+      // Simpan nama & nomor WA ke database begitu buku tamu diisi,
+      // terlepas dari apakah customer jadi checkout/pakai promo atau tidak.
+      registerGuestToSheet_(n, digits, pRaw);
 
       startBtn.disabled = true;
       startBtn.textContent = 'Mengecek...';
