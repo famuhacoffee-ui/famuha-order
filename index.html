@@ -1816,6 +1816,7 @@
     custName:'', custPhone:'', custAddress:'', deliveryArea:'',
     orderTiming:'now', scheduleDate:'', scheduleTime:'',
     firstPurchaseDiscount:false, firstPurchaseAlreadyUsed:false, fifthReward:false, custChecked:false, nextOrderNumber:null,
+    isReturningCustomer:false,
     promo1708UsedServer:false, promo1708ServerChecked:false
   };
   var MAX_SCHEDULE_DAYS_AHEAD = 7;
@@ -1894,14 +1895,29 @@
   // ---- Promo Jumat: Hot Cappuccino & Hot Americano flat Rp18.000, tiap hari Jumat ----
   var PROMO_JUMAT_PRICE = 18000;
   var PROMO_JUMAT_ENABLED = true; // bisa dimatikan lewat panel Admin
+  // Mode Preview: cuma disimpan di browser ini (localStorage), TIDAK dikirim
+  // ke server / config Google Sheet. Tujuannya biar Admin bisa lihat tampilan
+  // Promo Jumat kapan saja tanpa memengaruhi harga yang dilihat customer lain.
+  var PROMO_JUMAT_PREVIEW_KEY = 'famuha-promo-jumat-preview';
+  function promoJumatPreviewActive_(){
+    try { return localStorage.getItem(PROMO_JUMAT_PREVIEW_KEY) === '1'; } catch (e){ return false; }
+  }
+  function setPromoJumatPreview_(on){
+    try { localStorage.setItem(PROMO_JUMAT_PREVIEW_KEY, on ? '1' : '0'); } catch (e){}
+  }
   function promoJumatActive_(){
-    return PROMO_JUMAT_ENABLED && new Date().getDay() === 5; // 0=Minggu ... 5=Jumat
+    if (!PROMO_JUMAT_ENABLED) return false;
+    return promoJumatPreviewActive_() || new Date().getDay() === 5; // 0=Minggu ... 5=Jumat
   }
   function isPromoJumatEligible_(cfg){
     if (cfg.temp !== 'hot') return false;
-    if (cfg.variant === 'cappuccino') return true;
-    if (cfg.variant === 'black-americano') return true;
-    return false;
+    if (cfg.variant !== 'cappuccino' && cfg.variant !== 'black-americano') return false;
+    // Mode Preview admin -> lewati pengecekan status pelanggan, cukup lihat tampilan harga.
+    if (promoJumatPreviewActive_()) return true;
+    // Cuma untuk nomor yang sudah pernah order sebelumnya (dicek ke server),
+    // supaya tidak dobel sama Diskon Pembelian Pertama untuk pelanggan baru.
+    if (!state.custChecked || !state.isReturningCustomer) return false;
+    return true;
   }
 
   function computeUnitPrice(cfg){
@@ -2438,7 +2454,16 @@
 
   function updatePromoJumatUI_(){
     var banner = document.getElementById('promoJumatBanner');
-    if (banner) banner.hidden = !promoJumatActive_();
+    if (!banner) return;
+    var dayActive = promoJumatActive_();
+    var eligibleCustomer = promoJumatPreviewActive_() || (state.custChecked && state.isReturningCustomer);
+    var active = dayActive && eligibleCustomer;
+    banner.hidden = !active;
+    if (active && promoJumatPreviewActive_() && new Date().getDay() !== 5){
+      banner.innerHTML = '<b>Promo Jumat (Mode Preview):</b> Hot Cappuccino &amp; Hot Americano cuma <b>Rp' + PROMO_JUMAT_PRICE.toLocaleString('id-ID') + '</b>. Ini cuma tampilan preview di browser kamu — customer lain tidak melihat ini kecuali hari Jumat.';
+    } else if (active){
+      banner.innerHTML = '<b>Promo Jumat:</b> Hot Cappuccino &amp; Hot Americano cuma <b>Rp' + PROMO_JUMAT_PRICE.toLocaleString('id-ID') + '</b>! Berlaku tiap hari Jumat untuk pelanggan yang sudah pernah order.';
+    }
   }
 
   function update(){
@@ -2819,6 +2844,7 @@
       state.firstPurchaseAlreadyUsed = false;
       state.fifthReward = false;
       state.custChecked = false;
+      state.isReturningCustomer = false;
       // Nomor HP belum valid/lengkap -> belum bisa dipastikan ke server,
       // jangan anggap promo 17 Agustus otomatis aktif atau tidak.
       state.promo1708ServerChecked = false;
@@ -2835,6 +2861,7 @@
         console.log('[loyalty check] response:', data);
         if (!data || !data.ok) return;
         state.custChecked = true;
+        state.isReturningCustomer = !data.isFirstPurchase;
         state.firstPurchaseDiscount = FIRST_PURCHASE_PROMO_ENABLED && !!data.isFirstPurchase;
         state.firstPurchaseAlreadyUsed = FIRST_PURCHASE_PROMO_ENABLED && !data.isFirstPurchase;
         state.fifthReward = !!data.isFifthReward;
@@ -3085,30 +3112,38 @@
         .then(function(data){
           console.log('[buku tamu] cek pembelian pertama:', data);
           closeWelcome_();
-          if (data && data.ok && FIRST_PURCHASE_PROMO_ENABLED && data.isFirstPurchase){
-            state.custChecked = true;
+          if (!data || !data.ok){ return; }
+          state.custChecked = true;
+          state.isReturningCustomer = !data.isFirstPurchase;
+          state.nextOrderNumber = data.nextOrderNumber || null;
+          state.promo1708UsedServer = !!data.usedIndependencePromo;
+          state.promo1708ServerChecked = true;
+          if (FIRST_PURCHASE_PROMO_ENABLED && data.isFirstPurchase){
             state.firstPurchaseDiscount = true;
             state.firstPurchaseAlreadyUsed = false;
             state.fifthReward = !!data.isFifthReward;
-            state.nextOrderNumber = data.nextOrderNumber || null;
-            state.promo1708UsedServer = !!data.usedIndependencePromo;
-            state.promo1708ServerChecked = true;
             refreshLoyaltyBanner_();
             if (typeof updatePromo1708UI_ === 'function') updatePromo1708UI_();
             update();
             showDiscountPopup_();
-          } else if (data && data.ok && !data.isFirstPurchase){
-            state.custChecked = true;
+          } else if (!data.isFirstPurchase){
             state.firstPurchaseDiscount = false;
             state.firstPurchaseAlreadyUsed = FIRST_PURCHASE_PROMO_ENABLED;
             state.fifthReward = !!data.isFifthReward;
-            state.nextOrderNumber = data.nextOrderNumber || null;
-            state.promo1708UsedServer = !!data.usedIndependencePromo;
-            state.promo1708ServerChecked = true;
             refreshLoyaltyBanner_();
             if (typeof updatePromo1708UI_ === 'function') updatePromo1708UI_();
             update();
             showWelcomeBackPopup_(n);
+          } else {
+            // Pembelian pertama, tapi promo pembelian pertama sedang dimatikan
+            // di Admin -> tidak ada popup khusus, tapi tampilan tetap disegarkan
+            // (mis. supaya Promo Jumat tetap konsisten tidak berlaku untuk pelanggan baru).
+            state.firstPurchaseDiscount = false;
+            state.firstPurchaseAlreadyUsed = false;
+            state.fifthReward = !!data.isFifthReward;
+            refreshLoyaltyBanner_();
+            if (typeof updatePromo1708UI_ === 'function') updatePromo1708UI_();
+            update();
           }
         })
         .catch(function(err){
@@ -3375,6 +3410,25 @@
     promoJumatPriceRow.appendChild(promoJumatPriceLabel);
     promoJumatPriceRow.appendChild(promoJumatPriceInput);
     wrap.appendChild(promoJumatPriceRow);
+
+    // Mode Preview — TIDAK disimpan ke server, cuma lokal di browser ini.
+    // Efeknya langsung terlihat tanpa perlu klik "Simpan Perubahan".
+    var previewRow = document.createElement('div');
+    previewRow.className = 'admin-toggle-row';
+    var previewToggle = document.createElement('input');
+    previewToggle.type = 'checkbox';
+    previewToggle.id = 'adminPromoJumatPreview';
+    previewToggle.checked = promoJumatPreviewActive_();
+    var previewLabel = document.createElement('label');
+    previewLabel.setAttribute('for', 'adminPromoJumatPreview');
+    previewLabel.textContent = '🔍 Mode Preview: paksa tampilkan Promo Jumat (cuma di browser ini, tidak memengaruhi customer lain)';
+    previewRow.appendChild(previewToggle);
+    previewRow.appendChild(previewLabel);
+    wrap.appendChild(previewRow);
+    previewToggle.addEventListener('change', function(){
+      setPromoJumatPreview_(previewToggle.checked);
+      update();
+    });
 
     var storeHeader = document.createElement('div');
     storeHeader.className = 'admin-section-title';
