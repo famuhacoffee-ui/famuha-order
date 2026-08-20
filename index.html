@@ -1286,7 +1286,7 @@
 </style></head>
 <body><div id='welcomePopup'><div class='card'>
   <div class='wc-step active' id='wcStep1'>
-    <div style='text-align:center;font-size:42px'>☕</div><h2>Selamat Datang di Famuha Coffee</h2><p><b>Untuk memberikan pengalaman pemesanan yang lebih baik, silakan lengkapi data berikut sebelum melanjutkan.</b></p><label>Nama Lengkap</label><input id='customerName' placeholder='Masukkan nama Anda'><label>Nomor WhatsApp</label><input id='customerPhone' placeholder='Contoh: 0812xxxxxxxx'><div class='note'>🔒 Data Anda kami gunakan untuk keperluan pemesanan dan verifikasi promo.</div><button id='welcomeStartBtn'>Mulai Pesan</button><div class='otp-status' id='wcOtpFailStatus'></div><button id='wcSkipOtpBtn' class='otp-ghost-btn' style='display:none'>Lanjutkan Tanpa Verifikasi</button>
+    <div style='text-align:center;font-size:42px'>☕</div><h2>Selamat Datang di Famuha Coffee</h2><p><b>Untuk memberikan pengalaman pemesanan yang lebih baik, silakan lengkapi data berikut sebelum melanjutkan.</b></p><label>Nama Lengkap</label><input id='customerName' placeholder='Masukkan nama Anda'><label>Nomor WhatsApp</label><input id='customerPhone' placeholder='Contoh: 0812xxxxxxxx'><div class='note'>🔒 Data Anda kami gunakan untuk keperluan pemesanan dan verifikasi promo.</div><button id='welcomeStartBtn'>Verifikasi Sekarang</button><div class='otp-status' id='wcOtpFailStatus'></div><button id='wcSkipOtpBtn' class='otp-ghost-btn' style='display:none'>Lanjutkan Tanpa Verifikasi</button>
   </div>
   <div class='wc-step' id='wcStep2'>
     <div style='text-align:center;font-size:42px'>📲</div><h2>Verifikasi Nomor WhatsApp</h2><p>Kode 6 digit sudah dikirim ke WhatsApp</p><div class='otp-phone-note' id='otpPhoneNote'></div>
@@ -2980,7 +2980,7 @@
     function sendOtpNow_(isResend){
       hideOtpStatus();
       var busyBtn = isResend ? otpResendBtn : startBtn;
-      var busyLabel = isResend ? 'Kirim Ulang Kode' : 'Mulai Pesan';
+      var busyLabel = isResend ? 'Kirim Ulang Kode' : 'Verifikasi Sekarang';
       busyBtn.disabled = true;
       busyBtn.textContent = isResend ? 'Mengirim...' : 'Mengirim kode...';
       fetch(GAS_URL, {
@@ -3188,7 +3188,7 @@
         .then(function(res){ return res.json(); })
         .then(function(data){
           startBtn.disabled = false;
-          startBtn.textContent = 'Mulai Pesan';
+          startBtn.textContent = 'Verifikasi Sekarang';
           if (data && data.ok && data.verified){
             try{
               localStorage.setItem('otpVerifiedPhoneDigits', digits);
@@ -3201,7 +3201,7 @@
         })
         .catch(function(){
           startBtn.disabled = false;
-          startBtn.textContent = 'Mulai Pesan';
+          startBtn.textContent = 'Verifikasi Sekarang';
           // Gagal mengecek status verifikasi -> tetap minta OTP demi keamanan.
           sendOtpNow_(false);
         });
