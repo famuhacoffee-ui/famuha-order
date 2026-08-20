@@ -126,6 +126,16 @@
     line-height:1.5;
     color: var(--cream);
   }
+  .promo-jumat-banner{
+    margin-top:10px;
+    padding:10px 14px;
+    border-radius:10px;
+    background: linear-gradient(90deg, rgba(226,144,63,0.22) 0%, rgba(246,236,220,0.12) 100%);
+    border:1px solid rgba(226,144,63,0.45);
+    font-size:13px;
+    line-height:1.5;
+    color: var(--cream);
+  }
 
   /* ---------- Hero ---------- */
   .hero{
@@ -1355,6 +1365,9 @@
         <div class="promo-1708-banner" id="promo1708Banner" hidden>
           <b>Promo 17 Agustus:</b> Gula Aren Latte (Single Shot) &amp; Cappuccino Hot cuma <b>Rp17.000</b>! Berlaku 16–17 Agustus, maksimal 1x transaksi per pelanggan.
         </div>
+        <div class="promo-jumat-banner" id="promoJumatBanner" hidden>
+          <b>Promo Jumat:</b> Hot Cappuccino &amp; Hot Americano cuma <b>Rp18.000</b>! Berlaku tiap hari Jumat.
+        </div>
       </div>
 
       <div class="group" id="shotsGroup">
@@ -1878,9 +1891,23 @@
     return false;
   }
 
+  // ---- Promo Jumat: Hot Cappuccino & Hot Americano flat Rp18.000, tiap hari Jumat ----
+  var PROMO_JUMAT_PRICE = 18000;
+  var PROMO_JUMAT_ENABLED = true; // bisa dimatikan lewat panel Admin
+  function promoJumatActive_(){
+    return PROMO_JUMAT_ENABLED && new Date().getDay() === 5; // 0=Minggu ... 5=Jumat
+  }
+  function isPromoJumatEligible_(cfg){
+    if (cfg.temp !== 'hot') return false;
+    if (cfg.variant === 'cappuccino') return true;
+    if (cfg.variant === 'black-americano') return true;
+    return false;
+  }
+
   function computeUnitPrice(cfg){
     cfg = cfg || state;
     if (promo1708Active_() && isPromo1708Eligible_(cfg)) return PROMO_1708_PRICE;
+    if (promoJumatActive_() && isPromoJumatEligible_(cfg)) return PROMO_JUMAT_PRICE;
     var total = PRICES.size[cfg.size] + PRICES.milk[cfg.milk] + Math.max(PRICES.shots[cfg.shots], PRICES.variant[cfg.variant]);
     if (cfg.variant === 'cappuccino' && cfg.temp === 'hot') total -= CAPPUCCINO_HOT_DISCOUNT;
     return total;
@@ -2409,12 +2436,18 @@
     }
   }
 
+  function updatePromoJumatUI_(){
+    var banner = document.getElementById('promoJumatBanner');
+    if (banner) banner.hidden = !promoJumatActive_();
+  }
+
   function update(){
     renderSvg();
     var total = renderCart();
     updateCtaLinks(total);
     updateStoreStatusBadge_();
     updatePromo1708UI_();
+    updatePromoJumatUI_();
     document.getElementById('qrisPanel').hidden = (state.payment !== 'qris');
     document.getElementById('paidBtn').classList.toggle('disabled', cart.length === 0);
 
@@ -3193,6 +3226,10 @@
       firstPurchase: {
         enabled: FIRST_PURCHASE_PROMO_ENABLED,
         amount: FIRST_PURCHASE_DISCOUNT_AMOUNT
+      },
+      promoJumat: {
+        enabled: PROMO_JUMAT_ENABLED,
+        price: PROMO_JUMAT_PRICE
       }
     };
   }
@@ -3209,6 +3246,10 @@
     if (cfg.firstPurchase){
       if (typeof cfg.firstPurchase.enabled === 'boolean') FIRST_PURCHASE_PROMO_ENABLED = cfg.firstPurchase.enabled;
       if (typeof cfg.firstPurchase.amount === 'number') FIRST_PURCHASE_DISCOUNT_AMOUNT = cfg.firstPurchase.amount;
+    }
+    if (cfg.promoJumat){
+      if (typeof cfg.promoJumat.enabled === 'boolean') PROMO_JUMAT_ENABLED = cfg.promoJumat.enabled;
+      if (typeof cfg.promoJumat.price === 'number') PROMO_JUMAT_PRICE = cfg.promoJumat.price;
     }
     if (typeof cfg.storeOpen === 'boolean') STORE_OPEN = cfg.storeOpen;
     refreshShotsPriceLabels();
@@ -3302,6 +3343,39 @@
     amountRow.appendChild(amountInput);
     wrap.appendChild(amountRow);
 
+    var promoJumatHeader = document.createElement('div');
+    promoJumatHeader.className = 'admin-section-title';
+    promoJumatHeader.textContent = 'Promo Jumat';
+    wrap.appendChild(promoJumatHeader);
+
+    var promoJumatToggleRow = document.createElement('div');
+    promoJumatToggleRow.className = 'admin-toggle-row';
+    var promoJumatToggle = document.createElement('input');
+    promoJumatToggle.type = 'checkbox';
+    promoJumatToggle.id = 'adminPromoJumatEnabled';
+    promoJumatToggle.checked = PROMO_JUMAT_ENABLED;
+    var promoJumatToggleLabel = document.createElement('label');
+    promoJumatToggleLabel.setAttribute('for', 'adminPromoJumatEnabled');
+    promoJumatToggleLabel.textContent = 'Aktifkan Promo Jumat (Hot Cappuccino & Hot Americano)';
+    promoJumatToggleRow.appendChild(promoJumatToggle);
+    promoJumatToggleRow.appendChild(promoJumatToggleLabel);
+    wrap.appendChild(promoJumatToggleRow);
+
+    var promoJumatPriceRow = document.createElement('div');
+    promoJumatPriceRow.className = 'admin-field-row';
+    var promoJumatPriceLabel = document.createElement('label');
+    promoJumatPriceLabel.textContent = 'Harga Promo Jumat';
+    promoJumatPriceLabel.setAttribute('for', 'adminPromoJumatPrice');
+    var promoJumatPriceInput = document.createElement('input');
+    promoJumatPriceInput.type = 'number';
+    promoJumatPriceInput.id = 'adminPromoJumatPrice';
+    promoJumatPriceInput.min = '0';
+    promoJumatPriceInput.step = '500';
+    promoJumatPriceInput.value = PROMO_JUMAT_PRICE;
+    promoJumatPriceRow.appendChild(promoJumatPriceLabel);
+    promoJumatPriceRow.appendChild(promoJumatPriceInput);
+    wrap.appendChild(promoJumatPriceRow);
+
     var storeHeader = document.createElement('div');
     storeHeader.className = 'admin-section-title';
     storeHeader.textContent = 'Status Toko';
@@ -3348,6 +3422,13 @@
         enabled: document.getElementById('adminFirstPurchaseEnabled').checked,
         amount: (function(){
           var v = parseInt(document.getElementById('adminFirstPurchaseAmount').value, 10);
+          return isNaN(v) || v < 0 ? 0 : v;
+        })()
+      },
+      promoJumat: {
+        enabled: document.getElementById('adminPromoJumatEnabled').checked,
+        price: (function(){
+          var v = parseInt(document.getElementById('adminPromoJumatPrice').value, 10);
           return isNaN(v) || v < 0 ? 0 : v;
         })()
       },
