@@ -2998,6 +2998,12 @@
             clearOtpBoxes();
             focusFirstOtp();
           } else {
+            // Reset tampilan step OTP ke kondisi normal (jaga-jaga kalau
+            // sebelumnya sempat menampilkan pesan sukses lalu balik lagi).
+            otpInputs().forEach(function(i){ i.disabled = false; });
+            otpResendBtn.style.display = '';
+            otpBackBtn.style.display = '';
+            otpVerifyBtn.style.display = '';
             wcStep1.classList.remove('active');
             wcStep2.classList.add('active');
             otpPhoneNote.textContent = 'ke nomor ' + pendingPhoneRaw;
@@ -3055,7 +3061,17 @@
             body: JSON.stringify({ action:'registerGuest', custName: pendingName, custPhone: pendingPhoneRaw })
           }).catch(function(e){ console.warn('Gagal menyimpan ke Buku Tamu:', e); });
 
-          continueAfterVerified_();
+          // Tampilkan pesan sukses sebentar sebelum lanjut ke popup berikutnya.
+          otpInputs().forEach(function(i){ i.disabled = true; });
+          otpTimerWrap.style.display = 'none';
+          otpResendBtn.style.display = 'none';
+          otpBackBtn.style.display = 'none';
+          otpVerifyBtn.style.display = 'none';
+          otpStatus.className = 'otp-status show ok';
+          otpStatus.textContent = '✅ Nomor kamu berhasil terverifikasi!';
+          setTimeout(function(){
+            continueAfterVerified_();
+          }, 1200);
         })
         .catch(function(err){
           showOtpStatus('err', err.message || 'Verifikasi gagal.');
