@@ -1369,7 +1369,7 @@
           <b>Promo Jumat:</b> Hot Cappuccino &amp; Hot Americano cuma <b>Rp18.000</b>! Berlaku tiap hari Jumat.
         </div>
         <div class="promo-jumat-banner" id="voucherTraktirBanner" hidden>
-          <b>Voucher Traktir Teman:</b> Rp35.000 flat untuk kamu + 1 teman (menu Single Shot). Lebih dari itu, selisihnya jadi diskon dari kami — bukan nambah bayar. Khusus hari Minggu &amp; Senin, tukar di konter hari yang sama.
+          <b>Voucher Traktir Teman:</b> Rp35.000 dapat 1 latte buat kamu + 1 voucher menu (maks Rp35.000) buat teman. Khusus hari Minggu &amp; Senin, tukar di konter hari yang sama.
           <div style="margin-top:8px;">
             <button type="button" class="add-cart-btn add-cart-btn-sm" id="voucherTraktirOpenBtn" style="margin-top:0;">Beli Voucher Traktir Teman</button>
           </div>
@@ -1716,7 +1716,7 @@
       <div class="overlay-title serif">Voucher Traktir Teman</div>
 
       <div id="voucherStepForm">
-        <div class="overlay-msg" id="voucherBuyIntro">Khusus hari Minggu &amp; Senin. Rp35.000 flat untuk 2 orang: kamu pilih menu sendiri (Single Shot) + teman pilih Cappuccino/Latte. Berapa pun total harga aslinya, kamu tetap cukup bayar Rp35.000 — selisihnya jadi diskon dari kami.</div>
+        <div class="overlay-msg" id="voucherBuyIntro">Khusus hari Minggu &amp; Senin. Rp35.000 untuk 2 orang: kamu pilih menu sendiri (seperti pesan biasa) + teman pilih Cappuccino/Latte. Kalau totalnya lebih dari Rp35.000, selisihnya dibayar cash.</div>
         <input type="text" class="pin-input" id="voucherBuyerPhone" placeholder="Nomor HP kamu (yang traktir)" style="letter-spacing:normal; font-size:14px; text-align:left;" autocomplete="off">
         <input type="text" class="pin-input" id="voucherFriendName" placeholder="Nama yang ditraktir" style="letter-spacing:normal; font-size:14px; text-align:left; margin-top:8px;" autocomplete="off">
         <input type="text" class="pin-input" id="voucherFriendPhone" placeholder="Nomor HP yang ditraktir" style="letter-spacing:normal; font-size:14px; text-align:left; margin-top:8px;" autocomplete="off">
@@ -1732,7 +1732,7 @@
           <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
             <span>Paket Voucher Traktir Teman</span><span>Rp35.000</span>
           </div>
-          <div style="font-size:12px; opacity:0.75;">Menu kamu &amp; menu teman dipilih di langkah berikutnya. Harga final tetap Rp35.000 — kalau total menu aslinya lebih mahal, selisihnya jadi diskon dari kami, bukan tambahan bayar.</div>
+          <div style="font-size:12px; opacity:0.75;">Menu kamu &amp; menu teman dipilih di langkah berikutnya. Kalau totalnya lebih dari Rp35.000, selisihnya dibayar cash di tempat.</div>
         </div>
         <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin:12px 0; cursor:pointer; color:var(--cream);">
           <input type="checkbox" id="voucherPaidCheckbox" style="width:16px; height:16px;">
@@ -1751,7 +1751,8 @@
           <label style="font-size:12px; color:var(--cream); opacity:0.75; margin-top:6px;">Susu</label>
           <select id="voucherBuyerMilk" style="width:100%; padding:10px; border-radius:8px; background:rgba(246,236,220,0.08); color:var(--cream); border:1px solid var(--line);"></select>
 
-          <div style="font-size:11px; color:var(--cream); opacity:0.6; margin-top:6px;">Shot: Single Shot (termasuk paket, tidak bisa upgrade Double/Signature untuk voucher ini)</div>
+          <label style="font-size:12px; color:var(--cream); opacity:0.75; margin-top:6px;">Shot</label>
+          <select id="voucherBuyerShots" style="width:100%; padding:10px; border-radius:8px; background:rgba(246,236,220,0.08); color:var(--cream); border:1px solid var(--line);"></select>
 
           <label style="font-size:12px; color:var(--cream); opacity:0.75; margin-top:6px;">Varian</label>
           <select id="voucherBuyerVariant" style="width:100%; padding:10px; border-radius:8px; background:rgba(246,236,220,0.08); color:var(--cream); border:1px solid var(--line);"></select>
@@ -1759,7 +1760,7 @@
         <div style="display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:8px; margin-top:6px; font-weight:600; font-size:14px;">
           <span>Harga menu kamu</span><span id="voucherBuyerPriceLabel">Rp0</span>
         </div>
-        <div class="overlay-note">Harga final tetap Rp35.000, apa pun total menu kamu + menu teman. Kalau totalnya lebih mahal, selisihnya jadi diskon dari kami.</div>
+        <div class="overlay-note">Total menu kamu + menu teman termasuk dalam Rp35.000. Kalau lebih, selisihnya dibayar cash di tempat.</div>
         <button type="button" class="cta-btn" id="voucherBuyerMenuNextBtn" style="margin-top:6px;">Lanjut Pilih Menu Teman</button>
         <button type="button" class="history-clear-btn pin-cancel" id="voucherBuyerMenuClose">Tutup</button>
       </div>
@@ -1777,7 +1778,7 @@
       <div id="voucherStepDone" hidden>
         <div class="overlay-msg" style="color:#8fd6a8;">Voucher berhasil dipakai ☕</div>
         <div id="voucherDoneRincian" style="text-align:left; background:rgba(246,236,220,0.06); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:10px 0; font-size:13px;"></div>
-        <div class="overlay-note" id="voucherDoneSelisihMsg" hidden style="color:#8fd6a8;"></div>
+        <div class="overlay-note" id="voucherDoneSelisihMsg" hidden style="color:#f0b45c;"></div>
         <button type="button" class="history-clear-btn pin-cancel" id="voucherDoneResendBtn" style="margin-bottom:10px;">Kirim Ulang ke Toko via WhatsApp</button>
         <button type="button" class="cta-btn" id="voucherDoneClose">Selesai</button>
       </div>
@@ -4048,6 +4049,7 @@
 
     var buyerSizeEl = document.getElementById('voucherBuyerSize');
     var buyerMilkEl = document.getElementById('voucherBuyerMilk');
+    var buyerShotsEl = document.getElementById('voucherBuyerShots');
     var buyerVariantEl = document.getElementById('voucherBuyerVariant');
     var buyerPriceLabel = document.getElementById('voucherBuyerPriceLabel');
     var buyerMenuNextBtn = document.getElementById('voucherBuyerMenuNextBtn');
@@ -4118,7 +4120,7 @@
       return {
         size: buyerSizeEl.value,
         milk: buyerMilkEl.value,
-        shots: 'single', // dikunci Single Shot untuk voucher traktir, tidak bisa Double/Signature
+        shots: buyerShotsEl.value,
         variant: buyerVariantEl.value,
         temp: 'cold'
       };
@@ -4132,7 +4134,7 @@
       currentBuyerPrice = price;
     }
 
-    [buyerSizeEl, buyerMilkEl, buyerVariantEl].forEach(function(el){
+    [buyerSizeEl, buyerMilkEl, buyerShotsEl, buyerVariantEl].forEach(function(el){
       if (el) el.addEventListener('change', refreshBuyerPrice);
     });
 
@@ -4147,6 +4149,7 @@
 
       fillSelect(buyerSizeEl, 'size');
       fillSelect(buyerMilkEl, 'milk');
+      fillSelect(buyerShotsEl, 'shots');
       fillSelect(buyerVariantEl, 'variant');
       refreshBuyerPrice();
 
@@ -4281,20 +4284,16 @@
           .then(function(res){
             if (res && res.ok){
               var total = (typeof res.total === 'number') ? res.total : (currentBuyerPrice + friendPrice);
-              // Rp35.000 adalah harga final flat. Kalau harga normal kedua menu lebih
-              // mahal dari itu, selisihnya jadi DISKON dari toko -- bukan tambahan
-              // bayar buat customer.
-              var diskon = Math.max(0, total - VOUCHER_PRICE);
+              var selisih = (typeof res.selisih === 'number') ? res.selisih : Math.max(0, total - VOUCHER_PRICE);
 
               doneRincian.innerHTML =
                 '<div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>Menu kamu: ' + buyerMenuLabel + '</span><span>' + idr(currentBuyerPrice) + '</span></div>'
                 + '<div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Menu ' + (currentFriendName || 'teman') + ': ' + menu + '</span><span>' + idr(friendPrice) + '</span></div>'
-                + '<div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Harga normal</span><span>' + idr(total) + '</span></div>'
-                + '<div style="display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:8px; font-weight:600;"><span>Kamu bayar (sudah lunas)</span><span>' + idr(VOUCHER_PRICE) + '</span></div>';
+                + '<div style="display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:8px; font-weight:600;"><span>Total</span><span>' + idr(total) + '</span></div>';
 
-              if (diskon > 0){
+              if (selisih > 0){
                 doneSelisihMsg.hidden = false;
-                doneSelisihMsg.textContent = 'Kamu hemat ' + idr(diskon) + ' dari harga normal — diskon dari Famuha Coffee, tidak ada tambahan bayar.';
+                doneSelisihMsg.textContent = 'Total melebihi paket Rp35.000. Selisih ' + idr(selisih) + ' dibayar cash di tempat.';
               } else {
                 doneSelisihMsg.hidden = true;
               }
@@ -4305,7 +4304,7 @@
                 + 'Untuk: ' + (currentFriendName || '-') + ' (' + currentFriendPhone + ')\n'
                 + 'Menu ' + (currentFriendName || 'teman') + ': ' + menu + ' (' + idr(friendPrice) + ')\n'
                 + 'Menu yang traktir (' + (currentBuyerPhone || '-') + '): ' + buyerMenuLabel + ' (' + idr(currentBuyerPrice) + ')\n'
-                + 'Harga normal: ' + idr(total) + (diskon > 0 ? ' — diskon toko ' + idr(diskon) + ', sudah lunas Rp35.000' : ' — sudah lunas Rp35.000') + '\n'
+                + 'Total: ' + idr(total) + (selisih > 0 ? ' — selisih ' + idr(selisih) + ' dibayar cash di tempat' : '') + '\n'
                 + 'Mohon disiapkan ya, terima kasih 🙂';
               lastNotifyMsg = notifyMsg;
               window.open('https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(notifyMsg), '_blank');
