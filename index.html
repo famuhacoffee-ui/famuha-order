@@ -1716,7 +1716,7 @@
       <div class="overlay-title serif">Voucher Traktir Teman</div>
 
       <div id="voucherStepForm">
-        <div class="overlay-msg" id="voucherBuyIntro">Khusus hari Minggu &amp; Senin. Rp35.000 untuk 2 item: 1x latte buat kamu (yang traktir) + 1x voucher menu (Cappuccino/Latte) buat yang ditraktir.</div>
+        <div class="overlay-msg" id="voucherBuyIntro">Khusus hari Minggu &amp; Senin. Rp35.000 untuk 2 orang: kamu pilih menu sendiri (seperti pesan biasa) + teman pilih Cappuccino/Latte. Kalau totalnya lebih dari Rp35.000, selisihnya dibayar cash.</div>
         <input type="text" class="pin-input" id="voucherBuyerPhone" placeholder="Nomor HP kamu (yang traktir)" style="letter-spacing:normal; font-size:14px; text-align:left;" autocomplete="off">
         <input type="text" class="pin-input" id="voucherFriendName" placeholder="Nama yang ditraktir" style="letter-spacing:normal; font-size:14px; text-align:left; margin-top:8px;" autocomplete="off">
         <input type="text" class="pin-input" id="voucherFriendPhone" placeholder="Nomor HP yang ditraktir" style="letter-spacing:normal; font-size:14px; text-align:left; margin-top:8px;" autocomplete="off">
@@ -1730,14 +1730,9 @@
         <div class="overlay-msg">Rincian Pembayaran</div>
         <div style="text-align:left; background:rgba(246,236,220,0.06); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:10px 0;">
           <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
-            <span>1x Latte (buat kamu)</span><span>Termasuk</span>
+            <span>Paket Voucher Traktir Teman</span><span>Rp35.000</span>
           </div>
-          <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">
-            <span>1x Voucher menu (buat teman)</span><span>Termasuk</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:8px; font-weight:600; font-size:14px;">
-            <span>Total</span><span>Rp35.000</span>
-          </div>
+          <div style="font-size:12px; opacity:0.75;">Menu kamu &amp; menu teman dipilih di langkah berikutnya. Kalau totalnya lebih dari Rp35.000, selisihnya dibayar cash di tempat.</div>
         </div>
         <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin:12px 0; cursor:pointer; color:var(--cream);">
           <input type="checkbox" id="voucherPaidCheckbox" style="width:16px; height:16px;">
@@ -1745,6 +1740,29 @@
         </label>
         <button type="button" class="cta-btn" id="voucherUseNowBtn" disabled>Gunakan Sekarang</button>
         <button type="button" class="history-clear-btn pin-cancel" id="voucherPayClose">Tutup</button>
+      </div>
+
+      <div id="voucherStepBuyerMenu" hidden>
+        <div class="overlay-msg">Pilih menu buat kamu (yang traktir), seperti pesan biasa:</div>
+        <div style="text-align:left; display:flex; flex-direction:column; gap:6px; margin:10px 0;">
+          <label style="font-size:12px; color:var(--cream); opacity:0.75;">Ukuran</label>
+          <select id="voucherBuyerSize" style="width:100%; padding:10px; border-radius:8px; background:rgba(246,236,220,0.08); color:var(--cream); border:1px solid var(--line);"></select>
+
+          <label style="font-size:12px; color:var(--cream); opacity:0.75; margin-top:6px;">Susu</label>
+          <select id="voucherBuyerMilk" style="width:100%; padding:10px; border-radius:8px; background:rgba(246,236,220,0.08); color:var(--cream); border:1px solid var(--line);"></select>
+
+          <label style="font-size:12px; color:var(--cream); opacity:0.75; margin-top:6px;">Shot</label>
+          <select id="voucherBuyerShots" style="width:100%; padding:10px; border-radius:8px; background:rgba(246,236,220,0.08); color:var(--cream); border:1px solid var(--line);"></select>
+
+          <label style="font-size:12px; color:var(--cream); opacity:0.75; margin-top:6px;">Varian</label>
+          <select id="voucherBuyerVariant" style="width:100%; padding:10px; border-radius:8px; background:rgba(246,236,220,0.08); color:var(--cream); border:1px solid var(--line);"></select>
+        </div>
+        <div style="display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:8px; margin-top:6px; font-weight:600; font-size:14px;">
+          <span>Harga menu kamu</span><span id="voucherBuyerPriceLabel">Rp0</span>
+        </div>
+        <div class="overlay-note">Total menu kamu + menu teman termasuk dalam Rp35.000. Kalau lebih, selisihnya dibayar cash di tempat.</div>
+        <button type="button" class="cta-btn" id="voucherBuyerMenuNextBtn" style="margin-top:6px;">Lanjut Pilih Menu Teman</button>
+        <button type="button" class="history-clear-btn pin-cancel" id="voucherBuyerMenuClose">Tutup</button>
       </div>
 
       <div id="voucherStepMenu" hidden>
@@ -1758,7 +1776,10 @@
       </div>
 
       <div id="voucherStepDone" hidden>
-        <div class="overlay-msg" id="voucherDoneMsg" style="color:#8fd6a8;"></div>
+        <div class="overlay-msg" style="color:#8fd6a8;">Voucher berhasil dipakai ☕</div>
+        <div id="voucherDoneRincian" style="text-align:left; background:rgba(246,236,220,0.06); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:10px 0; font-size:13px;"></div>
+        <div class="overlay-note" id="voucherDoneSelisihMsg" hidden style="color:#f0b45c;"></div>
+        <button type="button" class="history-clear-btn pin-cancel" id="voucherDoneResendBtn" style="margin-bottom:10px;">Kirim Ulang ke Toko via WhatsApp</button>
         <button type="button" class="cta-btn" id="voucherDoneClose">Selesai</button>
       </div>
     </div>
@@ -4005,6 +4026,7 @@
   // ================= Voucher Traktir Teman =================
   function initVoucherTraktir_(){
     var VOUCHER_PRICE = 35000;
+    var FRIEND_MENU_PRICE = { Cappuccino: PRICES.size.regular + PRICES.variant.cappuccino, Latte: PRICES.size.regular };
 
     var banner = document.getElementById('voucherTraktirBanner');
     var openBtn = document.getElementById('voucherTraktirOpenBtn');
@@ -4018,18 +4040,35 @@
 
     var stepForm = document.getElementById('voucherStepForm');
     var stepPay = document.getElementById('voucherStepPay');
+    var stepBuyerMenu = document.getElementById('voucherStepBuyerMenu');
     var stepMenu = document.getElementById('voucherStepMenu');
     var stepDone = document.getElementById('voucherStepDone');
     var paidCheckbox = document.getElementById('voucherPaidCheckbox');
     var useNowBtn = document.getElementById('voucherUseNowBtn');
     var payCloseBtn = document.getElementById('voucherPayClose');
+
+    var buyerSizeEl = document.getElementById('voucherBuyerSize');
+    var buyerMilkEl = document.getElementById('voucherBuyerMilk');
+    var buyerShotsEl = document.getElementById('voucherBuyerShots');
+    var buyerVariantEl = document.getElementById('voucherBuyerVariant');
+    var buyerPriceLabel = document.getElementById('voucherBuyerPriceLabel');
+    var buyerMenuNextBtn = document.getElementById('voucherBuyerMenuNextBtn');
+    var buyerMenuCloseBtn = document.getElementById('voucherBuyerMenuClose');
+
     var menuButtons = Array.prototype.slice.call(document.querySelectorAll('.voucher-menu-btn'));
     var menuError = document.getElementById('voucherMenuError');
     var menuCloseBtn = document.getElementById('voucherMenuClose');
-    var doneMsg = document.getElementById('voucherDoneMsg');
+    var doneRincian = document.getElementById('voucherDoneRincian');
+    var doneSelisihMsg = document.getElementById('voucherDoneSelisihMsg');
     var doneCloseBtn = document.getElementById('voucherDoneClose');
+    var doneResendBtn = document.getElementById('voucherDoneResendBtn');
 
     var currentFriendPhone = null;
+    var currentFriendName = null;
+    var currentBuyerPhone = null;
+    var currentBuyerCfg = null;
+    var currentBuyerPrice = 0;
+    var lastNotifyMsg = null;
 
     function isVoucherDayActive(){
       var day = new Date().getDay();
@@ -4054,6 +4093,7 @@
     function goToStep(step){
       stepForm.hidden = step !== 'form';
       stepPay.hidden = step !== 'pay';
+      stepBuyerMenu.hidden = step !== 'buyerMenu';
       stepMenu.hidden = step !== 'menu';
       stepDone.hidden = step !== 'done';
     }
@@ -4063,6 +4103,41 @@
       goToStep('form');
     }
 
+    // Isi dropdown builder menu buat yang traktir dari PRICES/LABELS yang sudah ada
+    function fillSelect(el, group){
+      el.innerHTML = '';
+      Object.keys(PRICES[group]).forEach(function(key){
+        var opt = document.createElement('option');
+        opt.value = key;
+        var price = PRICES[group][key];
+        var label = (LABELS[group] && LABELS[group][key]) || key;
+        opt.textContent = label + (price > 0 ? ' (+' + idr(price) + ')' : '');
+        el.appendChild(opt);
+      });
+    }
+
+    function currentBuyerCfgFromForm(){
+      return {
+        size: buyerSizeEl.value,
+        milk: buyerMilkEl.value,
+        shots: buyerShotsEl.value,
+        variant: buyerVariantEl.value,
+        temp: 'cold'
+      };
+    }
+
+    function refreshBuyerPrice(){
+      var cfg = currentBuyerCfgFromForm();
+      var price = computeUnitPrice(cfg);
+      buyerPriceLabel.textContent = idr(price);
+      currentBuyerCfg = cfg;
+      currentBuyerPrice = price;
+    }
+
+    [buyerSizeEl, buyerMilkEl, buyerShotsEl, buyerVariantEl].forEach(function(el){
+      if (el) el.addEventListener('change', refreshBuyerPrice);
+    });
+
     if (openBtn) openBtn.addEventListener('click', function(){
       buyError.classList.remove('show');
       var savedPhone = '';
@@ -4071,14 +4146,25 @@
       friendPhoneEl.value = '';
       friendNameEl.value = '';
       currentFriendPhone = null;
+
+      fillSelect(buyerSizeEl, 'size');
+      fillSelect(buyerMilkEl, 'milk');
+      fillSelect(buyerShotsEl, 'shots');
+      fillSelect(buyerVariantEl, 'variant');
+      refreshBuyerPrice();
+
       goToStep('form');
       buyOverlay.classList.add('show');
       setTimeout(function(){ friendNameEl.focus(); }, 100);
     });
     if (cancelBtn) cancelBtn.addEventListener('click', closeVoucherOverlay);
     if (payCloseBtn) payCloseBtn.addEventListener('click', closeVoucherOverlay);
+    if (buyerMenuCloseBtn) buyerMenuCloseBtn.addEventListener('click', closeVoucherOverlay);
     if (menuCloseBtn) menuCloseBtn.addEventListener('click', closeVoucherOverlay);
     if (doneCloseBtn) doneCloseBtn.addEventListener('click', closeVoucherOverlay);
+    if (doneResendBtn) doneResendBtn.addEventListener('click', function(){
+      if (lastNotifyMsg) window.open('https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(lastNotifyMsg), '_blank');
+    });
     buyOverlay.addEventListener('click', function(e){ if (e.target === buyOverlay) closeVoucherOverlay(); });
 
     function showBuyError(msg){
@@ -4129,6 +4215,8 @@
             return;
           }
           currentFriendPhone = friend;
+          currentFriendName = friendName;
+          currentBuyerPhone = buyer;
 
           var msg = 'Halo Famuha Coffee, saya mau beli *Voucher Traktir Teman* (Rp' + VOUCHER_PRICE.toLocaleString('id-ID') + ').\n'
             + 'Nomor HP saya (yang traktir): ' + buyer + '\n'
@@ -4153,6 +4241,12 @@
     });
 
     if (useNowBtn) useNowBtn.addEventListener('click', function(){
+      refreshBuyerPrice();
+      goToStep('buyerMenu');
+    });
+
+    if (buyerMenuNextBtn) buyerMenuNextBtn.addEventListener('click', function(){
+      refreshBuyerPrice();
       menuError.classList.remove('show');
       menuButtons.forEach(function(b){ b.disabled = false; });
       goToStep('menu');
@@ -4169,16 +4263,51 @@
         menuButtons.forEach(function(b){ b.disabled = true; });
         menuError.classList.remove('show');
 
+        var buyerMenuLabel = LABELS.size[currentBuyerCfg.size] + ' '
+          + LABELS.variant[currentBuyerCfg.variant] + ', susu ' + LABELS.milk[currentBuyerCfg.milk]
+          + ', ' + LABELS.shots[currentBuyerCfg.shots];
+        var friendPrice = FRIEND_MENU_PRICE[menu] || 0;
+
         fetch(GAS_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'voucherTraktirClaim', friendPhone: currentFriendPhone, menu: menu })
+          body: JSON.stringify({
+            action: 'voucherTraktirClaim',
+            friendPhone: currentFriendPhone,
+            menu: menu,
+            buyerMenuLabel: buyerMenuLabel,
+            buyerPrice: currentBuyerPrice,
+            friendPrice: friendPrice
+          })
         })
           .then(function(r){ return r.json(); })
           .then(function(res){
             if (res && res.ok){
-              doneMsg.textContent = 'Voucher berhasil dipakai untuk "' + menu + '". Selamat menikmati ☕';
+              var total = (typeof res.total === 'number') ? res.total : (currentBuyerPrice + friendPrice);
+              var selisih = (typeof res.selisih === 'number') ? res.selisih : Math.max(0, total - VOUCHER_PRICE);
+
+              doneRincian.innerHTML =
+                '<div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>Menu kamu: ' + buyerMenuLabel + '</span><span>' + idr(currentBuyerPrice) + '</span></div>'
+                + '<div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Menu ' + (currentFriendName || 'teman') + ': ' + menu + '</span><span>' + idr(friendPrice) + '</span></div>'
+                + '<div style="display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:8px; font-weight:600;"><span>Total</span><span>' + idr(total) + '</span></div>';
+
+              if (selisih > 0){
+                doneSelisihMsg.hidden = false;
+                doneSelisihMsg.textContent = 'Total melebihi paket Rp35.000. Selisih ' + idr(selisih) + ' dibayar cash di tempat.';
+              } else {
+                doneSelisihMsg.hidden = true;
+              }
+
               goToStep('done');
+
+              var notifyMsg = 'Halo Famuha Coffee, voucher traktir sudah saya pakai ✅\n'
+                + 'Untuk: ' + (currentFriendName || '-') + ' (' + currentFriendPhone + ')\n'
+                + 'Menu ' + (currentFriendName || 'teman') + ': ' + menu + ' (' + idr(friendPrice) + ')\n'
+                + 'Menu yang traktir (' + (currentBuyerPhone || '-') + '): ' + buyerMenuLabel + ' (' + idr(currentBuyerPrice) + ')\n'
+                + 'Total: ' + idr(total) + (selisih > 0 ? ' — selisih ' + idr(selisih) + ' dibayar cash di tempat' : '') + '\n'
+                + 'Mohon disiapkan ya, terima kasih 🙂';
+              lastNotifyMsg = notifyMsg;
+              window.open('https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(notifyMsg), '_blank');
             } else {
               menuError.textContent = (res && res.error) || 'Gagal menukar voucher, coba lagi.';
               menuError.classList.add('show');
