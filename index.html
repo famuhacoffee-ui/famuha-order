@@ -1368,6 +1368,12 @@
         <div class="promo-jumat-banner" id="promoJumatBanner" hidden>
           <b>Promo Jumat:</b> Hot Cappuccino &amp; Hot Americano cuma <b>Rp18.000</b>! Berlaku tiap hari Jumat.
         </div>
+        <div class="promo-jumat-banner" id="voucherTraktirBanner" hidden>
+          <b>Voucher Traktir Teman:</b> Rp35.000 dapat 1 latte buat kamu + 1 voucher menu (maks Rp35.000) buat teman. Khusus hari Minggu &amp; Senin, tukar di konter hari yang sama.
+          <div style="margin-top:8px;">
+            <button type="button" class="add-cart-btn add-cart-btn-sm" id="voucherTraktirOpenBtn" style="margin-top:0;">Beli Voucher Traktir Teman</button>
+          </div>
+        </div>
       </div>
 
       <div class="group" id="shotsGroup">
@@ -1700,6 +1706,61 @@
       <button type="button" class="cta-btn" id="adminSaveBtn">Simpan Perubahan</button>
       <button type="button" class="history-clear-btn pin-cancel" id="adminClose">Tutup</button>
       <div class="overlay-note">Perubahan tersimpan di server dan berlaku untuk semua perangkat.</div>
+    </div>
+  </div>
+
+  <!-- Voucher Traktir Teman: overlay beli (customer) -->
+  <div class="overlay" id="voucherBuyOverlay">
+    <div class="overlay-card pin-card" id="voucherBuyCard">
+      <div class="overlay-logo serif">FAMUHA COFFEE</div>
+      <div class="overlay-title serif">Voucher Traktir Teman</div>
+
+      <div id="voucherStepForm">
+        <div class="overlay-msg" id="voucherBuyIntro">Khusus hari Minggu &amp; Senin. Rp35.000 untuk 2 item: 1x latte buat kamu (yang traktir) + 1x voucher menu (Cappuccino/Latte) buat yang ditraktir.</div>
+        <input type="text" class="pin-input" id="voucherBuyerPhone" placeholder="Nomor HP kamu (yang traktir)" style="letter-spacing:normal; font-size:14px; text-align:left;" autocomplete="off">
+        <input type="text" class="pin-input" id="voucherFriendName" placeholder="Nama yang ditraktir" style="letter-spacing:normal; font-size:14px; text-align:left; margin-top:8px;" autocomplete="off">
+        <input type="text" class="pin-input" id="voucherFriendPhone" placeholder="Nomor HP yang ditraktir" style="letter-spacing:normal; font-size:14px; text-align:left; margin-top:8px;" autocomplete="off">
+        <div class="pin-error" id="voucherBuyError">Isi kedua nomor HP dengan benar dulu ya.</div>
+        <button type="button" class="cta-btn" id="voucherBuySubmit">Bayar &amp; Terbitkan Voucher</button>
+        <button type="button" class="history-clear-btn pin-cancel" id="voucherBuyCancel">Batal</button>
+        <div class="overlay-note">Setelah klik, WhatsApp admin akan terbuka untuk konfirmasi bayar.</div>
+      </div>
+
+      <div id="voucherStepPay" hidden>
+        <div class="overlay-msg">Rincian Pembayaran</div>
+        <div style="text-align:left; background:rgba(246,236,220,0.06); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:10px 0;">
+          <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
+            <span>1x Latte (buat kamu)</span><span>Termasuk</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">
+            <span>1x Voucher menu (buat teman)</span><span>Termasuk</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:8px; font-weight:600; font-size:14px;">
+            <span>Total</span><span>Rp35.000</span>
+          </div>
+        </div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin:12px 0; cursor:pointer; color:var(--cream);">
+          <input type="checkbox" id="voucherPaidCheckbox" style="width:16px; height:16px;">
+          Saya sudah bayar Rp35.000
+        </label>
+        <button type="button" class="cta-btn" id="voucherUseNowBtn" disabled>Gunakan Sekarang</button>
+        <button type="button" class="history-clear-btn pin-cancel" id="voucherPayClose">Tutup</button>
+      </div>
+
+      <div id="voucherStepMenu" hidden>
+        <div class="overlay-msg">Voucher berlaku untuk Cappuccino &amp; Latte saja. Pilih menu buat teman:</div>
+        <div style="display:flex; gap:10px; margin:14px 0;">
+          <button type="button" class="add-cart-btn add-cart-btn-sm voucher-menu-btn" data-menu="Cappuccino" style="flex:1; margin-top:0;">Cappuccino</button>
+          <button type="button" class="add-cart-btn add-cart-btn-sm voucher-menu-btn" data-menu="Latte" style="flex:1; margin-top:0;">Latte</button>
+        </div>
+        <div class="pin-error" id="voucherMenuError"></div>
+        <button type="button" class="history-clear-btn pin-cancel" id="voucherMenuClose">Tutup</button>
+      </div>
+
+      <div id="voucherStepDone" hidden>
+        <div class="overlay-msg" id="voucherDoneMsg" style="color:#8fd6a8;"></div>
+        <button type="button" class="cta-btn" id="voucherDoneClose">Selesai</button>
+      </div>
     </div>
   </div>
 
@@ -3941,10 +4002,205 @@
     });
   })();
 
+  // ================= Voucher Traktir Teman =================
+  function initVoucherTraktir_(){
+    var VOUCHER_PRICE = 35000;
+
+    var banner = document.getElementById('voucherTraktirBanner');
+    var openBtn = document.getElementById('voucherTraktirOpenBtn');
+    var buyOverlay = document.getElementById('voucherBuyOverlay');
+    var buyerPhoneEl = document.getElementById('voucherBuyerPhone');
+    var friendPhoneEl = document.getElementById('voucherFriendPhone');
+    var friendNameEl = document.getElementById('voucherFriendName');
+    var buyError = document.getElementById('voucherBuyError');
+    var submitBtn = document.getElementById('voucherBuySubmit');
+    var cancelBtn = document.getElementById('voucherBuyCancel');
+
+    var stepForm = document.getElementById('voucherStepForm');
+    var stepPay = document.getElementById('voucherStepPay');
+    var stepMenu = document.getElementById('voucherStepMenu');
+    var stepDone = document.getElementById('voucherStepDone');
+    var paidCheckbox = document.getElementById('voucherPaidCheckbox');
+    var useNowBtn = document.getElementById('voucherUseNowBtn');
+    var payCloseBtn = document.getElementById('voucherPayClose');
+    var menuButtons = Array.prototype.slice.call(document.querySelectorAll('.voucher-menu-btn'));
+    var menuError = document.getElementById('voucherMenuError');
+    var menuCloseBtn = document.getElementById('voucherMenuClose');
+    var doneMsg = document.getElementById('voucherDoneMsg');
+    var doneCloseBtn = document.getElementById('voucherDoneClose');
+
+    var currentFriendPhone = null;
+
+    function isVoucherDayActive(){
+      var day = new Date().getDay();
+      return day === 0 || day === 1; // 0 = Minggu, 1 = Senin
+    }
+    function updateBannerVisibility(){ if (banner) banner.hidden = !isVoucherDayActive(); }
+
+    function normalizePhone(v){
+      var digits = (v || '').replace(/\D/g, '');
+      if (digits.length < 9) return null;
+      if (digits[0] === '0') digits = '62' + digits.slice(1);
+      else if (digits.slice(0, 2) !== '62') digits = '62' + digits;
+      return digits;
+    }
+
+    // Nomor HP Indonesia yang valid: setelah dinormalisasi jadi 62 8xxxxxxxxx,
+    // harus diawali 8 (nomor seluler) dan panjangnya wajar (bukan asal ketik).
+    function isValidIndoPhone(digits){
+      return !!digits && /^628[0-9]{7,12}$/.test(digits);
+    }
+
+    function goToStep(step){
+      stepForm.hidden = step !== 'form';
+      stepPay.hidden = step !== 'pay';
+      stepMenu.hidden = step !== 'menu';
+      stepDone.hidden = step !== 'done';
+    }
+
+    function closeVoucherOverlay(){
+      buyOverlay.classList.remove('show');
+      goToStep('form');
+    }
+
+    if (openBtn) openBtn.addEventListener('click', function(){
+      buyError.classList.remove('show');
+      var savedPhone = '';
+      try { savedPhone = localStorage.getItem('customerPhone') || ''; } catch (e){}
+      buyerPhoneEl.value = savedPhone;
+      friendPhoneEl.value = '';
+      friendNameEl.value = '';
+      currentFriendPhone = null;
+      goToStep('form');
+      buyOverlay.classList.add('show');
+      setTimeout(function(){ friendNameEl.focus(); }, 100);
+    });
+    if (cancelBtn) cancelBtn.addEventListener('click', closeVoucherOverlay);
+    if (payCloseBtn) payCloseBtn.addEventListener('click', closeVoucherOverlay);
+    if (menuCloseBtn) menuCloseBtn.addEventListener('click', closeVoucherOverlay);
+    if (doneCloseBtn) doneCloseBtn.addEventListener('click', closeVoucherOverlay);
+    buyOverlay.addEventListener('click', function(e){ if (e.target === buyOverlay) closeVoucherOverlay(); });
+
+    function showBuyError(msg){
+      buyError.textContent = msg;
+      buyError.classList.add('show');
+    }
+
+    if (submitBtn) submitBtn.addEventListener('click', function(){
+      var buyer = normalizePhone(buyerPhoneEl.value);
+      var friend = normalizePhone(friendPhoneEl.value);
+      var friendName = (friendNameEl.value || '').trim();
+      if (!friendName){
+        showBuyError('Isi nama yang mau ditraktir dulu ya.');
+        return;
+      }
+      if (!isValidIndoPhone(buyer) || !isValidIndoPhone(friend)){
+        showBuyError('Masukkan nomor HP yang valid (contoh: 08xxxxxxxxxx) untuk kedua nomor.');
+        return;
+      }
+      if (buyer === friend){
+        showBuyError('Nomor yang ditraktir tidak boleh sama dengan nomor kamu sendiri.');
+        return;
+      }
+      if (!GAS_URL){
+        showBuyError('GAS_URL belum diatur, tidak bisa memproses voucher.');
+        return;
+      }
+      buyError.classList.remove('show');
+      submitBtn.disabled = true;
+
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'voucherTraktirCreate',
+          buyerPhone: buyer,
+          friendPhone: friend,
+          friendName: friendName,
+          maxValue: VOUCHER_PRICE,
+          createdAt: new Date().toISOString()
+        })
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(res){
+          submitBtn.disabled = false;
+          if (!res || !res.ok){
+            showBuyError((res && res.error) || 'Gagal membuat voucher, coba lagi.');
+            return;
+          }
+          currentFriendPhone = friend;
+
+          var msg = 'Halo Famuha Coffee, saya mau beli *Voucher Traktir Teman* (Rp' + VOUCHER_PRICE.toLocaleString('id-ID') + ').\n'
+            + 'Nomor HP saya (yang traktir): ' + buyer + '\n'
+            + 'Nama yang ditraktir: ' + friendName + '\n'
+            + 'Nomor HP yang ditraktir: ' + friend + '\n'
+            + 'Mohon dikonfirmasi ya, terima kasih 🙂';
+          window.open('https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(msg), '_blank');
+
+          paidCheckbox.checked = false;
+          useNowBtn.disabled = true;
+          goToStep('pay');
+        })
+        .catch(function(err){
+          submitBtn.disabled = false;
+          console.error('[voucher traktir] gagal terhubung ke server:', err);
+          showBuyError('Gagal terhubung ke server, coba lagi.');
+        });
+    });
+
+    if (paidCheckbox) paidCheckbox.addEventListener('change', function(){
+      useNowBtn.disabled = !paidCheckbox.checked;
+    });
+
+    if (useNowBtn) useNowBtn.addEventListener('click', function(){
+      menuError.classList.remove('show');
+      menuButtons.forEach(function(b){ b.disabled = false; });
+      goToStep('menu');
+    });
+
+    menuButtons.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var menu = btn.getAttribute('data-menu');
+        if (!GAS_URL || !currentFriendPhone){
+          menuError.textContent = 'Terjadi kesalahan, coba ulang dari awal.';
+          menuError.classList.add('show');
+          return;
+        }
+        menuButtons.forEach(function(b){ b.disabled = true; });
+        menuError.classList.remove('show');
+
+        fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'voucherTraktirClaim', friendPhone: currentFriendPhone, menu: menu })
+        })
+          .then(function(r){ return r.json(); })
+          .then(function(res){
+            if (res && res.ok){
+              doneMsg.textContent = 'Voucher berhasil dipakai untuk "' + menu + '". Selamat menikmati ☕';
+              goToStep('done');
+            } else {
+              menuError.textContent = (res && res.error) || 'Gagal menukar voucher, coba lagi.';
+              menuError.classList.add('show');
+              menuButtons.forEach(function(b){ b.disabled = false; });
+            }
+          })
+          .catch(function(){
+            menuError.textContent = 'Gagal menukar voucher, coba lagi.';
+            menuError.classList.add('show');
+            menuButtons.forEach(function(b){ b.disabled = false; });
+          });
+      });
+    });
+
+    updateBannerVisibility();
+  }
+
   update();
   updateTimingUI();
   loadConfig();
   initGuestbook_();
+  initVoucherTraktir_();
 })();
 </script>
 </body>
