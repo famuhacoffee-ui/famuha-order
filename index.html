@@ -1357,9 +1357,21 @@
             <input type="radio" name="variant" value="mont-blanc-orange">
             <span class="name">Mont Blanc Orange</span>
           </label>
-          <label class="choice" data-value="cold-brew">
-            <input type="radio" name="variant" value="cold-brew">
-            <span class="name">Cold Brew</span>
+          <label class="choice" data-value="mont-blanc-strawberry">
+            <input type="radio" name="variant" value="mont-blanc-strawberry">
+            <span class="name">Mont Blanc Strawberry</span>
+          </label>
+          <label class="choice" data-value="cold-brew-orange">
+            <input type="radio" name="variant" value="cold-brew-orange">
+            <span class="name">Cold Brew Orange</span>
+          </label>
+          <label class="choice" data-value="cold-brew-peach">
+            <input type="radio" name="variant" value="cold-brew-peach">
+            <span class="name">Cold Brew Peach</span>
+          </label>
+          <label class="choice" data-value="matcha-vanilla-latte">
+            <input type="radio" name="variant" value="matcha-vanilla-latte">
+            <span class="name">Matcha Vanilla Latte</span>
           </label>
         </div>
         <div class="promo-1708-banner" id="promo1708Banner" hidden>
@@ -1394,7 +1406,7 @@
           </label>
           <label class="choice" data-value="triple">
             <input type="radio" name="shots" value="triple">
-            <span class="name">Signature</span>
+            <span class="name">TripleShot</span>
             <span class="price">+Rp 5.000</span>
           </label>
         </div>
@@ -1608,7 +1620,7 @@
         <img id="promoPreviewImg" class="promo-preview-img" alt="Hot Cappuccino Famuha Coffee" hidden>
       </div>
       <div class="preview-label serif" id="previewLabel">Gula Aren Latte</div>
-      <div class="preview-sub" id="previewSub">Single Shot · Es Normal</div>
+      <div class="preview-sub" id="previewSub">Single Shot · Less Es</div>
 
       <div class="cart-list" id="cartList"></div>
 
@@ -1828,7 +1840,7 @@
     size: { small: 18000, regular: 20000, large: 29000 },
     milk: { 'full-cream': 0, oat: 3000, almond: 3000, coconut: 3000 },
     shots: { single: 0, double: 4000, triple: 5000 },
-    variant: { pistachio: 2000, hazelnut: 2000, vanilla: 2000, cappuccino: 2000, 'gula-aren': 2000, 'black-americano': 0, 'mont-blanc-orange': 5000, 'cold-brew': 4000 }
+    variant: { pistachio: 2000, hazelnut: 2000, vanilla: 2000, cappuccino: 2000, 'gula-aren': 2000, 'black-americano': 0, 'mont-blanc-orange': 5000, 'mont-blanc-strawberry': 5000, 'cold-brew-orange': 4000, 'cold-brew-peach': 4000, 'matcha-vanilla-latte': 2000 }
   };
 
   var ONGKIR = {
@@ -1841,9 +1853,9 @@
   var LABELS = {
     size: { small:'Small', regular:'Regular', large:'Large' },
     milk: { 'full-cream':'Full Cream', oat:'Oat Milk', almond:'Almond Milk', coconut:'Coconut Milk' },
-    shots: { single:'Single Shot', double:'Double Shot', triple:'Signature Shot' },
-    ice: { none:'Tanpa Es', normal:'Es Normal', extra:'Extra Es' },
-    variant: { pistachio:'Pistachio Latte', hazelnut:'Hazelnut Latte', vanilla:'Vanilla Latte', cappuccino:'Cappuccino', 'gula-aren':'Gula Aren Latte', 'black-americano':'Black Americano', 'mont-blanc-orange':'Mont Blanc Orange', 'cold-brew':'Cold Brew' },
+    shots: { single:'Single Shot', double:'Double Shot', triple:'TripleShot' },
+    ice: { none:'Tanpa Es', normal:'Less Es', extra:'Extra Es' },
+    variant: { pistachio:'Pistachio Latte', hazelnut:'Hazelnut Latte', vanilla:'Vanilla Latte', cappuccino:'Cappuccino', 'gula-aren':'Gula Aren Latte', 'black-americano':'Black Americano', 'mont-blanc-orange':'Mont Blanc Orange', 'mont-blanc-strawberry':'Mont Blanc Strawberry', 'cold-brew-orange':'Cold Brew Orange', 'cold-brew-peach':'Cold Brew Peach', 'matcha-vanilla-latte':'Matcha Vanilla Latte' },
     sugar: { 'no-sugar':'No Sugar', 'less-sugar':'Less Sugar', 'normal-sugar':'Normal Sugar' },
     temp: { cold:'Dingin (Cold)', hot:'Panas (Hot)' },
     delivery: { pickup:'Ambil Sendiri', delivered:'Diantar', gosend:'Dijemput GoSend', grabexpress:'Dijemput GrabExpress' },
@@ -1858,7 +1870,10 @@
     'gula-aren': [178,120,56],
     'black-americano': [58,36,24],
     'mont-blanc-orange': [224,146,64],
-    'cold-brew': [74,46,28]
+    'mont-blanc-strawberry': [214,90,110],
+    'cold-brew-orange': [180,100,40],
+    'cold-brew-peach': [235,150,110],
+    'matcha-vanilla-latte': [150,178,96]
   };
   var ESPRESSO_COLOR = [43,26,18];
   var SHOT_WEIGHT = { single:0.25, double:0.45, triple:0.68 };
@@ -2022,10 +2037,10 @@
   }
 
   function cartHasExcludedFromFirstDiscount_(){
-    return cart.some(function(item){ return item.variant === 'cold-brew' || item.variant === 'cappuccino'; });
+    return cart.some(function(item){ return item.variant === 'cold-brew-orange' || item.variant === 'cold-brew-peach' || item.variant === 'cappuccino'; });
   }
   function cartHasMontBlanc_(){
-    return cart.some(function(item){ return item.variant === 'mont-blanc-orange'; });
+    return cart.some(function(item){ return item.variant === 'mont-blanc-orange' || item.variant === 'mont-blanc-strawberry'; });
   }
   function firstPurchaseDiscountAmount_(){
     return cartHasMontBlanc_() ? MONT_BLANC_FIRST_PURCHASE_DISCOUNT : FIRST_PURCHASE_DISCOUNT_AMOUNT;
@@ -2611,7 +2626,9 @@
   var VARIANT_LOCKS = {
     'black-americano': { shots: 'single', sugar: 'no-sugar' },
     'mont-blanc-orange': { shots: 'single', sugar: 'normal-sugar', temp: 'cold' },
-    'cold-brew': { shots: 'single', sugar: 'no-sugar', temp: 'cold' },
+    'mont-blanc-strawberry': { shots: 'single', sugar: 'normal-sugar', temp: 'cold' },
+    'cold-brew-orange': { shots: 'single', sugar: 'no-sugar', temp: 'cold' },
+    'cold-brew-peach': { shots: 'single', sugar: 'no-sugar', temp: 'cold' },
     'cappuccino': { shotsAllowed: ['double'] }
   };
   var savedBeforeLock = { shots: 'single', sugar: 'normal-sugar', temp: 'cold' };
@@ -3311,7 +3328,7 @@
     { section: 'Harga Dasar', path: ['PRICES','size','regular'], label: 'Harga Dasar (Regular)' },
     { section: 'Espresso Shot', path: ['PRICES','shots','single'], label: 'Single Shot' },
     { section: 'Espresso Shot', path: ['PRICES','shots','double'], label: 'Double Shot' },
-    { section: 'Espresso Shot', path: ['PRICES','shots','triple'], label: 'Signature Shot' },
+    { section: 'Espresso Shot', path: ['PRICES','shots','triple'], label: 'TripleShot' },
     { section: 'Tambahan Varian', path: ['PRICES','variant','pistachio'], label: 'Pistachio Latte' },
     { section: 'Tambahan Varian', path: ['PRICES','variant','hazelnut'], label: 'Hazelnut Latte' },
     { section: 'Tambahan Varian', path: ['PRICES','variant','vanilla'], label: 'Vanilla Latte' },
@@ -3319,7 +3336,10 @@
     { section: 'Tambahan Varian', path: ['PRICES','variant','gula-aren'], label: 'Gula Aren Latte' },
     { section: 'Tambahan Varian', path: ['PRICES','variant','black-americano'], label: 'Black Americano' },
     { section: 'Tambahan Varian', path: ['PRICES','variant','mont-blanc-orange'], label: 'Mont Blanc Orange' },
-    { section: 'Tambahan Varian', path: ['PRICES','variant','cold-brew'], label: 'Cold Brew' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','mont-blanc-strawberry'], label: 'Mont Blanc Strawberry' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','cold-brew-orange'], label: 'Cold Brew Orange' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','cold-brew-peach'], label: 'Cold Brew Peach' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','matcha-vanilla-latte'], label: 'Matcha Vanilla Latte' },
     { section: 'Promo Cappuccino', path: ['CAPPUCCINO_HOT_DISCOUNT'], label: 'Potongan Cappuccino Panas' }
   ];
 
@@ -3966,7 +3986,7 @@
         return 'Famuha Coffee buka setiap hari jam ' + SCHEDULE_TIME_MIN + '–' + SCHEDULE_TIME_MAX + ' WIB.\nSaat ini status toko: ' + (STORE_OPEN ? 'Buka ✅' : 'Tutup ❌') + '.';
       }
       if (/(menu|varian|rasa|harga|price)/.test(q)){
-        return 'Menu andalan kami: Pistachio, Hazelnut, Vanilla, Cappuccino, Gula Aren, Black Americano, Mont Blanc Orange, Cold Brew.\nHarga size Small mulai ' + rupiah(PRICES.size.small) + ', Regular ' + rupiah(PRICES.size.regular) + ', Large ' + rupiah(PRICES.size.large) + ' (harga dasar, belum termasuk topping/susu/shot tambahan).\nKamu bisa custom langsung lewat form "Build Your Own Iced Latte" di halaman ini.';
+        return 'Menu andalan kami: Pistachio, Hazelnut, Vanilla, Cappuccino, Gula Aren, Black Americano, Mont Blanc Orange, Mont Blanc Strawberry, Cold Brew Orange, Cold Brew Peach, Matcha Vanilla Latte.\nHarga size Small mulai ' + rupiah(PRICES.size.small) + ', Regular ' + rupiah(PRICES.size.regular) + ', Large ' + rupiah(PRICES.size.large) + ' (harga dasar, belum termasuk topping/susu/shot tambahan).\nKamu bisa custom langsung lewat form "Build Your Own Iced Latte" di halaman ini.';
       }
       if (/(ongkir|antar|kirim|delivery|area|jangkau)/.test(q)){
         var lines = Object.keys(ONGKIR).map(function(k){
@@ -4114,7 +4134,7 @@
       return {
         size: 'regular', // dikunci Regular untuk voucher traktir
         milk: buyerMilkEl.value,
-        shots: 'single', // dikunci Single Shot untuk voucher traktir, tidak bisa Double/Signature
+        shots: 'single', // dikunci Single Shot untuk voucher traktir, tidak bisa Double/TripleShot
         variant: buyerVariantEl.value,
         temp: 'cold'
       };
