@@ -136,6 +136,35 @@
     line-height:1.5;
     color: var(--cream);
   }
+  .promo-jumat-hero{
+    max-width:520px;
+    margin:0 auto;
+    padding:14px 14px 0;
+    text-align:center;
+  }
+  .promo-jumat-hero-img{
+    width:100%;
+    display:block;
+    border-radius:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.35);
+  }
+  .promo-jumat-hero-cta{
+    display:block;
+    width:100%;
+    margin-top:12px;
+    padding:14px 20px;
+    border:none;
+    border-radius:10px;
+    background: linear-gradient(90deg, #E2903F 0%, #C97A2E 100%);
+    color:#1a1208;
+    font-size:16px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 4px 0 #9a5f22;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .promo-jumat-hero-cta:hover{ filter:brightness(1.05); }
+  .promo-jumat-hero-cta:active{ transform:translateY(2px); box-shadow:0 2px 0 #9a5f22; }
 
   /* ---------- Hero ---------- */
   .hero{
@@ -1308,6 +1337,11 @@
 <div id='discountPopup' style='display:none'><div class='card'><div style='text-align:center;font-size:42px'>🎉</div><h2>Diskon Pembelian Pertama!</h2><p>Selamat, nomor WhatsApp kamu belum pernah tercatat order di Famuha Coffee. Kamu dapat <b id='discountAmountText'>diskon spesial</b> untuk pesanan pertamamu — otomatis kepotong saat checkout nanti.</p><button id='discountCloseBtn'>Yuk, Mulai Pesan!</button></div></div>
 <div id='welcomeBackPopup' style='display:none'><div class='card'><div style='text-align:center;font-size:42px'>☕</div><h2>Selamat Datang Kembali, <span id='welcomeBackName'></span>!</h2><p>Senang bisa melayanimu lagi. Yuk, susun pesanan favoritmu berikutnya.</p><button id='welcomeBackCloseBtn'>Lanjut Pesan</button></div></div>
 
+  <div class="promo-jumat-hero" id="promoJumatHero" hidden>
+    <img class="promo-jumat-hero-img" src="assets/promo/promo-jumat-banner.jpg" alt="Promo Hari Jumat - Cappuccino Hot & Americano Hot cuma Rp18.000">
+    <button type="button" class="promo-jumat-hero-cta" id="promoJumatHeroCta">Mau Beli Sekarang?</button>
+  </div>
+
   <div class="hero">
     <button type="button" class="history-btn" id="historyBtn">📊 Riwayat Transaksi</button>
     <button type="button" class="history-btn" id="adminBtn" style="right:auto; left:16px;">⚙️ Admin</button>
@@ -2005,11 +2039,7 @@
   function isPromoJumatEligible_(cfg){
     if (cfg.temp !== 'hot') return false;
     if (cfg.variant !== 'cappuccino' && cfg.variant !== 'black-americano') return false;
-    // Mode Preview admin -> lewati pengecekan status pelanggan, cukup lihat tampilan harga.
-    if (promoJumatPreviewActive_()) return true;
-    // Cuma untuk nomor yang sudah pernah order sebelumnya (dicek ke server),
-    // supaya tidak dobel sama Diskon Pembelian Pertama untuk pelanggan baru.
-    if (!state.custChecked || !state.isReturningCustomer) return false;
+    // Berlaku untuk semua pelanggan (baru maupun lama), tiap hari Jumat.
     return true;
   }
 
@@ -2037,7 +2067,7 @@
   }
 
   function cartHasExcludedFromFirstDiscount_(){
-    return cart.some(function(item){ return item.variant === 'cold-brew-orange' || item.variant === 'cold-brew-peach' || item.variant === 'cappuccino'; });
+    return cart.some(function(item){ return item.variant === 'cold-brew-orange' || item.variant === 'cold-brew-peach' || item.variant === 'cappuccino' || (item.variant === 'black-americano' && item.temp === 'hot'); });
   }
   function cartHasMontBlanc_(){
     return cart.some(function(item){ return item.variant === 'mont-blanc-orange' || item.variant === 'mont-blanc-strawberry'; });
@@ -2547,15 +2577,16 @@
 
   function updatePromoJumatUI_(){
     var banner = document.getElementById('promoJumatBanner');
-    if (!banner) return;
+    var heroBanner = document.getElementById('promoJumatHero');
     var dayActive = promoJumatActive_();
-    var eligibleCustomer = promoJumatPreviewActive_() || (state.custChecked && state.isReturningCustomer);
-    var active = dayActive && eligibleCustomer;
+    if (heroBanner) heroBanner.hidden = !dayActive;
+    if (!banner) return;
+    var active = dayActive;
     banner.hidden = !active;
     if (active && promoJumatPreviewActive_() && new Date().getDay() !== 5){
       banner.innerHTML = '<b>Promo Jumat (Mode Preview):</b> Hot Cappuccino &amp; Hot Americano cuma <b>Rp' + PROMO_JUMAT_PRICE.toLocaleString('id-ID') + '</b>. Ini cuma tampilan preview di browser kamu — customer lain tidak melihat ini kecuali hari Jumat.';
     } else if (active){
-      banner.innerHTML = '<b>Promo Jumat:</b> Hot Cappuccino &amp; Hot Americano cuma <b>Rp' + PROMO_JUMAT_PRICE.toLocaleString('id-ID') + '</b>! Berlaku tiap hari Jumat untuk pelanggan yang sudah pernah order.';
+      banner.innerHTML = '<b>Promo Jumat:</b> Hot Cappuccino &amp; Hot Americano cuma <b>Rp' + PROMO_JUMAT_PRICE.toLocaleString('id-ID') + '</b>! Berlaku tiap hari Jumat untuk semua pelanggan.';
     }
   }
 
@@ -3833,6 +3864,24 @@
     }
     requestPinFor('admin');
   });
+
+  var promoJumatHeroCta = document.getElementById('promoJumatHeroCta');
+  if (promoJumatHeroCta){
+    promoJumatHeroCta.addEventListener('click', function(){
+      var variantInput = document.querySelector('.choice-row[data-group="variant"] input[value="cappuccino"]');
+      var tempInput = document.querySelector('.choice-row[data-group="temp"] input[value="hot"]');
+      if (variantInput){
+        variantInput.checked = true;
+        variantInput.closest('.choice-row').dispatchEvent(new Event('change'));
+      }
+      if (tempInput){
+        tempInput.checked = true;
+        tempInput.closest('.choice-row').dispatchEvent(new Event('change'));
+      }
+      var options = document.getElementById('options');
+      if (options) options.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
 
   function checkPin(){
     var input = document.getElementById('pinInput');
