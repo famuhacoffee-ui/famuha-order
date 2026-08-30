@@ -1501,6 +1501,14 @@
             <input type="radio" name="variant" value="matcha-vanilla-latte">
             <span class="name">Matcha Vanilla Latte</span>
           </label>
+          <label class="choice" data-value="mocha">
+            <input type="radio" name="variant" value="mocha">
+            <span class="name">Mocha Coffee Latte</span>
+          </label>
+          <label class="choice" data-value="dirty-latte">
+            <input type="radio" name="variant" value="dirty-latte">
+            <span class="name">Dirty Latte</span>
+          </label>
         </div>
         <div class="promo-1708-banner" id="promo1708Banner" hidden>
           <b>Promo 17 Agustus:</b> Gula Aren Latte (Single Shot) &amp; Cappuccino Hot cuma <b>Rp17.000</b>! Berlaku 16–17 Agustus, maksimal 1x transaksi per pelanggan.
@@ -1973,7 +1981,7 @@
     size: { small: 18000, regular: 20000, large: 29000 },
     milk: { 'full-cream': 0, oat: 3000, almond: 3000, coconut: 3000 },
     shots: { single: 0, double: 4000, triple: 5000 },
-    variant: { pistachio: 2000, hazelnut: 2000, vanilla: 2000, cappuccino: 2000, 'gula-aren': 2000, 'black-americano': 0, 'mont-blanc-orange': 5000, 'mont-blanc-strawberry': 5000, 'cold-brew-orange': 4000, 'cold-brew-peach': 4000, 'matcha-vanilla-latte': 2000 }
+    variant: { pistachio: 2000, hazelnut: 2000, vanilla: 2000, cappuccino: 2000, 'gula-aren': 2000, 'black-americano': 0, 'mont-blanc-orange': 5000, 'mont-blanc-strawberry': 5000, 'cold-brew-orange': 4000, 'cold-brew-peach': 4000, 'matcha-vanilla-latte': 2000, mocha: 5000, 'dirty-latte': 5000 }
   };
 
   var ONGKIR = {
@@ -1988,7 +1996,7 @@
     milk: { 'full-cream':'Full Cream', oat:'Oat Milk', almond:'Almond Milk', coconut:'Coconut Milk' },
     shots: { single:'Single Shot', double:'Double Shot', triple:'TripleShot' },
     ice: { none:'Tanpa Es', less:'Less Es', normal:'Normal', extra:'Extra Es' },
-    variant: { pistachio:'Pistachio Latte', hazelnut:'Hazelnut Latte', vanilla:'Vanilla Latte', cappuccino:'Cappuccino', 'gula-aren':'Gula Aren Latte', 'black-americano':'Black Americano', 'mont-blanc-orange':'Mont Blanc Orange', 'mont-blanc-strawberry':'Mont Blanc Strawberry', 'cold-brew-orange':'Cold Brew Orange', 'cold-brew-peach':'Cold Brew Peach', 'matcha-vanilla-latte':'Matcha Vanilla Latte' },
+    variant: { pistachio:'Pistachio Latte', hazelnut:'Hazelnut Latte', vanilla:'Vanilla Latte', cappuccino:'Cappuccino', 'gula-aren':'Gula Aren Latte', 'black-americano':'Black Americano', 'mont-blanc-orange':'Mont Blanc Orange', 'mont-blanc-strawberry':'Mont Blanc Strawberry', 'cold-brew-orange':'Cold Brew Orange', 'cold-brew-peach':'Cold Brew Peach', 'matcha-vanilla-latte':'Matcha Vanilla Latte', mocha:'Mocha Coffee Latte', 'dirty-latte':'Dirty Latte' },
     sugar: { 'no-sugar':'No Sugar', 'less-sugar':'Less Sugar', 'normal-sugar':'Normal Sugar' },
     temp: { cold:'Dingin (Cold)', hot:'Panas (Hot)' },
     delivery: { pickup:'Ambil Sendiri', delivered:'Diantar', gosend:'Dijemput GoSend', grabexpress:'Dijemput GrabExpress' },
@@ -2006,7 +2014,9 @@
     'mont-blanc-strawberry': [214,90,110],
     'cold-brew-orange': [180,100,40],
     'cold-brew-peach': [235,150,110],
-    'matcha-vanilla-latte': [150,178,96]
+    'matcha-vanilla-latte': [150,178,96],
+    mocha: [110,68,46],
+    'dirty-latte': [90,54,34]
   };
   var ESPRESSO_COLOR = [43,26,18];
   var SHOT_WEIGHT = { single:0.25, double:0.45, triple:0.68 };
@@ -3485,6 +3495,8 @@
     { section: 'Tambahan Varian', path: ['PRICES','variant','cold-brew-orange'], label: 'Cold Brew Orange' },
     { section: 'Tambahan Varian', path: ['PRICES','variant','cold-brew-peach'], label: 'Cold Brew Peach' },
     { section: 'Tambahan Varian', path: ['PRICES','variant','matcha-vanilla-latte'], label: 'Matcha Vanilla Latte' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','mocha'], label: 'Mocha Coffee Latte' },
+    { section: 'Tambahan Varian', path: ['PRICES','variant','dirty-latte'], label: 'Dirty Latte' },
     { section: 'Promo Cappuccino', path: ['CAPPUCCINO_HOT_DISCOUNT'], label: 'Potongan Cappuccino Panas' }
   ];
 
