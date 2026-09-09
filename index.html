@@ -3306,6 +3306,19 @@
           if (!data || !data.ok){
             throw new Error((data && data.error) || 'Gagal mengirim kode OTP');
           }
+          if (data.otpDisabled){
+            // Verifikasi OTP sedang dimatikan dari Admin (OTP_ENABLED = false di
+            // Apps Script) -> backend sudah otomatis menandai nomor ini terverifikasi,
+            // jadi lewati step OTP sepenuhnya dan lanjut seperti sudah terverifikasi.
+            if (!isResend){
+              try{
+                localStorage.setItem('otpVerifiedPhoneDigits', pendingPhoneDigits);
+                localStorage.setItem('otpVerifiedPhoneRaw', pendingPhoneRaw);
+              }catch(e){}
+              continueAfterVerified_();
+            }
+            return;
+          }
           if (isResend){
             showOtpStatus('ok', 'Kode baru sudah dikirim ulang.');
             clearOtpBoxes();
