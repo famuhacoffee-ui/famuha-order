@@ -4839,8 +4839,13 @@
       wishlistFilled: hasWishlist(),
       referrer: document.referrer || '',
       userAgent: navigator.userAgent
-    }).then(function () {
-      try { localStorage.setItem(VISIT_LOGGED_TODAY, today); } catch (e) {}
+    }).then(function (res) {
+      // Cuma tandai "sudah dikirim hari ini" kalau beneran berhasil (res.ok).
+      // Kalau gagal (jaringan error / backend belum siap), biarkan tetap
+      // nyoba lagi di kunjungan berikutnya hari yang sama.
+      if (res && res.ok) {
+        try { localStorage.setItem(VISIT_LOGGED_TODAY, today); } catch (e) {}
+      }
     });
   }
 
