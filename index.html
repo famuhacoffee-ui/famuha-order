@@ -4870,19 +4870,21 @@
 
     var bar = document.createElement('div');
     bar.setAttribute('style',
-      'position:fixed;left:16px;right:16px;bottom:16px;z-index:999;' +
-      'max-width:420px;margin:0 auto;background:#2a1a10;color:#f6ecdc;' +
-      'border:1px solid rgba(246,236,220,0.2);border-radius:14px;' +
-      'padding:14px 16px;box-shadow:0 12px 30px rgba(0,0,0,0.4);' +
-      'font-family:Inter,sans-serif;font-size:13.5px;line-height:1.4;' +
-      'display:flex;gap:10px;align-items:center;'
+      'position:fixed;left:16px;right:16px;bottom:20px;z-index:999;' +
+      'max-width:480px;margin:0 auto;background:#2a1a10;color:#f6ecdc;' +
+      'border:1px solid rgba(246,236,220,0.2);border-radius:18px;' +
+      'padding:20px 22px;box-shadow:0 16px 40px rgba(0,0,0,0.45);' +
+      'font-family:Inter,sans-serif;font-size:16px;line-height:1.5;' +
+      'display:flex;flex-wrap:wrap;gap:14px;align-items:center;'
     );
     bar.innerHTML =
-      '<div style="flex:1;">☕ Nyalain notifikasi biar nggak lupa racik kopi favoritmu?</div>' +
+      '<div style="flex:1;min-width:220px;">☕ Nyalain notifikasi biar nggak lupa racik kopi favoritmu?</div>' +
+      '<div style="display:flex;gap:10px;">' +
       '<button id="famuhaPushYes" style="background:#e08a4f;color:#140c07;border:none;' +
-      'padding:8px 12px;border-radius:8px;font-weight:700;cursor:pointer;">Boleh</button>' +
+      'padding:12px 20px;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;">Boleh</button>' +
       '<button id="famuhaPushNo" style="background:transparent;color:#f6ecdc;border:1px solid rgba(246,236,220,0.3);' +
-      'padding:8px 10px;border-radius:8px;cursor:pointer;">Nanti</button>';
+      'padding:12px 18px;border-radius:10px;font-size:15px;cursor:pointer;">Nanti</button>' +
+      '</div>';
     document.body.appendChild(bar);
 
     document.getElementById('famuhaPushNo').addEventListener('click', function () {
