@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Famuha Coffee — Pengunjung Situs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap');
+  :root{
+    --ink:#140c07;
+    --cocoa:#3d2717;
+    --cocoa-2:#2a1a10;
+    --espresso:#2b1a12;
+    --gold:#c9a15a;
+    --gold-2:#e8c884;
+    --accent:#e08a4f;
+    --accent-2:#c96a3a;
+    --cream:#f6ecdc;
+    --line: rgba(246,236,220,0.14);
+    --sage:#8fae7c;
+    --flag-red:#c9463a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--ink);
+    color:var(--cream);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{ font-family:'Fraunces', Georgia, 'Times New Roman', serif; font-optical-sizing:auto; }
+  a{ color:inherit; }
+  button{ font-family:inherit; }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* ---------- Gate (kunci akses) ---------- */
+  #gate{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .gate-card{
+    width:100%;
+    max-width:400px;
+    background:var(--cocoa-2);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:32px 28px;
+  }
+  .gate-card h1{
+    margin:0 0 6px;
+    font-size:26px;
+    font-weight:600;
+  }
+  .gate-card p.sub{
+    margin:0 0 24px;
+    color:var(--gold-2);
+    font-size:14px;
+    line-height:1.5;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-size:13px;
+    color:var(--gold-2);
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    background:var(--espresso);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:11px 13px;
+    color:var(--cream);
+    font-size:14.5px;
+  }
+  .field input::placeholder{ color:rgba(246,236,220,0.35); }
+  .field .hint{ font-size:12px; color:rgba(246,236,220,0.45); margin-top:5px; }
+  .gate-btn{
+    width:100%;
+    background:var(--accent);
+    color:var(--ink);
+    border:none;
+    border-radius:10px;
+    padding:13px;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    margin-top:6px;
+  }
+  .gate-btn:hover{ background:var(--gold-2); }
+  .gate-error{
+    color:var(--flag-red);
+    font-size:13px;
+    margin-top:14px;
+    display:none;
+  }
+
+  /* ---------- Dashboard ---------- */
+  #dash{ display:none; }
+  .wrap{ max-width:1080px; margin:0 auto; padding:28px 20px 60px; }
+
+  .topbar{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+  .topbar h1{
+    margin:0;
+    font-size:30px;
+    font-weight:600;
+  }
+  .topbar .updated{
+    font-size:13px;
+    color:rgba(246,236,220,0.5);
+  }
+  .lock-out{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--gold-2);
+    border-radius:8px;
+    padding:7px 12px;
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  .lock-out:hover{ border-color:var(--accent); color:var(--accent); }
+
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    gap:14px;
+    margin-bottom:28px;
+  }
+  .stat{
+    background:var(--cocoa-2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px 20px;
+  }
+  .stat .num{
+    font-size:34px;
+    line-height:1.05;
+    font-weight:600;
+  }
+  .stat .label{
+    font-size:13px;
+    color:var(--gold-2);
+    margin-top:4px;
+  }
+  .stat.warn .num{ color:var(--flag-red); }
+  .stat.need-key{ display:flex; align-items:center; }
+  .stat.need-key .label{ font-size:13px; line-height:1.5; color:rgba(246,236,220,0.5); margin:0; }
+
+  .panel{
+    background:var(--cocoa-2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 22px 8px;
+    margin-bottom:24px;
+  }
+  .panel h2{
+    margin:0 0 3px;
+    font-size:17px;
+    font-weight:600;
+  }
+  .panel .panel-sub{
+    margin:0 0 18px;
+    font-size:13px;
+    color:rgba(246,236,220,0.5);
+  }
+
+  /* grafik batang harian */
+  .chart{
+    display:flex;
+    align-items:flex-end;
+    gap:6px;
+    height:120px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--line);
+  }
+  .chart .col{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end;
+    height:100%;
+    position:relative;
+  }
+  .chart .bar{
+    width:100%;
+    max-width:26px;
+    background:var(--accent);
+    border-radius:4px 4px 0 0;
+    min-height:2px;
+  }
+  .chart .col:hover .bar{ background:var(--gold-2); }
+  .chart .col .tip{
+    position:absolute;
+    bottom:100%;
+    margin-bottom:6px;
+    background:var(--ink);
+    border:1px solid var(--line);
+    padding:3px 7px;
+    border-radius:6px;
+    font-size:11.5px;
+    white-space:nowrap;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .12s;
+  }
+  .chart .col:hover .tip{ opacity:1; }
+  .chart-labels{
+    display:flex;
+    gap:6px;
+    margin-top:6px;
+  }
+  .chart-labels span{
+    flex:1;
+    text-align:center;
+    font-size:10.5px;
+    color:rgba(246,236,220,0.4);
+  }
+
+  /* filter & search */
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .toolbar input[type=search]{
+    flex:1;
+    min-width:180px;
+    background:var(--espresso);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:9px 12px;
+    color:var(--cream);
+    font-size:14px;
+  }
+  .seg{
+    display:flex;
+    background:var(--espresso);
+    border:1px solid var(--line);
+    border-radius:9px;
+    overflow:hidden;
+  }
+  .seg button{
+    background:none;
+    border:none;
+    color:var(--gold-2);
+    padding:9px 14px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .seg button.active{ background:var(--accent); color:var(--ink); font-weight:700; }
+
+  table{ width:100%; border-collapse:collapse; }
+  thead th{
+    text-align:left;
+    font-size:12px;
+    font-weight:600;
+    color:rgba(246,236,220,0.5);
+    padding:10px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  tbody td{
+    padding:12px 10px;
+    font-size:14px;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  tbody tr:last-child td{ border-bottom:none; }
+  .mono{ font-variant-numeric:tabular-nums; }
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:12px;
+    padding:3px 9px;
+    border-radius:999px;
+  }
+  .badge.ok{ background:rgba(143,174,124,0.18); color:var(--sage); }
+  .badge.no{ background:rgba(201,70,58,0.16); color:var(--flag-red); }
+  .badge.unknown{ background:rgba(246,236,220,0.08); color:rgba(246,236,220,0.5); }
+  .wa-btn{
+    display:inline-block;
+    background:var(--accent);
+    color:var(--ink);
+    text-decoration:none;
+    font-size:12.5px;
+    font-weight:700;
+    padding:6px 11px;
+    border-radius:7px;
+  }
+  .wa-btn:hover{ background:var(--gold-2); }
+  .muted{ color:rgba(246,236,220,0.4); font-size:13px; }
+  .empty{ padding:32px 4px; text-align:center; color:rgba(246,236,220,0.45); font-size:14px; }
+
+  @media (max-width:720px){
+    thead{ display:none; }
+    table, tbody, tr, td{ display:block; width:100%; }
+    tbody tr{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px 14px;
+      margin-bottom:10px;
+    }
+    tbody td{
+      border-bottom:none;
+      padding:5px 0;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+    }
+    tbody td::before{
+      content:attr(data-label);
+      color:rgba(246,236,220,0.45);
+      font-size:12px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-card">
+    <h1 class="serif">Pengunjung Situs</h1>
+    <p class="sub">Masukkan kunci akses buat lihat siapa aja yang pernah buka situs Famuha Coffee.</p>
+    <div class="field">
+      <label for="inUrl">URL Apps Script (GAS_URL)</label>
+      <input id="inUrl" type="text" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div class="field">
+      <label for="inSecret">Push secret</label>
+      <input id="inSecret" type="password" placeholder="Isi sama seperti PUSH_SECRET di Code.gs">
+      <div class="hint">Wajib diisi — buat buka data pengunjung.</div>
+    </div>
+    <div class="field">
+      <label for="inKey">Access key riwayat transaksi <span class="muted">(opsional)</span></label>
+      <input id="inKey" type="password" placeholder="Isi sama seperti ACCESS_KEY di Code.gs">
+      <div class="hint">Kalau diisi, dashboard bisa tandai siapa yang belum pernah checkout.</div>
+    </div>
+    <button class="gate-btn" id="unlockBtn">Buka Dashboard</button>
+    <div class="gate-error" id="gateError">Gagal ambil data — cek lagi URL &amp; kunci-nya.</div>
+  </div>
+</div>
+
+<div id="dash">
+  <div class="wrap">
+    <div class="topbar">
+      <h1 class="serif">Pengunjung Situs</h1>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span class="updated" id="updatedAt"></span>
+        <button class="lock-out" id="lockBtn">Kunci lagi</button>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="panel">
+      <h2>Pengunjung baru per hari</h2>
+      <p class="panel-sub">14 hari terakhir, dihitung dari kunjungan pertama tiap orang</p>
+      <div class="chart" id="chart"></div>
+      <div class="chart-labels" id="chartLabels"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Daftar pengunjung</h2>
+      <p class="panel-sub">Diurutkan dari yang terakhir buka situs</p>
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="Cari nomor HP…">
+        <div class="seg" id="filterSeg">
+          <button data-filter="all" class="active">Semua</button>
+          <button data-filter="notCheckout">Belum checkout</button>
+          <button data-filter="hasPhone">Punya nomor HP</button>
+        </div>
+      </div>
+      <table id="visitTable">
+        <thead>
+          <tr>
+            <th>Kontak</th>
+            <th>Pertama buka</th>
+            <th>Terakhir buka</th>
+            <th>Kunjungan</th>
+            <th>Sempat isi keranjang</th>
+            <th>Checkout</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="visitBody"></tbody>
+      </table>
+      <div class="empty" id="emptyMsg" style="display:none;">Belum ada data yang cocok.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var LS_URL = 'famuha_admin_gas_url';
+  var LS_SECRET = 'famuha_admin_push_secret';
+  var LS_KEY = 'famuha_admin_access_key';
+
+  var visits = [];       // dari PageVisits
+  var paidPhones = null; // Set nomor yang sudah pernah checkout (null = tidak dicek)
+  var currentFilter = 'all';
+
+  // ---------- util ----------
+  function normPhone(p){
+    var digits = String(p || '').replace(/[^0-9]/g, '');
+    digits = digits.replace(/^0+/, '');
+    if (digits.indexOf('62') !== 0 && digits) digits = '62' + digits;
+    return digits;
+  }
+  function fmtDate(iso){
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }) +
+      ' ' + d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+  }
+  function dateKey(iso){
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString().slice(0,10);
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+    });
+  }
+
+  // ---------- gate ----------
+  var gate = document.getElementById('gate');
+  var dash = document.getElementById('dash');
+  var gateError = document.getElementById('gateError');
+
+  var DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwOnGK3QJ_pSW5zWh1GNW2wncc0NM9gNCHGhWPIkzFG794-j6lv1snBE7Yiq9DMQ9Fd/exec';
+  document.getElementById('inUrl').value = localStorage.getItem(LS_URL) || DEFAULT_GAS_URL;
+  document.getElementById('inSecret').value = localStorage.getItem(LS_SECRET) || '';
+  document.getElementById('inKey').value = localStorage.getItem(LS_KEY) || '';
+
+  document.getElementById('unlockBtn').addEventListener('click', function(){
+    var url = document.getElementById('inUrl').value.trim();
+    var secret = document.getElementById('inSecret').value.trim();
+    var key = document.getElementById('inKey').value.trim();
+    if (!url || !secret){
+      gateError.textContent = 'URL Apps Script & push secret wajib diisi.';
+      gateError.style.display = 'block';
+      return;
+    }
+    localStorage.setItem(LS_URL, url);
+    localStorage.setItem(LS_SECRET, secret);
+    localStorage.setItem(LS_KEY, key);
+    loadData(url, secret, key);
+  });
+
+  document.getElementById('lockBtn').addEventListener('click', function(){
+    localStorage.removeItem(LS_SECRET);
+    localStorage.removeItem(LS_KEY);
+    dash.style.display = 'none';
+    gate.style.display = 'flex';
+  });
+
+  // Kalau kunci sudah pernah disimpan, langsung coba buka
+  (function autoUnlock(){
+    var url = localStorage.getItem(LS_URL);
+    var secret = localStorage.getItem(LS_SECRET);
+    var key = localStorage.getItem(LS_KEY) || '';
+    if (url && secret) loadData(url, secret, key);
+  })();
+
+  // ---------- ambil data ----------
+  function loadData(url, secret, key){
+    gateError.style.display = 'none';
+    var visitsUrl = url + '?action=pageVisitsList&secret=' + encodeURIComponent(secret);
+
+    fetch(visitsUrl).then(function(r){ return r.json(); }).then(function(res){
+      if (!res || !res.ok) throw new Error(res && res.error || 'unauthorized');
+      visits = res.visits || [];
+
+      if (key){
+        var histUrl = url + '?action=history&key=' + encodeURIComponent(key);
+        return fetch(histUrl).then(function(r){ return r.json(); }).then(function(hres){
+          if (hres && hres.ok){
+            paidPhones = new Set();
+            (hres.rows || []).forEach(function(row){
+              var n = normPhone(row.custPhone);
+              if (n) paidPhones.add(n);
+            });
+          } else {
+            paidPhones = null;
+          }
+        }).catch(function(){ paidPhones = null; });
+      }
+    }).then(function(){
+      gate.style.display = 'none';
+      dash.style.display = 'block';
+      document.getElementById('updatedAt').textContent = 'Diperbarui ' + fmtDate(new Date().toISOString());
+      render();
+    }).catch(function(err){
+      gateError.textContent = 'Gagal ambil data — cek lagi URL & kunci-nya. (' + (err.message || err) + ')';
+      gateError.style.display = 'block';
+    });
+  }
+
+  // ---------- render ----------
+  function render(){
+    renderStats();
+    renderChart();
+    renderTable();
+  }
+
+  function renderStats(){
+    var total = visits.length;
+    var todayKey = new Date().toISOString().slice(0,10);
+    var newToday = visits.filter(function(v){ return dateKey(v.firstVisit) === todayKey; }).length;
+
+    var withPhone = visits.filter(function(v){ return !!v.phone; });
+    var notCheckedOut = null;
+    if (paidPhones){
+      notCheckedOut = withPhone.filter(function(v){ return !paidPhones.has(normPhone(v.phone)); }).length;
+    }
+
+    var html = '';
+    html += statCard(total, 'Pengunjung unik (semua waktu)');
+    html += statCard(newToday, 'Pengunjung baru hari ini');
+    if (notCheckedOut !== null){
+      html += statCard(notCheckedOut, 'Punya nomor HP, belum pernah checkout', true);
+    } else {
+      html += '<div class="stat need-key"><div class="label">Isi <b style="color:var(--cream)">access key riwayat transaksi</b> di layar kunci buat lihat berapa banyak yang belum checkout.</div></div>';
+    }
+    document.getElementById('stats').innerHTML = html;
+  }
+  function statCard(num, label, warn){
+    return '<div class="stat' + (warn ? ' warn' : '') + '"><div class="num serif">' + num + '</div><div class="label">' + label + '</div></div>';
+  }
+
+  function renderChart(){
+    var days = [];
+    var today = new Date();
+    for (var i = 13; i >= 0; i--){
+      var d = new Date(today);
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().slice(0,10));
+    }
+    var counts = {};
+    days.forEach(function(k){ counts[k] = 0; });
+    visits.forEach(function(v){
+      var k = dateKey(v.firstVisit);
+      if (k && counts.hasOwnProperty(k)) counts[k]++;
+    });
+    var max = Math.max.apply(null, days.map(function(k){ return counts[k]; }).concat([1]));
+
+    var chartHtml = '', labelsHtml = '';
+    days.forEach(function(k, idx){
+      var v = counts[k];
+      var h = Math.round((v / max) * 100);
+      var d = new Date(k + 'T00:00:00');
+      var shortLabel = d.toLocaleDateString('id-ID', { day:'numeric', month:'short' });
+      chartHtml += '<div class="col"><div class="tip">' + v + ' pengunjung baru</div><div class="bar" style="height:' + Math.max(h, 2) + '%"></div></div>';
+      // hanya tampilkan sebagian label biar tidak padat
+      labelsHtml += '<span>' + (idx % 2 === 0 ? shortLabel : '') + '</span>';
+    });
+    document.getElementById('chart').innerHTML = chartHtml;
+    document.getElementById('chartLabels').innerHTML = labelsHtml;
+  }
+
+  function renderTable(){
+    var q = document.getElementById('search').value.trim().toLowerCase();
+    var rows = visits.slice().sort(function(a, b){
+      return new Date(b.lastVisit) - new Date(a.lastVisit);
+    });
+
+    rows = rows.filter(function(v){
+      if (q && (!v.phone || v.phone.toLowerCase().indexOf(q) === -1)) return false;
+      if (currentFilter === 'hasPhone' && !v.phone) return false;
+      if (currentFilter === 'notCheckout'){
+        if (!v.phone) return false;
+        if (paidPhones && paidPhones.has(normPhone(v.phone))) return false;
+      }
+      return true;
+    });
+
+    var body = document.getElementById('visitBody');
+    var emptyMsg = document.getElementById('emptyMsg');
+    if (!rows.length){
+      body.innerHTML = '';
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+
+    body.innerHTML = rows.map(function(v){
+      var contact = v.phone ? escapeHtml(v.phone) : '<span class="muted">Anonim</span>';
+      var wishlist = v.wishlistFilled
+        ? '<span class="badge ok">Ya</span>'
+        : '<span class="badge unknown">Belum</span>';
+
+      var checkoutBadge = '<span class="badge unknown">Nggak diketahui</span>';
+      var waBtn = '';
+      if (v.phone){
+        var norm = normPhone(v.phone);
+        var paid = paidPhones ? paidPhones.has(norm) : null;
+        if (paid === true) checkoutBadge = '<span class="badge ok">Sudah</span>';
+        else if (paid === false) checkoutBadge = '<span class="badge no">Belum</span>';
+        if (paid !== true){
+          waBtn = '<a class="wa-btn" target="_blank" rel="noopener" href="https://wa.me/' + norm + '">Chat WA</a>';
+        }
+      }
+
+      return '<tr>' +
+        '<td data-label="Kontak" class="mono">' + contact + '</td>' +
+        '<td data-label="Pertama buka">' + fmtDate(v.firstVisit) + '</td>' +
+        '<td data-label="Terakhir buka">' + fmtDate(v.lastVisit) + '</td>' +
+        '<td data-label="Kunjungan" class="mono">' + (v.visitCount || 1) + '</td>' +
+        '<td data-label="Sempat isi keranjang">' + wishlist + '</td>' +
+        '<td data-label="Checkout">' + checkoutBadge + '</td>' +
+        '<td data-label="">' + waBtn + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  document.getElementById('search').addEventListener('input', renderTable);
+  document.getElementById('filterSeg').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-filter]');
+    if (!btn) return;
+    currentFilter = btn.getAttribute('data-filter');
+    document.querySelectorAll('#filterSeg button').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderTable();
+  });
+})();
+</script>
+</body>
+</html>
