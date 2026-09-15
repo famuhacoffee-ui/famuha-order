@@ -4906,7 +4906,7 @@
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
     Notification.requestPermission().then(function (perm) {
       if (perm !== 'granted') return;
-      navigator.serviceWorker.register('/sw.js').then(function (reg) {
+      navigator.serviceWorker.register('./sw.js').then(function (reg) {
         return reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
@@ -4974,7 +4974,7 @@
     hookAddToCartButtons();
     logPageVisit();
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(function () {});
+      navigator.serviceWorker.register('./sw.js').catch(function () {});
     }
     setTimeout(showSoftPrompt, 4000); // munculin ajakan izin setelah 4 detik, tidak langsung
     if ('Notification' in window && Notification.permission === 'granted') {
