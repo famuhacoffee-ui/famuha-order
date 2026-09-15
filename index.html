@@ -2325,6 +2325,13 @@
     transactions.push(record);
     saveTransactions();
     sendTransactionToSheet_(record);
+    // Simpan nama & no. HP ke browser ini, supaya kunjungan berikutnya
+    // dikenali otomatis (popup "Selamat Datang Kembali" / diskon pembelian
+    // pertama) tanpa perlu isi ulang -- lihat tryAutoRecognizeReturningCustomer_.
+    try {
+      if (record.custName) localStorage.setItem('customerName', record.custName);
+      if (record.custPhone) localStorage.setItem('customerPhone', record.custPhone);
+    } catch (e) {}
     return record;
   }
 
@@ -3204,6 +3211,18 @@
     var startBtn = document.getElementById('welcomeStartBtn');
     if (!welcomePopup || !startBtn) return;
 
+    // ---- BYPASS: popup "Selamat Datang" (nama & no. WhatsApp di awal) ----
+    // Dimatikan atas permintaan — pelanggan langsung masuk ke halaman
+    // pemesanan tanpa diminta isi nama/HP di awal. Nama & no. HP tetap
+    // diminta nanti di form checkout (id="custName"/"custPhone"). Popup
+    // "Selamat Datang Kembali" & diskon pembelian pertama TETAP jalan,
+    // tapi dipicu otomatis dari nomor HP yang tersimpan di browser ini
+    // dari checkout sebelumnya (lihat tryAutoRecognizeReturningCustomer_
+    // di bawah) — bukan lagi dari isian di popup ini. Kalau browser ini
+    // belum pernah dipakai checkout sama sekali, tidak ada popup apa pun
+    // yang muncul (server memang belum kenal nomornya).
+    welcomePopup.remove();
+
     var nameInput = document.getElementById('customerName');
     var phoneInput = document.getElementById('customerPhone');
     var discountPopup = document.getElementById('discountPopup');
@@ -3234,6 +3253,73 @@
         if (welcomeBackPopup) welcomeBackPopup.style.display = 'none';
       });
     }
+
+    // ---- Auto-kenali pelanggan lama dari cache browser (tanpa popup di awal) ----
+    // Kalau browser ini PERNAH dipakai checkout sebelumnya, nomor HP &
+    // namanya sudah kesimpan di localStorage (lihat recordTransaction()).
+    // Di sini kita cek diam-diam ke server pakai nomor itu, supaya popup
+    // "Selamat Datang Kembali" / diskon pembelian pertama tetap bisa
+    // muncul — tanpa memaksa pelanggan isi ulang nama/HP di awal.
+    function tryAutoRecognizeReturningCustomer_(){
+      var cachedName = '', cachedPhone = '';
+      try {
+        cachedName = localStorage.getItem('customerName') || '';
+        cachedPhone = localStorage.getItem('customerPhone') || '';
+      } catch (e) {}
+      if (!cachedPhone || !GAS_URL) return; // belum pernah checkout di browser ini -> tidak ada yang dicek
+
+      var digits = cachedPhone.replace(/[^0-9]/g, '');
+      if (digits.length < 10) return;
+
+      // Sinkronkan ke form pemesanan supaya customer tidak perlu isi ulang.
+      if (custNameEl && cachedName){ custNameEl.value = cachedName; state.custName = cachedName; }
+      if (custPhoneEl){ custPhoneEl.value = cachedPhone; state.custPhone = cachedPhone; }
+
+      fetch(GAS_URL + '?phone=' + encodeURIComponent(digits))
+        .then(function(res){
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function(data){
+          console.log('[buku tamu] auto-cek pelanggan lama:', data);
+          if (!data || !data.ok) return;
+          state.custChecked = true;
+          state.isReturningCustomer = !data.isFirstPurchase;
+          state.nextOrderNumber = data.nextOrderNumber || null;
+          state.promo1708UsedServer = !!data.usedIndependencePromo;
+          state.promo1708ServerChecked = true;
+          if (FIRST_PURCHASE_PROMO_ENABLED && data.isFirstPurchase){
+            // Nomornya kesimpan di browser tapi server tidak menemukan riwayat order
+            // (mis. sheet Transaksi pernah dibersihkan) -> perlakukan sebagai pembelian pertama.
+            state.firstPurchaseDiscount = true;
+            state.firstPurchaseAlreadyUsed = false;
+            state.fifthReward = !!data.isFifthReward;
+            refreshLoyaltyBanner_();
+            if (typeof updatePromo1708UI_ === 'function') updatePromo1708UI_();
+            update();
+            showDiscountPopup_();
+          } else if (!data.isFirstPurchase){
+            state.firstPurchaseDiscount = false;
+            state.firstPurchaseAlreadyUsed = FIRST_PURCHASE_PROMO_ENABLED;
+            state.fifthReward = !!data.isFifthReward;
+            refreshLoyaltyBanner_();
+            if (typeof updatePromo1708UI_ === 'function') updatePromo1708UI_();
+            update();
+            showWelcomeBackPopup_(cachedName || 'pelanggan');
+          } else {
+            state.firstPurchaseDiscount = false;
+            state.firstPurchaseAlreadyUsed = false;
+            state.fifthReward = !!data.isFifthReward;
+            refreshLoyaltyBanner_();
+            if (typeof updatePromo1708UI_ === 'function') updatePromo1708UI_();
+            update();
+          }
+        })
+        .catch(function(err){
+          console.error('[buku tamu] gagal auto-cek pelanggan lama, lanjut tanpa cek promo:', err);
+        });
+    }
+    tryAutoRecognizeReturningCustomer_();
 
     // ---- Step OTP (verifikasi nomor WhatsApp via Fonnte, lewat GAS_URL yang sama) ----
     var wcStep1 = document.getElementById('wcStep1');
@@ -4906,7 +4992,7 @@
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
     Notification.requestPermission().then(function (perm) {
       if (perm !== 'granted') return;
-      navigator.serviceWorker.register('./sw.js').then(function (reg) {
+      navigator.serviceWorker.register('/sw.js').then(function (reg) {
         return reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
@@ -4974,7 +5060,7 @@
     hookAddToCartButtons();
     logPageVisit();
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(function () {});
+      navigator.serviceWorker.register('/sw.js').catch(function () {});
     }
     setTimeout(showSoftPrompt, 4000); // munculin ajakan izin setelah 4 detik, tidak langsung
     if ('Notification' in window && Notification.permission === 'granted') {
