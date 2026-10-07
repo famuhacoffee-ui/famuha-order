@@ -4,20 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Famuha Coffee — Build Your Own Iced Latte</title>
-<meta name="description" content="Promo Weekend: 2 Coffee Latte cuma Rp36.000, hemat Rp10.000. Pesan online di Famuha Coffee.">
-<!-- Pratinjau link (WhatsApp / sosmed). Ganti og:image saat ganti promo. -->
+<meta name="description" content="Pesan kopi dan minuman favoritmu online di Famuha Coffee. Fresh dibuat setelah order.">
+<!-- Pratinjau link (WhatsApp / sosmed). Ganti og:image kalau mau ganti thumbnail. -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Famuha Coffee">
-<meta property="og:title" content="Promo Weekend — 2 Coffee Latte cuma Rp36.000">
-<meta property="og:description" content="Hemat Rp10.000! Order online sekarang di Famuha Coffee.">
+<meta property="og:title" content="Famuha Coffee — Build Your Own Iced Latte">
+<meta property="og:description" content="Pesan kopi dan minuman favoritmu online. Fresh dibuat setelah order.">
 <meta property="og:url" content="https://famuhacoffee-ui.github.io/famuha-order/">
-<meta property="og:image" content="https://famuhacoffee-ui.github.io/famuha-order/assets/promo/promoweekend.jpg">
+<meta property="og:image" content="https://famuhacoffee-ui.github.io/famuha-order/assets/promo/thumbnail-famuha.jpg">
 <meta property="og:image:type" content="image/jpeg">
-<meta property="og:image:width" content="778">
-<meta property="og:image:height" content="988">
-<meta property="og:image:alt" content="Promo Weekend Famuha Coffee: 2 Coffee Latte cuma Rp36.000">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="628">
+<meta property="og:image:alt" content="Menu minuman Famuha Coffee: Ice Pistachio Latte, Ice Matcha Vanilla, Gula Aren Latte">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://famuhacoffee-ui.github.io/famuha-order/assets/promo/promoweekend.jpg">
+<meta name="twitter:image" content="https://famuhacoffee-ui.github.io/famuha-order/assets/promo/thumbnail-famuha.jpg">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap');
   :root{
@@ -1771,6 +1771,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 .adm-info{flex:1;min-width:0;font-size:13px;line-height:1.3}.adm-info b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.adm-info span{color:#6B7280;font-size:11.5px}
 .adm-btn{border:1px solid #D1D5DB;background:#fff;color:#111827;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer}
 .adm-btn.pri{background:var(--tp-green);border-color:var(--tp-green);color:#fff}.adm-btn.del{color:#DC2626;border-color:#FCA5A5}
+.fm-card.fm-removed{display:none!important}.adm-item.adm-removed{opacity:.5}.adm-item.adm-removed .adm-info b{text-decoration:line-through}
 .adm-form{border:1px dashed #D1D5DB;border-radius:12px;padding:10px;display:grid;gap:8px;background:#fff}
 .adm-form label{font-size:12px;font-weight:700;color:#374151;display:grid;gap:4px}
 .adm-form input,.adm-form select{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #D1D5DB;border-radius:8px;font:inherit;font-size:14px;background:#fff;color:#111827}
@@ -4143,6 +4144,30 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   })();
   renderPromoBanner_();
   var MENU_IMGS = {}, MENU_IMGS_KEY = 'famuha-menu-imgs', ADMIN_IMG_DRAFT = {}, ADMIN_EXIST_PRICE = {};
+  // Menu bawaan yang dihapus admin (daftar nama menu; kartu disembunyikan, bukan dihapus dari kode)
+  var HIDDEN_MENUS = [], HIDDEN_MENUS_KEY = 'famuha-hidden-menus', ADMIN_HIDDEN_DRAFT = [], ADMIN_BANNER_PENDING = null;
+  try { var _hm = localStorage.getItem(HIDDEN_MENUS_KEY); if (_hm) HIDDEN_MENUS = JSON.parse(_hm) || []; } catch (err){}
+  function applyHiddenMenus_(){
+    var cards = document.querySelectorAll('#fmGrid .fm-card:not([data-custom])');
+    [].forEach.call(cards, function(c){ c.classList.toggle('fm-removed', HIDDEN_MENUS.indexOf(c.dataset.name) > -1); });
+    // Sembunyikan pilihan varian di pembuat minuman kalau semua kartu varian itu sudah dihapus
+    var row = document.querySelector('.choice-row[data-group="variant"]');
+    if (row){
+      [].forEach.call(cards, function(c){
+        var v = c.dataset.variant, inp = row.querySelector('input[value="' + v + '"]');
+        if (!inp) return;
+        var left = document.querySelectorAll('#fmGrid .fm-card:not([data-custom]):not(.fm-removed)[data-variant="' + v + '"]').length;
+        inp.parentNode.style.display = left ? '' : 'none';
+      });
+      var cur = row.querySelector('input:checked');
+      if (cur && cur.parentNode.style.display === 'none'){
+        var first = [].slice.call(row.querySelectorAll('input')).filter(function(i){ return i.parentNode.style.display !== 'none'; })[0];
+        if (first){ first.checked = true; first.dispatchEvent(new Event('change', { bubbles:true })); }
+      }
+    }
+    var cnt = document.getElementById('fmResultCount');
+    if (cnt) cnt.textContent = document.querySelectorAll('#fmGrid .fm-card:not(.fm-removed)').length + ' menu';
+  }
   try { var _mi = localStorage.getItem(MENU_IMGS_KEY); if (_mi) MENU_IMGS = JSON.parse(_mi) || {}; } catch (err){}
   function applyMenuOverrides_(){
     document.querySelectorAll('#fmGrid .fm-card:not([data-custom])').forEach(function(c){
@@ -4241,13 +4266,14 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     form.appendChild(admField_('Tampilkan', on)); form.appendChild(admField_('Judul', t)); form.appendChild(admField_('Keterangan', x));
     form.appendChild(admField_('Teks harga / label (kanan)', pr)); form.appendChild(admField_('Foto banner (opsional, rasio lebar 3:1)', fl));
     form.appendChild(prev); form.appendChild(del); form.appendChild(msg); form.appendChild(btnRow); box.appendChild(form); wrap.appendChild(box);
+    ADMIN_BANNER_PENDING = function(){ return editId ? 'update' : ((img || t.value.trim() || x.value.trim() || pr.value.trim()) ? 'add' : ''); };
     draw(); showPrev();
   }
   function renderExistingMenusSection_(wrap){
-    ADMIN_IMG_DRAFT = Object.assign({}, MENU_IMGS); ADMIN_EXIST_PRICE = {};
+    ADMIN_IMG_DRAFT = Object.assign({}, MENU_IMGS); ADMIN_EXIST_PRICE = {}; ADMIN_HIDDEN_DRAFT = HIDDEN_MENUS.slice();
     var box = admEl_('div', 'adm-menu');
     box.appendChild(admEl_('div', 'admin-section-title', 'Menu Saat Ini'));
-    box.appendChild(admEl_('div', 'adm-note', 'Ganti foto dan harga menu yang sudah ada. Menu dengan suhu Panas ikut harga menu Dingin yang sama. Klik \"Simpan Perubahan\" di bawah untuk menerbitkan.'));
+    box.appendChild(admEl_('div', 'adm-note', 'Ganti foto dan harga menu yang sudah ada. Menu dengan suhu Panas ikut harga menu Dingin yang sama. Tombol Hapus menyembunyikan menu dari halaman pelanggan. Klik \"Simpan Perubahan\" di bawah untuk menerbitkan.'));
     var list = admEl_('div', 'adm-list'); box.appendChild(list);
     document.querySelectorAll('#fmGrid .fm-card:not([data-custom])').forEach(function(c){
       var name = c.dataset.name, v = c.dataset.variant, shared = !!c.dataset.temp;
@@ -4272,7 +4298,24 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         admPickImage_(fl.files[0], function(d){ if (d){ ADMIN_IMG_DRAFT[name] = d; showThumb(); } });
       });
       rs.addEventListener('click', function(){ delete ADMIN_IMG_DRAFT[name]; fl.value = ''; showThumb(); });
-      row.appendChild(th); row.appendChild(info); row.appendChild(fl); row.appendChild(rs); list.appendChild(row);
+      var dl = admEl_('button', 'adm-btn del', 'Hapus'); dl.type = 'button';
+      function syncDel(){
+        var gone = ADMIN_HIDDEN_DRAFT.indexOf(name) > -1;
+        row.classList.toggle('adm-removed', gone);
+        dl.textContent = gone ? 'Batalkan' : 'Hapus';
+        dl.classList.toggle('del', !gone);
+      }
+      dl.addEventListener('click', function(){
+        var i = ADMIN_HIDDEN_DRAFT.indexOf(name);
+        if (i > -1){ ADMIN_HIDDEN_DRAFT.splice(i, 1); }
+        else {
+          if (!confirm('Hapus menu "' + name + '"? Menu hilang dari halaman pelanggan setelah menekan Simpan Perubahan.')) return;
+          ADMIN_HIDDEN_DRAFT.push(name);
+        }
+        syncDel();
+      });
+      syncDel();
+      row.appendChild(th); row.appendChild(info); row.appendChild(fl); row.appendChild(rs); row.appendChild(dl); list.appendChild(row);
     });
     wrap.appendChild(box);
   }
@@ -4388,6 +4431,11 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       try { localStorage.setItem(MENU_IMGS_KEY, JSON.stringify(MENU_IMGS)); } catch (err){}
     }
     applyMenuOverrides_();
+    if (Array.isArray(cfg.hiddenMenus)){
+      HIDDEN_MENUS = cfg.hiddenMenus.map(String).slice(0, 100);
+      try { localStorage.setItem(HIDDEN_MENUS_KEY, JSON.stringify(HIDDEN_MENUS)); } catch (err){}
+    }
+    applyHiddenMenus_();
     renderPromoBanner_();
     if (Array.isArray(cfg.customMenus)){
       applyCustomMenus_(cfg.customMenus);
@@ -4398,6 +4446,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   }
 
   function loadConfig(){
+    applyHiddenMenus_();
     try {
       var cm = localStorage.getItem(CUSTOM_MENUS_KEY);
       if (cm) applyCustomMenus_(JSON.parse(cm));
@@ -4669,10 +4718,19 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       statusEl.className = 'admin-status err';
       return;
     }
+    var pend = ADMIN_BANNER_PENDING && ADMIN_BANNER_PENDING();
+    if (pend){
+      statusEl.textContent = pend === 'update'
+        ? 'Banner yang sedang diedit belum diupdate. Klik "Update Banner" dulu, baru "Simpan Perubahan".'
+        : 'Ada banner yang belum masuk daftar. Klik "Tambah Banner" dulu, baru "Simpan Perubahan".';
+      statusEl.className = 'admin-status err';
+      return;
+    }
     var newConfig = collectAdminFormValues_();
     newConfig.customMenus = ADMIN_MENU_DRAFT.map(function(m){ return Object.assign({}, m); });
     ADMIN_MENU_DRAFT.forEach(function(m){ delete newConfig.prices.variant[m.id]; });
     newConfig.menuImgs = Object.assign({}, ADMIN_IMG_DRAFT);
+    newConfig.hiddenMenus = ADMIN_HIDDEN_DRAFT.slice();
     if (ADMIN_BANNER_DRAFT) newConfig.promoBanners = ADMIN_BANNER_DRAFT.map(function(b){ return Object.assign({}, b); });
     Object.keys(ADMIN_EXIST_PRICE).forEach(function(v){ newConfig.prices.variant[v] = Math.max(0, ADMIN_EXIST_PRICE[v] - PRICES.size.regular); });
     var saveBtn = document.getElementById('adminSaveBtn');
@@ -4701,6 +4759,9 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         MENU_IMGS = Object.assign({}, newConfig.menuImgs);
         try { localStorage.setItem(MENU_IMGS_KEY, JSON.stringify(MENU_IMGS)); } catch (err){}
         applyMenuOverrides_();
+        HIDDEN_MENUS = newConfig.hiddenMenus.slice();
+        try { localStorage.setItem(HIDDEN_MENUS_KEY, JSON.stringify(HIDDEN_MENUS)); } catch (err){}
+        applyHiddenMenus_();
         if (newConfig.promoBanners){ PROMO_BANNERS = newConfig.promoBanners; try { localStorage.setItem(PROMO_BANNERS_KEY, JSON.stringify(PROMO_BANNERS)); } catch (err){} renderPromoBanner_(); }
         var serverKeeps = Array.isArray(applied.customMenus);
         if (!serverKeeps){
@@ -4710,8 +4771,17 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(applied)); } catch (err){}
         statusEl.textContent = serverKeeps ? 'Tersimpan! Perubahan langsung berlaku.' : 'Harga tersimpan. Menu baru baru tersimpan di perangkat ini; server (Apps Script) belum menyimpan daftar menu, jadi pelanggan lain belum melihatnya.';
         statusEl.className = serverKeeps ? 'admin-status ok' : 'admin-status err';
+        var kb = Math.round(JSON.stringify(newConfig).length / 1024);
+        function bSig_(a){ return (a || []).map(function(b){ return (b && b.id) + ':' + String((b && b.img) || '').length; }).join('|'); }
         if (!applied.promoBanners){
-          statusEl.textContent += ' Banner promo baru tersimpan di perangkat ini; server belum menyimpannya.';
+          statusEl.textContent += ' Banner promo baru tersimpan di perangkat ini; server belum menyimpannya (data ' + kb + ' KB).';
+          statusEl.className = 'admin-status err';
+        } else if (newConfig.promoBanners && bSig_(applied.promoBanners) !== bSig_(newConfig.promoBanners)){
+          statusEl.textContent += ' Banner TIDAK tersimpan utuh di server (data ' + kb + ' KB; kemungkinan melewati batas ukuran penyimpanan Apps Script). Setelah refresh, banner lama akan muncul lagi.';
+          statusEl.className = 'admin-status err';
+        }
+        if (!Array.isArray(applied.hiddenMenus) && newConfig.hiddenMenus.length){
+          statusEl.textContent += ' Menu yang dihapus baru tersembunyi di perangkat ini; server belum menyimpan daftar hapus.';
           statusEl.className = 'admin-status err';
         }
         if (!applied.menuImgs && Object.keys(newConfig.menuImgs).length){
@@ -4721,7 +4791,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       })
       .catch(function(err){
         console.error('[admin] gagal menyimpan konfigurasi:', err);
-        statusEl.textContent = 'Gagal terhubung ke server. Coba lagi.';
+        statusEl.textContent = 'Gagal terhubung ke server. Coba lagi. (' + (err && err.message ? err.message : 'tanpa detail') + ')';
         statusEl.className = 'admin-status err';
       })
       .finally(function(){
@@ -5508,7 +5578,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     cards.forEach(function(card){
       var okCat=activeCat==='all'||card.dataset.cat===activeCat;
       var okQ=!q||norm(card.dataset.name).indexOf(q)>-1;
-      card.style.display=(okCat&&okQ)?'':'none'; if(okCat&&okQ) shown++;
+      var vis=okCat&&okQ&&!card.classList.contains('fm-removed'); card.style.display=vis?'':'none'; if(vis) shown++;
     });
     if(count) count.textContent=shown+' menu';
     if(empty) empty.style.display=shown?'none':'block';
@@ -5797,6 +5867,116 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     });
     var g=row.closest('.group'); if(g&&q){ g.scrollIntoView({behavior:'smooth',block:'nearest'}); }
   }); }
+})();
+</script>
+<style id="famuha-share-css">
+#fmShare{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center}
+#fmShare.open{display:flex}
+#fmShare .fs-card{background:#fff;width:100%;max-width:440px;border-radius:18px 18px 0 0;padding:18px 18px 22px;box-shadow:0 -8px 30px rgba(0,0,0,.2);color:#31353B;font-family:inherit}
+@media(min-width:600px){#fmShare{align-items:center}#fmShare .fs-card{border-radius:18px}}
+#fmShare .fs-title{font-weight:800;font-size:16px;margin:0 0 2px}
+#fmShare .fs-sub{font-size:12px;color:#6b7280;margin:0 0 14px;word-break:break-all}
+#fmShare .fs-row{display:flex;flex-direction:column;gap:10px}
+#fmShare .fs-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font:inherit;font-weight:700;cursor:pointer;color:#31353B;text-align:left}
+#fmShare .fs-btn small{font-weight:500;font-size:11.5px;color:#6b7280}
+#fmShare .fs-btn:hover{background:#f6f7f8}
+#fmShare .fs-wa{border-color:#25D366}#fmShare .fs-wa b{color:#128C4A}
+#fmShare .fs-ig{border-color:#E1306C}#fmShare .fs-ig b{color:#C13584}
+#fmShare .fs-toast{min-height:18px;font-size:12.5px;text-align:center;margin-top:10px;color:#028a0b}
+#fmShare .fs-close{margin-top:4px;text-align:center;align-items:center;border-color:transparent;color:#6b7280}
+</style>
+<script id="famuha-share">
+(function(){
+  'use strict';
+  // Link yang dibagikan SELALU halaman ini sendiri (tanpa ?query/#hash), supaya
+  // WhatsApp/Instagram membaca tag og:image di <head> dan thumbnail tetap muncul.
+  // Sengaja TIDAK memakai navigator.share({files}) karena itu mengganti preview link
+  // dengan file gambar mentah.
+  var BASE = location.origin + location.pathname;
+  var cur = { title:'', text:'', url:BASE };
+
+  var sh = document.createElement('div'); sh.id = 'fmShare'; sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true');
+  sh.innerHTML = '<div class="fs-card"><p class="fs-title" id="fsTitle">Bagikan</p><p class="fs-sub" id="fsSub"></p>' +
+    '<div class="fs-row">' +
+    '<button type="button" class="fs-btn fs-wa" id="fsWa"><b>WhatsApp</b><small>Buka WhatsApp, pilih kontak atau grup</small></button>' +
+    '<button type="button" class="fs-btn fs-ig" id="fsIg"><b>Instagram</b><small id="fsIgHint"></small></button>' +
+    '<button type="button" class="fs-btn" id="fsCopy"><b>Salin Link</b><small>Tempel di mana saja</small></button>' +
+    '</div><div class="fs-toast" id="fsToast"></div>' +
+    '<button type="button" class="fs-btn fs-close" id="fsClose"><b>Tutup</b></button></div>';
+  document.body.appendChild(sh);
+  var $ = function(id){ return document.getElementById(id); };
+  $('fsIgHint').textContent = navigator.share ? 'Pilih Instagram di menu bagikan HP kamu' : 'Link disalin, tempel di DM / Story Instagram';
+
+  function menuUrl(name){ return BASE + '?menu=' + encodeURIComponent(name); }
+  function say(msg){ $('fsToast').textContent = msg; }
+  function close(){ sh.classList.remove('open'); }
+  function open(title, text, url){
+    cur = { title: title, text: text, url: url };
+    $('fsTitle').textContent = title; $('fsSub').textContent = url; say('');
+    sh.classList.add('open');
+  }
+  function copy(text){
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function(res, rej){
+      var t = document.createElement('textarea'); t.value = text; t.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+      document.body.appendChild(t); t.select();
+      try { document.execCommand('copy') ? res() : rej(new Error('copy')); } catch (e){ rej(e); }
+      document.body.removeChild(t);
+    });
+  }
+
+  $('fsWa').addEventListener('click', function(){
+    // Link ditaruh di baris sendiri supaya WhatsApp membuat kartu preview (thumbnail) dari og:image.
+    window.open('https://wa.me/?text=' + encodeURIComponent(cur.text + '\n' + cur.url), '_blank', 'noopener');
+  });
+  $('fsIg').addEventListener('click', function(){
+    // Instagram tidak punya URL share untuk web. Di HP: pakai menu bagikan bawaan (ada Instagram).
+    // Di desktop: salin link supaya bisa ditempel di DM / Story.
+    if (navigator.share){
+      navigator.share({ title: cur.title, text: cur.text, url: cur.url }).catch(function(){});
+    } else {
+      copy(cur.url).then(function(){ say('Link disalin. Buka Instagram lalu tempel di DM atau Story (stiker Link).'); })
+        .catch(function(){ say('Gagal menyalin. Salin manual link di atas.'); });
+    }
+  });
+  $('fsCopy').addEventListener('click', function(){
+    copy(cur.url).then(function(){ say('✓ Link disalin'); }).catch(function(){ say('Gagal menyalin. Salin manual link di atas.'); });
+  });
+  $('fsClose').addEventListener('click', close);
+  sh.addEventListener('click', function(e){ if (e.target === sh) close(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
+
+  // Tombol Bagikan di header (bagikan toko)
+  var a = $('tpActions');
+  if (a){
+    var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'history-btn'; hb.textContent = '📤 Bagikan';
+    a.insertBefore(hb, a.firstChild);
+    hb.addEventListener('click', function(){ open('Bagikan Famuha Coffee', 'Pesan kopi favoritmu online di Famuha Coffee ☕', BASE); });
+  }
+  // Tombol Bagikan di halaman detail menu (bagikan menu itu)
+  var buy = $('fdBuy');
+  if (buy){
+    var db = document.createElement('button'); db.type = 'button'; db.className = 'fd-btn s'; db.id = 'fdShare'; db.textContent = '↗ Bagikan menu ini';
+    buy.parentNode.insertBefore(db, buy.nextSibling);
+    db.addEventListener('click', function(){
+      var n = (($('fdName') || {}).textContent || '').trim();
+      if (!n){ open('Bagikan Famuha Coffee', 'Pesan kopi favoritmu online di Famuha Coffee ☕', BASE); return; }
+      open('Bagikan ' + n, 'Yuk coba ' + n + ' di Famuha Coffee ☕', menuUrl(n));
+    });
+  }
+  // Link langsung ke menu: ?menu=Nama Menu -> otomatis buka detail menu itu
+  var want = '';
+  try { want = (new URLSearchParams(location.search).get('menu') || '').trim().toLowerCase(); } catch (e){}
+  if (want){
+    var tries = 0, tm = setInterval(function(){
+      tries++;
+      var card = [].slice.call(document.querySelectorAll('#fmGrid .fm-card')).filter(function(c){
+        return !c.classList.contains('fm-removed') && String(c.dataset.name || '').trim().toLowerCase() === want;
+      })[0];
+      if (card){ clearInterval(tm); card.click(); }
+      else if (tries > 20) clearInterval(tm);
+    }, 400);
+  }
 })();
 </script>
 </body>
