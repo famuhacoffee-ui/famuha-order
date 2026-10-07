@@ -2213,6 +2213,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         <svg id="cupSvg" viewBox="0 0 220 320" xmlns="http://www.w3.org/2000/svg"></svg>
         <img id="promoPreviewImg" class="promo-preview-img" alt="Hot Cappuccino Famuha Coffee" hidden>
       </div>
+      <div class="preview-title">Ringkasan Pesanan</div>
       <div class="preview-label serif" id="previewLabel">Gula Aren Latte</div>
       <div class="preview-sub" id="previewSub">Single Shot · Less Es</div>
 
@@ -4074,7 +4075,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 
   // ---------------- Menu baru dari panel Admin ----------------
   var CUSTOM_MENUS = [], CUSTOM_MENUS_KEY = 'famuha-custom-menus';
-  var CUSTOM_COLORS = { coffee:[150,100,70], matcha:[150,178,96], chocolate:[110,68,46], noncoffee:[235,225,210] };
+  var CUSTOM_COLORS = { coffee:[150,100,70], hot:[150,100,70], matcha:[150,178,96], chocolate:[110,68,46], noncoffee:[235,225,210] };
   function cleanMenu_(m){
     if (!m || typeof m.id !== 'string' || !/^[a-z0-9-]+$/i.test(m.id) || !m.name) return null;
     var img = String(m.img || '');
@@ -4095,7 +4096,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       PRICES.variant[m.id] = Math.max(0, m.price - PRICES.size.regular);
       LABELS.variant[m.id] = m.name;
       VARIANT_COLOR[m.id] = CUSTOM_COLORS[m.cat];
-      if (m.cat !== 'coffee') VARIANT_LOCKS[m.id] = { shots: 'single', noShot: true };
+      if (m.cat !== 'coffee' && m.cat !== 'hot') VARIANT_LOCKS[m.id] = { shots: 'single', noShot: true };
       if (!row) return;
       var lab = document.createElement('label'); lab.className = 'choice'; lab.dataset.value = m.id;
       var inp = document.createElement('input'); inp.type = 'radio'; inp.name = 'variant'; inp.value = m.id;
@@ -4286,7 +4287,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     var form = admEl_('div', 'adm-form');
     var fName = admEl_('input'); fName.type = 'text'; fName.maxLength = 60; fName.placeholder = 'Contoh: Ice Salted Caramel Latte';
     var fCat = admEl_('select');
-    [['coffee','Coffee'],['matcha','Matcha'],['chocolate','Chocolate'],['noncoffee','Non Coffee']].forEach(function(o){ var op = admEl_('option', '', o[1]); op.value = o[0]; fCat.appendChild(op); });
+    [['coffee','Coffee'],['hot','Panas'],['matcha','Matcha'],['chocolate','Chocolate'],['noncoffee','Non Coffee']].forEach(function(o){ var op = admEl_('option', '', o[1]); op.value = o[0]; fCat.appendChild(op); });
     var fPrice = admEl_('input'); fPrice.type = 'number'; fPrice.step = '500'; fPrice.placeholder = 'Harga ukuran Regular';
     var fDesc = admEl_('input'); fDesc.type = 'text'; fDesc.maxLength = 140; fDesc.placeholder = 'Deskripsi singkat';
     var fBadge = admEl_('input'); fBadge.type = 'text'; fBadge.maxLength = 24; fBadge.placeholder = 'Opsional, mis. 🆕 Menu Baru';
@@ -5332,13 +5333,13 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   }
   function mk(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function build(m){
-    var card = mk('article', 'fm-card'); card.dataset.cat = m.cat; card.dataset.name = m.name; card.dataset.variant = m.id; card.dataset.custom = '1';
+    var card = mk('article', 'fm-card'); var cat = (m.cat === 'coffee' && /^hot\b/i.test(m.name)) ? 'hot' : m.cat; card.dataset.cat = cat; if (cat === 'hot') card.dataset.temp = 'hot'; card.dataset.name = m.name; card.dataset.variant = m.id; card.dataset.custom = '1';
     var ph = mk('div', 'fm-photo');
     if (m.badge) ph.appendChild(mk('span', 'badge', m.badge));
     var h = mk('button', 'fm-heart', '♡'); h.type = 'button'; h.setAttribute('aria-label', 'Favorit'); ph.appendChild(h);
     var img = mk('div', 'cupimg'); img.setAttribute('role', 'img'); img.setAttribute('aria-label', m.name);
     if (m.img) img.style.backgroundImage = 'url("' + m.img + '")';
-    else { img.classList.add('noimg'); img.textContent = ({ coffee:'☕', matcha:'🍵', chocolate:'🍫', noncoffee:'🥤' })[m.cat] || '☕'; }
+    else { img.classList.add('noimg'); img.textContent = ({ coffee:'☕', hot:'☕', matcha:'🍵', chocolate:'🍫', noncoffee:'🥤' })[m.cat] || '☕'; }
     ph.appendChild(img); card.appendChild(ph);
     var body = mk('div', 'fm-body'); body.appendChild(mk('div', 'fm-name', m.name)); body.appendChild(mk('div', 'fm-desc', m.desc));
     var bt = mk('div', 'fm-bottom'); bt.appendChild(mk('div', 'fm-price', 'Rp' + m.price.toLocaleString('id-ID')));
@@ -5357,6 +5358,8 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 </script>
 <style id="famuha-detail-css">
 .preview-stage{display:none!important}
+#previewLabel,#previewSub{display:none!important}
+.preview-title{font-size:17px;font-weight:800;color:var(--tp-text,#31353B);margin:2px 0 10px}
 #fmDetail{position:fixed;inset:0;z-index:9000;background:#fff;overflow-y:auto;display:none;color:var(--tp-text,#31353B)}
 #fmDetail.open{display:block}
 #fmDetail *{box-sizing:border-box}
