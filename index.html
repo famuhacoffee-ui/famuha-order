@@ -1781,7 +1781,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 .admin-fields-wrap{max-height:55vh!important}
 </style>
 </head>
-<body><div id='welcomePopup'><div class='card'>
+<body data-step="1"><div id='welcomePopup'><div class='card'>
   <div class='wc-step active' id='wcStep1'>
     <div style='text-align:center;font-size:42px'>☕</div><h2>Selamat Datang di Famuha Coffee</h2><p><b>Untuk memberikan pengalaman pemesanan yang lebih baik, silakan lengkapi data berikut sebelum melanjutkan.</b></p><label>Nama Lengkap</label><input id='customerName' placeholder='Masukkan nama Anda'><label>Nomor WhatsApp</label><input id='customerPhone' placeholder='Contoh: 0812xxxxxxxx'><div class='note'>🔒 Data Anda kami gunakan untuk keperluan pemesanan dan promo.</div><button id='welcomeStartBtn'>Mulai Pesan</button><div class='otp-status' id='wcOtpFailStatus'></div><button id='wcSkipOtpBtn' class='otp-ghost-btn' style='display:none'>Lanjutkan Tanpa Verifikasi</button>
   </div>
@@ -1895,9 +1895,10 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <article class="fm-card" data-cat="coffee" data-name="Cold Brew Peach" data-variant="cold-brew-peach"><div class="fm-photo"><button class="fm-heart" aria-label="Favorit">♡</button><div class="cupimg noimg" role="img" aria-label="Cold Brew Peach">🍑</div></div><div class="fm-body"><div class="fm-name">Cold Brew Peach</div><div class="fm-desc">Cold brew dingin dengan rasa peach.</div><div class="fm-bottom"><div class="fm-price">Rp24.000</div></div></div></article>
     </div>
     <div class="fm-empty" id="fmEmpty">Menu yang kamu cari belum tersedia.</div>
-    <div class="fm-section-head" style="margin-top:22px"><h2>Atur Sesuai Selera</h2><small>Pilih shot, gula, es & lainnya</small></div>
+    <div class="fm-section-head fm-hide-selera" style="margin-top:22px"><h2>Atur Sesuai Selera</h2><small>Pilih shot, gula, es & lainnya</small></div>
   </section>
 
+  <div class="step-head" id="stepHead"><button type="button" class="sh-back" id="stepBack">← Pilih menu lagi</button><div class="sh-title">Data Pemesan</div><div class="sh-sub">Langkah 2 dari 2 · isi data, pilih pengiriman &amp; pembayaran</div></div>
   <div class="layout">
     <div class="options" id="options">
 
@@ -2104,7 +2105,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         <div class="delivery-note" id="loyaltyBanner" hidden style="margin-top:12px; border-color: var(--gold); color: var(--gold-2);"></div>
       </div>
 
-      <div class="group">
+      <div class="group" id="deliveryGroup">
         <div class="group-head">
           <div class="group-title serif">Delivery</div>
           <div class="group-hint">Wajib pilih 1</div>
@@ -2178,7 +2179,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         <div class="delivery-note" id="scheduleLockedNote" hidden>Jadwal tidak tersedia untuk delivery GoSend/GrabExpress — pesanan diproses sekarang.</div>
       </div>
 
-      <div class="group">
+      <div class="group" id="paymentGroup">
         <div class="group-head">
           <div class="group-title serif">Metode Pembayaran</div>
           <div class="group-hint">Wajib pilih 1</div>
@@ -2219,6 +2220,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <div class="preview-sub" id="previewSub">Single Shot · Less Es</div>
 
       <div class="cart-list" id="cartList"></div>
+<button type="button" class="step-more" id="stepMore">+ Tambah menu lain</button>
 
       <div class="discount-info-row" id="discountInfoRow" hidden></div>
 
@@ -2227,7 +2229,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         <span class="tprice" id="totalPrice">Rp 0</span>
       </div>
 
-      <a href="#" target="_blank" class="cta-btn" id="ctaBtn">Pesan via WhatsApp</a>
+      <a href="#" target="_blank" class="cta-btn" id="ctaBtn">Konfirmasi via WhatsApp</a>
       <div class="cta-note">Tambahkan minimal 1 varian ke pesanan · Konfirmasi akhir via WhatsApp</div>
     </div>
   </div>
@@ -2244,7 +2246,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     </div>
     <div class="mobile-bar-row mobile-bar-checkout">
       <div class="mtotal"><small>Total</small><span id="mobileTotal">Rp 0</span></div>
-      <a href="#" target="_blank" class="cta-btn" id="ctaBtnMobile">Pesan via WhatsApp</a>
+      <a href="#" target="_blank" class="cta-btn" id="ctaBtnMobile">Konfirmasi via WhatsApp</a>
     </div>
   </div>
 
@@ -2258,7 +2260,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         <span id="thankyouTotal">Rp 0</span>
       </div>
       <button type="button" class="cta-btn" id="thankyouClose">Tutup</button>
-      <div class="overlay-note">Kalau WhatsApp belum terbuka, tekan lagi tombol "Pesan via WhatsApp"</div>
+      <div class="overlay-note">Kalau WhatsApp belum terbuka, tekan lagi tombol "Konfirmasi via WhatsApp"</div>
     </div>
   </div>
 
@@ -3186,9 +3188,9 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     } else if (cart.length === 0){
       waHint = 'Tambahkan minimal 1 varian ke pesanan · Konfirmasi akhir via WhatsApp';
     } else if (state.payment === 'qris' && !qrisPaidConfirmed){
-      waHint = 'Scan QRIS lalu tekan "Saya Sudah Bayar" dulu sebelum pesan via WhatsApp';
+      waHint = 'Scan QRIS lalu tekan "Saya Sudah Bayar" dulu sebelum konfirmasi via WhatsApp';
     } else if (!scheduleOk){
-      waHint = 'Lengkapi tanggal & jam jadwal pesanan dulu (jam operasional ' + SCHEDULE_TIME_MIN + '–' + SCHEDULE_TIME_MAX + ') sebelum pesan via WhatsApp';
+      waHint = 'Lengkapi tanggal & jam jadwal pesanan dulu (jam operasional ' + SCHEDULE_TIME_MIN + '–' + SCHEDULE_TIME_MAX + ') sebelum konfirmasi via WhatsApp';
     } else {
       waHint = 'Tambahkan minimal 1 varian ke pesanan · Konfirmasi akhir via WhatsApp';
     }
@@ -4951,7 +4953,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     } else {
       qrisPaidConfirmed = true;
       var total = computeCartTotal();
-      showThankyou('Terima kasih sudah melakukan pembayaran! Silakan klik "Pesan via WhatsApp" untuk konfirmasi ke kami.', total);
+      showThankyou('Terima kasih sudah melakukan pembayaran! Silakan klik "Konfirmasi via WhatsApp" untuk konfirmasi ke kami.', total);
       update();
     }
   });
@@ -5316,7 +5318,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         return 'Untuk info promo terbaru, coba cek halaman order — kalau sedang ada promo aktif, biasanya muncul otomatis di ringkasan pesanan. Kalau mau dipastikan langsung, chat admin kami ya.';
       }
       if (/(cara order|cara pesan|gimana order|gimana pesan|order gimana)/.test(q)){
-        return 'Cara order gampang kok:\n1. Pilih size, susu, shot, varian rasa, gula & es di form.\n2. Klik "Tambah ke Keranjang".\n3. Isi data diri & pilih metode delivery + pembayaran.\n4. Klik "Pesan via WhatsApp" — chat otomatis terkirim ke admin kami untuk konfirmasi.';
+        return 'Cara order gampang kok:\n1. Pilih size, susu, shot, varian rasa, gula & es di form.\n2. Klik "Tambah ke Keranjang".\n3. Isi data diri & pilih metode delivery + pembayaran.\n4. Klik "Konfirmasi via WhatsApp" — chat otomatis terkirim ke admin kami untuk konfirmasi.';
       }
       if (/(bayar|pembayaran|qris|cod|transfer)/.test(q)){
         return 'Pembayaran bisa lewat COD (bayar di tempat/saat diantar) atau QRIS. Pilih metode pembayaran ini di bagian akhir form order sebelum checkout.';
@@ -5482,7 +5484,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     '<div class="fd-sel"><i id="fdThumb"></i><div><b id="fdSelName"></b><small id="fdSelSub"></small></div></div>' +
     '<div class="fd-qty"><div><button type="button" id="fdMinus" aria-label="Kurangi">−</button><span id="fdQty">1</span><button type="button" id="fdPlus" aria-label="Tambah">+</button></div></div>' +
     '<div class="fd-sub">Subtotal<b id="fdSubtotal"></b></div>' +
-    '<button type="button" class="fd-btn p" id="fdAdd">+ Keranjang</button><button type="button" class="fd-btn s" id="fdBuy">Beli Langsung</button>' +
+    '<button type="button" class="fd-btn p" id="fdAdd">Lanjut ke Pemesanan →</button><button type="button" class="fd-btn s" id="fdAddMore">+ Tambah ke Pesanan</button><button type="button" class="fd-btn s" id="fdBuy">Beli Langsung</button>' +
     '<div class="fd-toast" id="fdToast"></div><button type="button" class="fd-btn s" data-x style="margin:0">← Kembali ke Menu</button></div></aside></div></div>';
   document.body.appendChild(el);
   var F = function(id){ return $(id); };
@@ -5537,9 +5539,11 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   }
   F('fdMinus').addEventListener('click', function(){ $('qtyMinus').click(); sync(); });
   F('fdPlus').addEventListener('click', function(){ $('qtyPlus').click(); sync(); });
-  F('fdAdd').addEventListener('click', add);
+  F('fdAdd').addEventListener('click', function(){ if (!add()) return; close(); if (window.famuhaGoStep) window.famuhaGoStep(2); });
+  F('fdAddMore').addEventListener('click', function(){ if (!add()) return; close(); if (window.famuhaToast) window.famuhaToast('✓ Ditambahkan ke Keranjang Aktif. Pilih menu lain, atau lanjut ke pemesanan.', 3600); });
   F('fdBuy').addEventListener('click', function(){
     if (!add()) return; close();
+    if (window.famuhaGoStep) { window.famuhaGoStep(2); return; }
     var t = $('customerGroup') || $('cartList'); if (t) setTimeout(function(){ t.scrollIntoView({ behavior:'smooth', block:'center' }); }, 120);
   });
   el.addEventListener('click', function(e){ if (e.target.closest('[data-x]')) close(); });
@@ -5977,6 +5981,148 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       else if (tries > 20) clearInterval(tm);
     }, 400);
   }
+})();
+</script>
+<style id="famuha-hide-selera">
+/* "Atur Sesuai Selera" tidak ditampilkan di halaman utama: pilihan dibuat lewat halaman detail menu.
+   JANGAN diganti display:none -- halaman detail membaca kelompok ini (shots/sugar/temp/ice) dan
+   melewati yang display:none. Jadi cukup dipindah keluar layar. */
+.fm-hide-selera{display:none!important}
+#shotsGroup,#sugarGroup,#tempGroup,#iceGroup,#qtyAddGroup{position:fixed!important;left:-9999px!important;top:0!important;width:320px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important;margin:0!important}
+</style>
+<style id="famuha-steps-css">
+/* Alur 2 langkah: (1) pilih menu -> (2) checkout: data pemesan, delivery, waktu, pembayaran, lalu ringkasan pesanan (keranjang) di akhir.
+   Halaman 1 TIDAK menampilkan keranjang/bar total. Bagian disembunyikan lewat CSS (bukan dihapus) supaya script lama tetap jalan. */
+.step-head{display:none;max-width:1100px;margin:0 auto;padding:14px 12px 0}
+body[data-step="2"] .step-head{display:block}
+.step-head .sh-back{background:none;border:0;color:#028a0b;font:inherit;font-weight:700;cursor:pointer;padding:6px 0}
+.step-head .sh-title{font-size:20px;font-weight:800;margin:2px 0 0;color:#31353B}
+.step-head .sh-sub{font-size:12.5px;color:#6b7280;margin-top:2px}
+.step-more{display:block;width:100%;margin:12px 0 0;padding:11px;border-radius:8px;border:1.5px dashed #03AC0E;background:#fff;color:#028a0b;font:inherit;font-weight:700;cursor:pointer}
+#fdBuy{display:none!important}
+body[data-step="1"] #customerGroup,body[data-step="1"] #deliveryGroup,body[data-step="1"] #timingGroup,body[data-step="1"] #paymentGroup,
+body[data-step="1"] #ctaBtn,body[data-step="1"] #ctaBtnMobile,body[data-step="1"] .preview-card,body[data-step="1"] .mobile-bar{display:none!important}
+@media(max-width:879px){body[data-step="1"]{padding-bottom:24px}}
+body[data-step="2"] .hero,body[data-step="2"] .fm-market,body[data-step="2"] .mobile-bar-add,
+body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-step="2"] #previewSub{display:none!important}
+@media(min-width:880px){
+  body[data-step="2"] #options{grid-template-columns:minmax(0,1fr)!important;max-width:680px;margin-left:auto!important;margin-right:auto!important}
+  body[data-step="2"] .preview-card{grid-column:1!important;grid-row:auto!important;position:static!important}
+}
+#fmStepToast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:9600;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+#fmStepToast.on{opacity:1}
+</style>
+<script id="famuha-steps">
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var cart = $('cartList');
+  function hasItems(){ return !!cart && cart.children.length > 0 && !cart.querySelector('.cart-empty'); }
+  function step(){ return document.body.getAttribute('data-step'); }
+  function inStep2(){ return !!(history.state && history.state.famuhaStep === 2); }
+  function leave2(){ if (inStep2()) history.back(); else goStep(1, true); }
+
+  // Keranjang dikosongkan saat di checkout -> balik ke pilih menu
+  if (cart) new MutationObserver(function(){ if (step() === '2' && !hasItems()) leave2(); }).observe(cart, { childList:true, subtree:true, characterData:true });
+
+  var toastEl = document.createElement('div'); toastEl.id = 'fmStepToast'; document.body.appendChild(toastEl);
+  var tt; function toast(msg, ms){ toastEl.textContent = msg; toastEl.classList.add('on'); clearTimeout(tt); tt = setTimeout(function(){ toastEl.classList.remove('on'); }, ms || 2400); }
+  window.famuhaToast = toast;
+
+  function goStep(n, fromPop){
+    n = (n === 2) ? 2 : 1;
+    if (n === 2 && !hasItems()){ toast('Tambahkan minimal 1 menu dulu'); return false; }
+    if (n === 2 && !fromPop && !inStep2()){ try { history.pushState({ famuhaStep:2 }, ''); } catch (e){} }
+    document.body.setAttribute('data-step', String(n));
+    window.scrollTo(0, 0);
+    return true;
+  }
+  window.famuhaGoStep = goStep;
+
+  var back = $('stepBack');
+  if (back) back.addEventListener('click', leave2);
+  var more = $('stepMore');
+  if (more) more.addEventListener('click', leave2);
+  window.addEventListener('popstate', function(){ if (step() === '2' && !inStep2()) goStep(1, true); });
+
+  // Tombol keranjang melayang: di langkah 1 -> lanjut ke checkout; di langkah 2 -> perilaku lama (scroll ke ringkasan)
+  document.addEventListener('click', function(e){
+    var f = e.target.closest && e.target.closest('.fm-cart-fab');
+    if (f && step() === '1'){ e.stopImmediatePropagation(); e.preventDefault(); goStep(2); }
+  }, true);
+
+  // Setelah pesanan selesai (overlay "Terima Kasih" ditutup) kembali ke langkah 1
+  var ty = $('thankyouOverlay');
+  if (ty){
+    var wasShown = ty.classList.contains('show');
+    new MutationObserver(function(){
+      var now = ty.classList.contains('show');
+      if (wasShown && !now && step() === '2') leave2();
+      wasShown = now;
+    }).observe(ty, { attributes:true, attributeFilter:['class'] });
+  }
+})();
+</script>
+<style id="famuha-active-cart-css">
+#kaBox{background:#fff;border:1px solid #BBF7D0;border-radius:14px;padding:14px 16px;margin:0 0 16px;box-shadow:0 2px 10px rgba(22,163,74,.08);color:#31353B}
+#kaBox[hidden]{display:none}
+#kaBox .ka-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+#kaBox .ka-head b{font-size:16px}
+#kaBox .ka-head span{font-size:12px;color:#6b7280;background:#F0FDF4;border-radius:999px;padding:3px 10px;font-weight:700}
+#kaBox .ka-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid #f1f5f9}
+#kaBox .ka-info{flex:1;min-width:0}
+#kaBox .ka-name{font-weight:700;font-size:14px}
+#kaBox .ka-meta{font-size:12px;color:#6b7280;margin-top:2px}
+#kaBox .ka-price{font-weight:800;font-size:14px;white-space:nowrap}
+#kaBox .ka-del{border:0;background:#fee2e2;color:#dc2626;width:26px;height:26px;border-radius:50%;font-size:16px;line-height:1;cursor:pointer;flex:none}
+#kaBox .ka-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #e5e7eb;margin-top:4px;padding-top:12px}
+#kaBox .ka-foot small{display:block;color:#6b7280;font-size:12px}
+#kaBox .ka-foot b{font-size:18px}
+#kaBox .ka-go{border:0;cursor:pointer;font-family:inherit;width:auto;margin:0;padding:11px 18px;white-space:nowrap}
+@media(max-width:560px){#kaBox .ka-foot{flex-direction:column;align-items:stretch}#kaBox .ka-go{width:100%}}
+</style>
+<script id="famuha-active-cart">
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var cart = $('cartList'), market = document.querySelector('.fm-market');
+  var anchor = market && market.querySelector('.fm-section-head');
+  if (!cart || !market || !anchor) return;
+
+  var box = document.createElement('div'); box.id = 'kaBox'; box.hidden = true;
+  box.innerHTML = '<div class="ka-head"><b>🛒 Keranjang Aktif Kamu</b><span id="kaCount">0 item</span></div>' +
+    '<div id="kaList"></div>' +
+    '<div class="ka-foot"><div><small>Total</small><b id="kaTotal">Rp 0</b></div>' +
+    '<button type="button" class="cta-btn ka-go" id="kaGo">Lanjut ke Pemesanan →</button></div>';
+  market.insertBefore(box, anchor);
+
+  function txt(el){ return el ? el.textContent.trim() : ''; }
+  function render(){
+    var items = [].slice.call(cart.querySelectorAll('.cart-item'));
+    var list = $('kaList'); list.innerHTML = '';
+    if (!items.length){ box.hidden = true; return; }
+    var qty = 0;
+    items.forEach(function(it){
+      var name = txt(it.querySelector('.cart-item-name')); qty += parseInt(name, 10) || 1;
+      var rm = it.querySelector('[data-remove]');
+      var row = document.createElement('div'); row.className = 'ka-row';
+      var info = document.createElement('div'); info.className = 'ka-info';
+      var n = document.createElement('div'); n.className = 'ka-name'; n.textContent = name;
+      var m = document.createElement('div'); m.className = 'ka-meta'; m.textContent = txt(it.querySelector('.cart-item-meta'));
+      info.appendChild(n); if (m.textContent) info.appendChild(m);
+      var pr = document.createElement('div'); pr.className = 'ka-price'; pr.textContent = txt(it.querySelector('.cart-item-price'));
+      var del = document.createElement('button'); del.type = 'button'; del.className = 'ka-del'; del.setAttribute('aria-label', 'Hapus item'); del.textContent = '×';
+      del.addEventListener('click', function(){ if (rm) rm.click(); });   // pakai tombol hapus asli di keranjang
+      row.appendChild(info); row.appendChild(pr); row.appendChild(del); list.appendChild(row);
+    });
+    $('kaCount').textContent = qty + ' item';
+    $('kaTotal').textContent = txt($('totalPrice')) || 'Rp 0';
+    box.hidden = false;
+  }
+  new MutationObserver(render).observe(cart, { childList:true, subtree:true, characterData:true });
+  if ($('totalPrice')) new MutationObserver(render).observe($('totalPrice'), { childList:true, subtree:true, characterData:true });
+  $('kaGo').addEventListener('click', function(){ if (window.famuhaGoStep) window.famuhaGoStep(2); });
+  render();
 })();
 </script>
 </body>
