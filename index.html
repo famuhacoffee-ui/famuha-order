@@ -1780,6 +1780,30 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 .adm-btnrow{display:flex;gap:8px}
 .admin-fields-wrap{max-height:55vh!important}
 </style>
+<style id="famuha-wablast">
+.wb-card{max-width:760px!important;width:100%!important;max-height:92vh!important;overflow-y:auto!important}
+.wb-card label{display:block;font-size:12px;font-weight:700;margin:10px 0 4px;color:var(--tp-text,#31353B)}
+.wb-card input[type=text],.wb-card input[type=number],.wb-card select,.wb-card textarea{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--tp-line,#E5E7E9);border-radius:8px;font:inherit;font-size:14px;background:#fff;color:var(--tp-text,#31353B)}
+.wb-card textarea{min-height:190px;resize:vertical;line-height:1.45}
+.wb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0 10px}
+.wb-sum{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0;font-size:12px;color:var(--tp-sub,#6D7588)}
+.wb-sum b{display:block;font-size:20px;line-height:1.1;color:var(--tp-text,#31353B)}
+.wb-prev{margin-top:8px;background:var(--tp-green-l,#EFFAF0);border-radius:10px;padding:10px 12px;white-space:pre-wrap;font-size:13px;max-height:200px;overflow:auto;color:var(--tp-text,#31353B)}
+.wb-prev small{display:block;color:var(--tp-sub,#6D7588);margin-bottom:4px}
+.wb-wrap{overflow-x:auto;margin-top:8px}
+.wb-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.wb-tbl th{background:#F3F4F5;color:var(--tp-sub,#6D7588);text-align:left;padding:8px;font-size:12px}
+.wb-tbl td{padding:8px;border-bottom:1px solid var(--tp-line,#E5E7E9);vertical-align:middle;color:var(--tp-text,#31353B)}
+.wb-tbl tr.wb-done td{background:#F3F4F5;color:var(--tp-sub,#6D7588)}
+.wb-tbl small{color:var(--tp-sub,#6D7588)}
+.wb-tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;margin-right:4px;background:#E5E7E9;color:var(--tp-sub,#6D7588)}
+.wb-tag.buyer{background:var(--tp-green,#03AC0E);color:#fff}.wb-tag.visitor{background:#fff;border:1px solid #FF9800;color:#B26A00}
+.wb-actions{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.wb-actions .cta-btn{flex:1 1 200px;width:auto}
+.wb-note{font-size:12px;color:var(--tp-sub,#6D7588);line-height:1.45;margin:8px 0}
+.wb-card details{margin-top:8px;font-size:13px}
+.wb-card summary{cursor:pointer;color:var(--tp-sub,#6D7588)}
+</style>
 </head>
 <body data-step="1"><div id='welcomePopup'><div class='card'>
   <div class='wc-step active' id='wcStep1'>
@@ -2311,11 +2335,72 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 
       <div class="admin-fields-wrap" id="adminFields"></div>
 
+      <button type="button" class="adm-btn pri" id="waBlastOpenBtn" style="width:100%;margin:10px 0 4px;padding:11px">📣 Pengingat WA (kirim promo ke pelanggan)</button>
       <div class="admin-status" id="adminStatus"></div>
 
       <button type="button" class="cta-btn" id="adminSaveBtn">Simpan Perubahan</button>
       <button type="button" class="history-clear-btn pin-cancel" id="adminClose">Tutup</button>
       <div class="overlay-note">Perubahan tersimpan di server dan berlaku untuk semua perangkat.</div>
+    </div>
+  </div>
+
+  <div class="overlay" id="waBlastOverlay">
+    <div class="overlay-card wb-card">
+      <div class="overlay-logo serif">FAMUHA COFFEE</div>
+      <div class="overlay-title serif">Admin — Pengingat Promo WA</div>
+      <div class="admin-status" id="wbStatus" role="status"></div>
+
+      <div class="wb-grid">
+        <div><label for="wbSeg">Kirim ke</label>
+          <select id="wbSeg">
+            <option value="all">Semua</option>
+            <option value="buyer">Sudah pernah transaksi</option>
+            <option value="visitor">Belum transaksi, pernah buka web</option>
+          </select></div>
+        <div><label for="wbPreset">Contoh pesan</label>
+          <select id="wbPreset">
+            <option value="setia">Pelanggan setia (beli 5 gratis 1)</option>
+            <option value="pertama">Ajakan order pertama</option>
+            <option value="jumat">Promo Jumat (Rp18.000)</option>
+            <option value="kosong">Pesan kosong</option>
+          </select></div>
+        <div><label for="wbCampaign">Nama kampanye</label>
+          <input type="text" id="wbCampaign" value="Promo Pelanggan Setia"></div>
+      </div>
+
+      <label for="wbMsg">Isi pesan</label>
+      <textarea id="wbMsg"></textarea>
+      <div class="wb-note">Variabel: {nama} (nama depan, jika kosong jadi "Kak"), {jumlah_order}, {jumlah_kunjungan}. Format WhatsApp: *tebal*, _miring_.</div>
+      <div class="wb-prev" id="wbPrev" aria-live="polite"></div>
+
+      <div class="wb-sum" id="wbSum"></div>
+      <div class="wb-grid">
+        <div><label for="wbQ">Cari nama atau nomor</label><input type="text" id="wbQ"></div>
+        <div><label for="wbMin">Minimal transaksi</label><input type="number" id="wbMin" min="1" value="1"></div>
+        <div><label for="wbIdle">Terakhir aktif lebih dari (hari)</label><input type="number" id="wbIdle" min="0" value="0"></div>
+        <div><label for="wbTodo">Tampilkan</label>
+          <select id="wbTodo"><option value="all">Semua</option><option value="todo">Belum dikirim saja</option></select></div>
+      </div>
+
+      <div class="wb-actions">
+        <button type="button" class="cta-btn" id="wbNext">Kirim ke berikutnya</button>
+        <button type="button" class="history-clear-btn" id="wbReload">Muat ulang data</button>
+      </div>
+
+      <div class="wb-wrap">
+        <table class="wb-tbl">
+          <thead><tr><th>Penerima</th><th>Aktivitas</th><th></th></tr></thead>
+          <tbody id="wbRows"><tr><td colspan="3" class="wb-note">Memuat…</td></tr></tbody>
+        </table>
+      </div>
+
+      <details id="wbCsvBox">
+        <summary>Tambah data dari file CSV (cadangan)</summary>
+        <div class="wb-note">Unduh tab dari Google Sheets sebagai CSV: Transaksi, PageVisits, Nomor Terverifikasi, atau Buku Tamu. Jenisnya dikenali otomatis dan menggantikan data sejenis yang sudah dimuat.</div>
+        <input type="file" id="wbCsv" accept=".csv,text/csv" multiple>
+      </details>
+      <div class="wb-note">Tombol Kirim membuka WhatsApp dengan pesan terisi, Bapak tinggal menekan kirim di sana. Tanda "terkirim" dicatat per nama kampanye.</div>
+      <button type="button" class="history-clear-btn pin-cancel" id="wbClose">Tutup</button>
     </div>
   </div>
 
@@ -5192,6 +5277,281 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   });
   document.getElementById('historyOverlay').addEventListener('click', function(e){
     if (e.target === this) this.classList.remove('show');
+  });
+
+  // ---------------- Pengingat WA (menu Admin) ----------------
+  // Kirim promo ke pelanggan yang pernah transaksi dan ke pengunjung yang belum order,
+  // lewat link wa.me (Bapak menekan kirim sendiri di WhatsApp).
+  // Pelanggan diambil dari action=history. Pengunjung diambil dari action=blastContacts
+  // (lihat file pengingat-wa-appsscript.gs), atau dari CSV sebagai cadangan.
+  var WB_STORE_KEY = 'famuha_pengingat_terkirim_v1';
+  var WB_PRESETS = {
+    setia: "Halo {nama}, terima kasih sudah jadi pelanggan FAMUHA Coffee ☕\n\nAda hadiah spesial untuk kamu:\n☕ Beli 5 cup kopi apa saja\n🎁 Gratis 1 cup Coffee Latte / Americano\n\nCara ikut:\n✔ Setiap pembelian mendapat 1 poin\n✔ Kumpulkan 5 poin\n✔ Tukarkan dengan 1 cup gratis\n\nKamu sudah {jumlah_order}x order, ayo lanjut kumpulkan poinnya!\n\n📲 Order via WhatsApp atau portal:\nhttps://famuhacoffee-ui.github.io/famuha-order/\n\nFAMUHA Coffee\n_Secangkir kopi penuh makna_ ☕",
+    pertama: "Halo {nama}, terima kasih sudah mampir ke FAMUHA Coffee ☕\n\nBelum sempat coba kopi kami? Yuk order pertamamu!\n\n🔥 Setiap hari Jumat\n☕ Hot Cappuccino & Hot Americano\n💰 Rp18.000\n✅ Berlaku untuk pelanggan terverifikasi\n\n📲 Order via WhatsApp atau portal:\nhttps://famuhacoffee-ui.github.io/famuha-order/\n\n🚶 Fast Pick • Order Pick and Go\n\nFAMUHA Coffee\n_Secangkir kopi penuh makna_ ☕",
+    jumat: "Halo {nama}, Jumat lebih nikmat di FAMUHA Coffee! 🔥\n\nNikmati Hot Cappuccino atau Hot Americano hanya Rp18.000.\n\n📅 Setiap hari Jumat\n☕ Hot Cappuccino & Hot Americano\n💰 Rp18.000\n✅ Berlaku untuk pelanggan terverifikasi\n\nOrder sekarang:\nhttps://famuhacoffee-ui.github.io/famuha-order/\n\nFAMUHA Coffee\n_Secangkir kopi penuh makna_ ☕",
+    kosong: ""
+  };
+  var WB_CAMP = { setia: 'Promo Pelanggan Setia', pertama: 'Ajakan Order Pertama', jumat: 'Promo Jumat', kosong: '' };
+  var wbSrc = { tx: [], visit: [], contact: [] };
+  var wbPeople = [], wbBad = 0, wbAnon = 0, wbTest = 0, wbSent = {};
+
+  function wbEl(id){ return document.getElementById(id); }
+  function wbEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(m){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]; }); }
+  function wbNorm(raw){
+    var d = String(raw || '').replace(/\D+/g, '');
+    if (!d) return '';
+    if (d.indexOf('62') === 0) { /* sudah kode negara */ }
+    else if (d.charAt(0) === '0') d = '62' + d.slice(1);
+    else if (d.charAt(0) === '8') d = '62' + d;
+    return d;
+  }
+  function wbValid(p){ return /^628[0-9]{8,11}$/.test(p); }
+  function wbDate(s){
+    s = String(s == null ? '' : s).trim();
+    var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) { var d = new Date(s); return isNaN(d) ? null : d; }
+    return null;
+  }
+  function wbFirst(n){
+    var w = String(n || '').trim().split(/\s+/)[0] || '';
+    return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : 'Kak';
+  }
+  function wbIsTest(n){ return /^\s*(test|tes|testing|coba|dummy|admin test)\s*\d*\s*$/i.test(String(n || '')); }
+  function wbFmtDate(d){ return d ? d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }) : ''; }
+  function wbFmtPhone(p){ return '+' + p.slice(0, 2) + ' ' + p.slice(2, 5) + '-' + p.slice(5, 9) + '-' + p.slice(9); }
+
+  function wbLoadSent(){ try { wbSent = JSON.parse(localStorage.getItem(WB_STORE_KEY) || '{}') || {}; } catch (e){ wbSent = {}; } }
+  function wbSaveSent(){ try { localStorage.setItem(WB_STORE_KEY, JSON.stringify(wbSent)); } catch (e){} }
+  function wbCampKey(){ return (wbEl('wbCampaign').value || '').trim() || '(tanpa nama)'; }
+  function wbIsSent(p){ var c = wbSent[wbCampKey()]; return !!(c && c[p]); }
+
+  /* ---- CSV (cadangan) ---- */
+  function wbParseCSV(text){
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    var first = text.split(/\r?\n/)[0] || '';
+    var sep = first.split(';').length > first.split(',').length ? ';' : ',';
+    var rows = [], row = [], f = '', q = false, i = 0, c;
+    while (i < text.length){
+      c = text[i];
+      if (q){
+        if (c === '"'){ if (text[i + 1] === '"'){ f += '"'; i += 2; continue; } q = false; i++; continue; }
+        f += c; i++; continue;
+      }
+      if (c === '"'){ q = true; i++; continue; }
+      if (c === sep){ row.push(f); f = ''; i++; continue; }
+      if (c === '\n' || c === '\r'){ if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); f = ''; rows.push(row); row = []; i++; continue; }
+      f += c; i++;
+    }
+    if (f.length || row.length){ row.push(f); rows.push(row); }
+    return rows.filter(function(r){ return r.some(function(v){ return String(v).trim() !== ''; }); });
+  }
+  function wbIsHpHead(h){ return h === 'no hp' || h === 'nohp' || h === 'no. hp' || h === 'hp' || h === 'no wa' || h === 'phone'; }
+  function wbIngestCsv(rows){
+    if (rows.length < 2) return '';
+    var h = rows[0].map(function(x){ return String(x).trim().toLowerCase(); }), body = rows.slice(1);
+    var iN = h.indexOf('nama'), iP = h.findIndex(wbIsHpHead), iT = h.indexOf('timestamp');
+    if (h.indexOf('visitorid') >= 0){
+      var iV = h.indexOf('visitcount'), iL = h.indexOf('lastvisit'), iW = h.indexOf('wishlistfilled'), iI = h.indexOf('visitorid'), iU = h.indexOf('useragent');
+      wbSrc.visit = body.map(function(r){ return { id: r[iI], ua: r[iU], phone: r[iP], d: wbDate(r[iL]), visits: parseInt(r[iV], 10) || 1, wishlist: String(r[iW]).trim().toUpperCase() === 'TRUE' }; });
+      return 'PageVisits';
+    }
+    if (iN < 0 || iP < 0) return '';
+    var mapped = body.map(function(r){ return { name: r[iN], phone: r[iP], d: iT >= 0 ? wbDate(r[iT]) : null }; });
+    if (h.indexOf('item') >= 0){ wbSrc.tx = mapped; return 'Transaksi'; }
+    wbSrc.contact = (wbSrc.contact || []).concat(mapped);
+    return 'Buku Tamu / Nomor Terverifikasi';
+  }
+
+  /* ---- gabung semua sumber ---- */
+  function wbRebuild(){
+    var map = {}, badSeen = {};
+    wbBad = 0; wbAnon = 0; wbTest = 0;
+    function get(p){ return map[p] || (map[p] = { phone: p, txName: '', name: '', count: 0, last: null, visits: 0, lastVisit: null, wishlist: false }); }
+    function ok(raw){
+      var p = wbNorm(raw);
+      if (wbValid(p)) return p;
+      var k = String(raw || '').trim();
+      if (k && !badSeen[k]){ badSeen[k] = 1; wbBad++; }
+      return '';
+    }
+    wbSrc.tx.forEach(function(r){
+      if (wbIsTest(r.name)){ wbTest++; return; }
+      var p = ok(r.phone); if (!p) return;
+      var c = get(p), nm = String(r.name || '').trim();
+      c.count++;
+      if (r.d && (!c.last || r.d > c.last)){ c.last = r.d; if (nm) c.txName = nm; }
+      else if (!c.txName && nm) c.txName = nm;
+    });
+    wbSrc.visit.forEach(function(r){
+      if (/test/i.test(String(r.id || '')) || /^tes/i.test(String(r.ua || ''))){ wbTest++; return; }
+      if (!String(r.phone || '').trim()){ wbAnon++; return; }
+      var p = ok(r.phone); if (!p) return;
+      var c = get(p);
+      c.visits += r.visits || 1;
+      if (r.d && (!c.lastVisit || r.d > c.lastVisit)) c.lastVisit = r.d;
+      if (r.wishlist) c.wishlist = true;
+    });
+    wbSrc.contact.forEach(function(r){
+      if (wbIsTest(r.name)){ wbTest++; return; }
+      var p = ok(r.phone); if (!p) return;
+      var c = get(p), nm = String(r.name || '').trim();
+      if (nm && !c.name) c.name = nm;
+      if (r.d && (!c.lastVisit || r.d > c.lastVisit)) c.lastVisit = r.d;
+    });
+    wbPeople = Object.keys(map).map(function(k){
+      var c = map[k];
+      c.name = c.txName || c.name || '';
+      c.segment = c.count > 0 ? 'buyer' : 'visitor';
+      c.activity = c.segment === 'buyer' ? c.last : c.lastVisit;
+      return c;
+    });
+    wbPeople.sort(function(a, b){ return (b.activity || 0) - (a.activity || 0); });
+  }
+
+  /* ---- muat data dari server ---- */
+  function wbSetStatus(t, cls){ var s = wbEl('wbStatus'); s.textContent = t; s.className = 'admin-status' + (cls ? ' ' + cls : ''); }
+  function wbLoad(){
+    if (!GAS_URL){ wbSetStatus('GAS_URL belum diatur.', 'err'); return; }
+    wbSetStatus('Memuat data dari Google Sheet…');
+    var q = '&key=' + encodeURIComponent(GAS_ACCESS_KEY);
+    var pTx = fetch(GAS_URL + '?action=history' + q).then(function(r){ return r.json(); }).then(function(d){
+      if (!d || !d.ok || !Array.isArray(d.rows)) throw new Error('history');
+      wbSrc.tx = d.rows.map(function(r){ return { name: r.custName, phone: r.custPhone, d: r.ts ? new Date(r.ts) : null }; });
+      return true;
+    }).catch(function(){ return false; });
+    var pVis = fetch(GAS_URL + '?action=blastContacts' + q).then(function(r){ return r.json(); }).then(function(d){
+      if (!d || !d.ok || !Array.isArray(d.visits)) throw new Error('blastContacts');
+      wbSrc.visit = d.visits.map(function(r){ return { id: r.visitorId, ua: r.userAgent, phone: r.phone, d: wbDate(r.lastVisit), visits: parseInt(r.visitCount, 10) || 1, wishlist: String(r.wishlistFilled).toUpperCase() === 'TRUE' }; });
+      wbSrc.contact = [].concat(d.guests || [], d.verified || []).map(function(r){ return { name: r.name, phone: r.phone, d: wbDate(r.ts) }; });
+      (d.sent || []).forEach(function(s){
+        var p = wbNorm(s.phone), k = String(s.campaign || '').trim();
+        if (!k || !p) return;
+        if (!wbSent[k]) wbSent[k] = {};
+        wbSent[k][p] = wbSent[k][p] || new Date().toISOString();
+      });
+      wbSaveSent();
+      return true;
+    }).catch(function(){ return false; });
+    Promise.all([pTx, pVis]).then(function(res){
+      wbRebuild(); wbRender();
+      var msg = '', cls = '';
+      if (!res[0]) { msg = 'Data transaksi gagal dimuat dari server. Gunakan file CSV Transaksi di bagian bawah.'; cls = 'err'; wbEl('wbCsvBox').open = true; }
+      else if (!res[1]) { msg = 'Data pengunjung belum tersedia dari server (Apps Script belum diperbarui). Pelanggan sudah dimuat. Untuk pengunjung, tambahkan kode dari pengingat-wa-appsscript.gs atau unggah CSV PageVisits / Buku Tamu di bagian bawah.'; cls = 'err'; wbEl('wbCsvBox').open = true; }
+      else { msg = 'Data dimuat.'; cls = 'ok'; }
+      if (wbAnon) msg += ' ' + wbAnon + ' pengunjung tanpa nomor tidak bisa dihubungi.';
+      if (wbTest) msg += ' ' + wbTest + ' entri uji coba dilewati.';
+      wbSetStatus(msg, cls);
+    });
+  }
+
+  /* ---- pesan dan daftar ---- */
+  function wbFill(tpl, c){
+    return tpl.replace(/\{nama\}/gi, wbFirst(c.name)).replace(/\{jumlah_order\}/gi, String(c.count)).replace(/\{jumlah_kunjungan\}/gi, String(c.visits));
+  }
+  function wbFiltered(){
+    var q = wbEl('wbQ').value.trim().toLowerCase(), qd = q.replace(/\D+/g, '');
+    var seg = wbEl('wbSeg').value, minO = Math.max(1, parseInt(wbEl('wbMin').value, 10) || 1);
+    var idle = Math.max(0, parseInt(wbEl('wbIdle').value, 10) || 0), todo = wbEl('wbTodo').value === 'todo', now = Date.now();
+    return wbPeople.filter(function(c){
+      if (seg !== 'all' && c.segment !== seg) return false;
+      if (q && c.name.toLowerCase().indexOf(q) < 0 && !(qd && c.phone.indexOf(qd) >= 0)) return false;
+      if (minO > 1 && c.count < minO) return false;
+      if (idle > 0){ if (!c.activity) return false; if ((now - c.activity.getTime()) / 86400000 < idle) return false; }
+      if (todo && wbIsSent(c.phone)) return false;
+      return true;
+    });
+  }
+  function wbActText(c){
+    var a = [];
+    if (c.segment === 'buyer'){ a.push(c.count + 'x order'); if (c.last) a.push('terakhir ' + wbFmtDate(c.last)); }
+    else { a.push(c.visits ? c.visits + 'x buka web' : 'terdaftar di web'); if (c.lastVisit) a.push('terakhir ' + wbFmtDate(c.lastVisit)); if (c.wishlist) a.push('sudah isi wishlist'); }
+    return a.join(', ');
+  }
+  function wbRender(){
+    var list = wbFiltered(), body = wbEl('wbRows');
+    var buyers = wbPeople.filter(function(c){ return c.segment === 'buyer'; }).length;
+    var sent = wbPeople.filter(function(c){ return wbIsSent(c.phone); }).length;
+    wbEl('wbSum').innerHTML =
+      '<div><b>' + buyers + '</b>sudah transaksi</div>' +
+      '<div><b>' + (wbPeople.length - buyers) + '</b>belum transaksi, pernah buka web</div>' +
+      '<div><b>' + list.length + '</b>sesuai filter</div>' +
+      '<div><b>' + sent + '</b>sudah dikirim</div>' +
+      '<div><b>' + wbBad + '</b>nomor tidak valid</div>';
+    wbEl('wbNext').disabled = !list.some(function(c){ return !wbIsSent(c.phone); }) || !wbEl('wbMsg').value.trim();
+    if (!wbPeople.length) body.innerHTML = '<tr><td colspan="3" class="wb-note">Belum ada data penerima.</td></tr>';
+    else if (!list.length) body.innerHTML = '<tr><td colspan="3" class="wb-note">Tidak ada penerima yang cocok dengan filter.</td></tr>';
+    else body.innerHTML = list.map(function(c){
+      var d = wbIsSent(c.phone);
+      return '<tr class="' + (d ? 'wb-done' : '') + '"><td><b>' + wbEsc(c.name || '(tanpa nama)') + '</b><br><small>' + wbEsc(wbFmtPhone(c.phone)) + '</small></td>' +
+        '<td><span class="wb-tag ' + c.segment + '">' + (c.segment === 'buyer' ? 'Pelanggan' : 'Pengunjung') + '</span>' + (d ? '<span class="wb-tag">Terkirim</span>' : '') + '<br><small>' + wbEsc(wbActText(c)) + '</small></td>' +
+        '<td><button type="button" class="adm-btn' + (d ? '' : ' pri') + '" data-wbphone="' + c.phone + '">' + (d ? 'Kirim lagi' : 'Kirim WA') + '</button></td></tr>';
+    }).join('');
+    var sample = list[0] || wbPeople[0] || { name: 'Adinda', count: 3, visits: 2 }, t = wbEl('wbMsg').value;
+    wbEl('wbPrev').innerHTML = '<small>Contoh tampilan untuk ' + wbEsc(wbFirst(sample.name)) + '</small>' + wbEsc(t ? wbFill(t, sample) : '(pesan masih kosong)');
+  }
+  function wbSend(phone){
+    var c = wbPeople.find(function(x){ return x.phone === phone; });
+    if (!c) return;
+    var tpl = wbEl('wbMsg').value;
+    if (!tpl.trim()){ wbEl('wbMsg').focus(); return; }
+    window.open('https://wa.me/' + c.phone + '?text=' + encodeURIComponent(wbFill(tpl, c)), '_blank', 'noopener');
+    var k = wbCampKey();
+    if (!wbSent[k]) wbSent[k] = {};
+    wbSent[k][phone] = new Date().toISOString();
+    wbSaveSent();
+    // catat juga ke Sheet "Log Blast" (diabaikan kalau Apps Script belum mendukung)
+    try {
+      fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'logBlast', pin: ADMIN_PIN, campaign: k, name: c.name || '', phone: c.phone }) }).catch(function(){});
+    } catch (e){}
+    wbRender();
+  }
+  function wbMsgIsPreset(){ var v = wbEl('wbMsg').value; return Object.keys(WB_PRESETS).some(function(k){ return WB_PRESETS[k] === v; }); }
+  function wbApplyPreset(key){
+    wbEl('wbPreset').value = key; wbEl('wbMsg').value = WB_PRESETS[key];
+    if (WB_CAMP[key]) wbEl('wbCampaign').value = WB_CAMP[key];
+  }
+
+  function wbOpen(){
+    wbLoadSent();
+    if (!wbEl('wbMsg').value) wbApplyPreset('setia');
+    wbEl('waBlastOverlay').classList.add('show');
+    wbLoad();
+  }
+  wbEl('waBlastOpenBtn').addEventListener('click', wbOpen);
+  wbEl('wbClose').addEventListener('click', function(){ wbEl('waBlastOverlay').classList.remove('show'); });
+  wbEl('waBlastOverlay').addEventListener('click', function(e){ if (e.target === this) this.classList.remove('show'); });
+  wbEl('wbReload').addEventListener('click', wbLoad);
+  wbEl('wbPreset').addEventListener('change', function(){ wbApplyPreset(this.value); wbRender(); });
+  wbEl('wbSeg').addEventListener('change', function(){
+    if (wbMsgIsPreset()){ var v = this.value; if (v === 'visitor') wbApplyPreset('pertama'); else if (v === 'buyer') wbApplyPreset('setia'); }
+    wbRender();
+  });
+  ['wbMsg', 'wbCampaign', 'wbQ', 'wbMin', 'wbIdle', 'wbTodo'].forEach(function(id){
+    wbEl(id).addEventListener('input', wbRender); wbEl(id).addEventListener('change', wbRender);
+  });
+  wbEl('wbRows').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-wbphone]'); if (b) wbSend(b.getAttribute('data-wbphone'));
+  });
+  wbEl('wbNext').addEventListener('click', function(){
+    var n = wbFiltered().find(function(c){ return !wbIsSent(c.phone); }); if (n) wbSend(n.phone);
+  });
+  wbEl('wbCsv').addEventListener('change', function(){
+    var files = Array.prototype.slice.call(this.files || []), inp = this, left = files.length, names = [], bad = [];
+    if (!left) return;
+    files.forEach(function(f){
+      var r = new FileReader();
+      r.onload = function(){
+        var kind = ''; try { kind = wbIngestCsv(wbParseCSV(String(r.result))); } catch (e){}
+        if (kind) names.push(f.name + ' (' + kind + ')'); else bad.push(f.name);
+        if (--left === 0){
+          wbRebuild(); wbRender(); inp.value = '';
+          wbSetStatus((names.length ? 'CSV dimuat: ' + names.join(', ') + '. ' : '') + (bad.length ? 'Tidak dikenali: ' + bad.join(', ') + '.' : ''), bad.length ? 'err' : 'ok');
+        }
+      };
+      r.readAsText(f, 'utf-8');
+    });
   });
 
   document.getElementById('adminSaveBtn').addEventListener('click', saveAdminConfig);
