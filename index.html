@@ -4180,6 +4180,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     });
   }
   var ADMIN_MENU_DRAFT = [], admEditId = null, admImg = '';
+  var ADMIN_MENU_PENDING = null;
   function admEl_(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function admField_(label, input){ var l = admEl_('label', '', label); l.appendChild(input); return l; }
   function admPickImage_(file, cb){
@@ -4399,6 +4400,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       msg.style.color = '#16A34A'; msg.textContent = 'Masuk daftar. Klik "Simpan Perubahan" di bawah untuk menerbitkan.';
       setTimeout(function(){ msg.style.color = ''; }, 100);
     });
+    ADMIN_MENU_PENDING = function(){ return admEditId ? 'update' : (fName.value.trim() ? 'add' : null); };
     drawList(); refreshPrev();
   }
 
@@ -4725,6 +4727,14 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       statusEl.textContent = pend === 'update'
         ? 'Banner yang sedang diedit belum diupdate. Klik "Update Banner" dulu, baru "Simpan Perubahan".'
         : 'Ada banner yang belum masuk daftar. Klik "Tambah Banner" dulu, baru "Simpan Perubahan".';
+      statusEl.className = 'admin-status err';
+      return;
+    }
+    var pendM = ADMIN_MENU_PENDING && ADMIN_MENU_PENDING();
+    if (pendM){
+      statusEl.textContent = pendM === 'update'
+        ? 'Menu yang sedang diedit belum diupdate. Klik \"Update Menu\" dulu, baru \"Simpan Perubahan\".'
+        : 'Ada menu baru yang belum masuk daftar. Klik \"Tambah Menu\" dulu, baru \"Simpan Perubahan\".';
       statusEl.className = 'admin-status err';
       return;
     }
@@ -5894,10 +5904,12 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   'use strict';
   // Link yang dibagikan SELALU halaman ini sendiri (tanpa ?query/#hash), supaya
   // WhatsApp/Instagram membaca tag og:image di <head> dan thumbnail tetap muncul.
-  // Sengaja TIDAK memakai navigator.share({files}) karena itu mengganti preview link
-  // dengan file gambar mentah.
-  var BASE = location.origin + location.pathname;
-  var cur = { title:'', text:'', url:BASE };
+  // Khusus tombol WhatsApp pada menu: bila HP mendukung, foto menu dikirim sebagai gambar
+  // (caption = teks + link), jadi thumbnail yang muncul adalah foto menu itu sendiri.
+  // Kalau halaman dibuka dari pratinjau/iframe (origin "null") atau file lokal, pakai alamat resmi toko.
+  var SITE_URL = 'https://famuhacoffee-ui.github.io/famuha-order/';
+  var BASE = /^https?:$/.test(location.protocol) && location.origin !== 'null' ? location.origin + location.pathname : SITE_URL;
+  var cur = { title:'', text:'', url:BASE, file:null };
 
   var sh = document.createElement('div'); sh.id = 'fmShare'; sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true');
   sh.innerHTML = '<div class="fs-card"><p class="fs-title" id="fsTitle">Bagikan</p><p class="fs-sub" id="fsSub"></p>' +
@@ -5914,9 +5926,29 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   function menuUrl(name){ return BASE + '?menu=' + encodeURIComponent(name); }
   function say(msg){ $('fsToast').textContent = msg; }
   function close(){ sh.classList.remove('open'); }
-  function open(title, text, url){
-    cur = { title: title, text: text, url: url };
+  function menuImgUrl(name){
+    function bgOf(el){
+      if (!el) return '';
+      var m = /url\((['"]?)(.*?)\1\)/.exec(getComputedStyle(el).backgroundImage || '');
+      return m ? m[2] : '';
+    }
+    var u = bgOf($('fdImg'));
+    if (u) return u;
+    var card = [].slice.call(document.querySelectorAll('#fmGrid .fm-card')).filter(function(c){ return c.dataset.name === name; })[0];
+    return card ? bgOf(card.querySelector('.cupimg')) : '';
+  }
+  function prepFile(name){
+    var u = menuImgUrl(name); if (!u) return;
+    var mine = cur;
+    fetch(u).then(function(r){ if (!r.ok) throw new Error('img'); return r.blob(); }).then(function(b){
+      var ext = (b.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+      mine.file = new File([b], name.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.' + ext, { type: b.type || 'image/jpeg' });
+    }).catch(function(){ mine.file = null; });
+  }
+  function open(title, text, url, menuName){
+    cur = { title: title, text: text, url: url, file: null };
     $('fsTitle').textContent = title; $('fsSub').textContent = url; say('');
+    if (menuName) prepFile(menuName);
     sh.classList.add('open');
   }
   function copy(text){
@@ -5930,8 +5962,17 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   }
 
   $('fsWa').addEventListener('click', function(){
-    // Link ditaruh di baris sendiri supaya WhatsApp membuat kartu preview (thumbnail) dari og:image.
-    window.open('https://wa.me/?text=' + encodeURIComponent(cur.text + '\n' + cur.url), '_blank', 'noopener');
+    var caption = cur.text + '\n' + cur.url;
+    // Menu: kirim FOTO menu + teks ("Mau pesan sekarang?") + link lewat menu bagikan HP; pilih WhatsApp.
+    if (cur.file && navigator.canShare && navigator.canShare({ files: [cur.file] })){
+      navigator.share({ files: [cur.file], text: caption }).catch(function(e){
+        if (e && e.name === 'AbortError') return;
+        window.open('https://wa.me/?text=' + encodeURIComponent(caption), '_blank', 'noopener');
+      });
+      return;
+    }
+    // Cadangan (desktop / foto belum siap): link ditaruh di baris sendiri supaya WhatsApp membuat kartu preview dari og:image.
+    window.open('https://wa.me/?text=' + encodeURIComponent(caption), '_blank', 'noopener');
   });
   $('fsIg').addEventListener('click', function(){
     // Instagram tidak punya URL share untuk web. Di HP: pakai menu bagikan bawaan (ada Instagram).
@@ -5944,7 +5985,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     }
   });
   $('fsCopy').addEventListener('click', function(){
-    copy(cur.url).then(function(){ say('✓ Link disalin'); }).catch(function(){ say('Gagal menyalin. Salin manual link di atas.'); });
+    copy(cur.url).then(function(){ say('\u2713 Link disalin'); }).catch(function(){ say('Gagal menyalin. Salin manual link di atas.'); });
   });
   $('fsClose').addEventListener('click', close);
   sh.addEventListener('click', function(e){ if (e.target === sh) close(); });
@@ -5953,19 +5994,19 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   // Tombol Bagikan di header (bagikan toko)
   var a = $('tpActions');
   if (a){
-    var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'history-btn'; hb.textContent = '📤 Bagikan';
+    var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'history-btn'; hb.textContent = '\uD83D\uDCE4 Bagikan';
     a.insertBefore(hb, a.firstChild);
-    hb.addEventListener('click', function(){ open('Bagikan Famuha Coffee', 'Pesan kopi favoritmu online di Famuha Coffee ☕', BASE); });
+    hb.addEventListener('click', function(){ open('Bagikan Famuha Coffee', 'Pesan kopi favoritmu online di Famuha Coffee \u2615', BASE); });
   }
   // Tombol Bagikan di halaman detail menu (bagikan menu itu)
   var buy = $('fdBuy');
   if (buy){
-    var db = document.createElement('button'); db.type = 'button'; db.className = 'fd-btn s'; db.id = 'fdShare'; db.textContent = '↗ Bagikan menu ini';
+    var db = document.createElement('button'); db.type = 'button'; db.className = 'fd-btn s'; db.id = 'fdShare'; db.textContent = '\u2197 Bagikan menu ini';
     buy.parentNode.insertBefore(db, buy.nextSibling);
     db.addEventListener('click', function(){
       var n = (($('fdName') || {}).textContent || '').trim();
-      if (!n){ open('Bagikan Famuha Coffee', 'Pesan kopi favoritmu online di Famuha Coffee ☕', BASE); return; }
-      open('Bagikan ' + n, 'Yuk coba ' + n + ' di Famuha Coffee ☕', menuUrl(n));
+      if (!n){ open('Bagikan Famuha Coffee', 'Pesan kopi favoritmu online di Famuha Coffee \u2615', BASE); return; }
+      open('Bagikan ' + n, 'Yuk coba ' + n + ' di Famuha Coffee \u2615\nMau pesan sekarang? \uD83D\uDC47', menuUrl(n), n);
     });
   }
   // Link langsung ke menu: ?menu=Nama Menu -> otomatis buka detail menu itu
