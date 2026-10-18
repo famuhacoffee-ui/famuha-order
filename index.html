@@ -1771,7 +1771,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 .adm-info{flex:1;min-width:0;font-size:13px;line-height:1.3}.adm-info b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.adm-info span{color:#6B7280;font-size:11.5px}
 .adm-btn{border:1px solid #D1D5DB;background:#fff;color:#111827;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer}
 .adm-btn.pri{background:var(--tp-green);border-color:var(--tp-green);color:#fff}.adm-btn.del{color:#DC2626;border-color:#FCA5A5}
-.fm-card.fm-removed{display:none!important}.adm-item.adm-removed{opacity:.5}.adm-item.adm-removed .adm-info b{text-decoration:line-through}
+.fm-card.fm-removed{display:none!important}.fm-card.fm-soldout{opacity:.72;cursor:not-allowed}.fm-card.fm-soldout .fm-photo{position:relative;overflow:hidden}.fm-card.fm-soldout .cupimg{filter:grayscale(1)}.fm-card.fm-soldout .fm-photo::after{content:'HABIS';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(17,24,39,.55);color:#fff;font-weight:800;letter-spacing:.14em;font-size:15px}.choice.choice-soldout{opacity:.45;text-decoration:line-through}.adm-item.adm-soldout .adm-info b::after{content:' · HABIS';color:#DC2626;font-size:11px;font-weight:800}.fd-note{margin:14px 0 4px}.fd-note .fd-note-t{font-weight:700;font-size:13px;margin-bottom:6px}.fd-note .fd-note-t span{font-weight:400;opacity:.65}.fd-note textarea{width:100%;box-sizing:border-box;border:1px solid #D1D5DB;border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:vertical;min-height:58px}.cart-item-note{font-size:12px;opacity:.85;margin-top:3px;word-break:break-word}.cart-note-btn{background:none;border:0;padding:0;margin-top:4px;font-size:12px;font-weight:700;color:var(--gold-2,#B45309);cursor:pointer;text-decoration:underline}.cart-item-soldout{font-size:12px;font-weight:700;color:#DC2626;margin-top:3px}.tbv-code-row{display:flex;gap:8px;margin:12px 0 4px}.tbv-code-row input{flex:1;min-width:0}.tbv-code-btn{border:0;border-radius:10px;padding:0 16px;font-weight:700;font-size:13px;background:var(--tp-green,#00AA13);color:#fff;cursor:pointer;min-height:42px}.tbv-code-btn:disabled{opacity:.6;cursor:default}.tbv-code-msg{font-size:12px;margin:4px 0 8px;line-height:1.4}.tbv-code-msg.ok{color:#047857}.tbv-code-msg.err{color:#DC2626}.tbv-pick-btn{display:block;width:100%;margin-top:8px}.adm-item.adm-removed{opacity:.5}.adm-item.adm-removed .adm-info b{text-decoration:line-through}
 .adm-form{border:1px dashed #D1D5DB;border-radius:12px;padding:10px;display:grid;gap:8px;background:#fff}
 .adm-form label{font-size:12px;font-weight:700;color:#374151;display:grid;gap:4px}
 .adm-form input,.adm-form select{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #D1D5DB;border-radius:8px;font:inherit;font-size:14px;background:#fff;color:#111827}
@@ -1866,6 +1866,30 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <button type="button" class="promo-weekend-cta" id="promoWeekendCta">Pesan Sekarang</button>
       <button type="button" class="promo-weekend-later" id="promoWeekendLater">Nanti aja</button>
       <p class="promo-weekend-note">Berlaku Sabtu &amp; Minggu.</p>
+    </div>
+  </div>
+
+  <div class="promo-weekend-overlay" id="promoTbvOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="promoTbvTitle">
+    <div class="promo-weekend-card">
+      <button type="button" class="promo-weekend-close" id="promoTbvClose" aria-label="Tutup">×</button>
+      <span class="promo-weekend-badge">PROMO WARGA TRAN BOGE VILLAGE</span>
+      <div class="promo-weekend-emoji">🏡☕</div>
+      <h3 class="promo-weekend-title" id="promoTbvTitle">Promo TBV Gayub</h3>
+      <p class="promo-weekend-price"><small>cuma</small><span id="promoTbvPrice">Rp18.000</span></p>
+      <div class="promo-weekend-save">☕ Double Espresso · 1 cup</div>
+      <div id="tbvMain">
+        <p class="promo-weekend-default">Spesial warga <b>Tran Boge Village</b>: <b>Cappuccino</b> atau <b>Ice Coffee Latte</b> Double Espresso. Kode promo: <b>TBV Gayub</b>.</p>
+        <button type="button" class="promo-weekend-cta" id="promoTbvNow">Mau Gunakan Sekarang</button>
+        <button type="button" class="promo-weekend-later" id="promoTbvLater">Nanti</button>
+      </div>
+      <div id="tbvPick" hidden>
+        <p class="promo-weekend-default">Pilih menu promonya:</p>
+        <button type="button" class="promo-weekend-cta tbv-pick-btn" data-tbv-v="cappuccino" data-tbv-t="cold">Ice Cappuccino</button>
+        <button type="button" class="promo-weekend-cta tbv-pick-btn" data-tbv-v="cappuccino" data-tbv-t="hot">Hot Cappuccino</button>
+        <button type="button" class="promo-weekend-cta tbv-pick-btn" data-tbv-v="latte" data-tbv-t="cold">Ice Coffee Latte</button>
+        <button type="button" class="promo-weekend-later" id="promoTbvBack">Batal</button>
+      </div>
+      <p class="promo-weekend-note">Berlaku Sabtu &amp; Minggu, 1x seminggu. Pilih "Nanti"? Masukkan kode <b>TBV Gayub</b> saat checkout.</p>
     </div>
   </div>
 
@@ -2096,7 +2120,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <div class="group" id="qtyAddGroup">
         <div class="group-head">
           <div class="group-title serif">Jumlah &amp; Tambah ke Pesanan</div>
-          <div class="group-hint">Qty untuk varian ini</div>
+          <div class="group-hint">Qty untuk varian ini</div><input type="hidden" id="itemNote" value="">
         </div>
         <div class="qty-control">
           <button type="button" class="qty-btn" id="qtyMinus" aria-label="Kurangi jumlah">−</button>
@@ -2124,6 +2148,10 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
           <label class="field">
             <span class="field-label">Alamat <span class="field-optional">(opsional)</span></span>
             <input type="text" id="custAddress" name="custAddress" class="field-input" placeholder="Alamat pengiriman (jika perlu)" autocomplete="off">
+          </label>
+          <label class="field">
+            <span class="field-label">Catatan untuk penjual <span class="field-optional">(opsional)</span></span>
+            <textarea id="orderNote" name="orderNote" class="field-input" rows="2" maxlength="200" placeholder="Contoh: es dipisah, antar ke pos satpam" style="resize:vertical"></textarea>
           </label>
         </div>
         <div class="delivery-note" id="loyaltyBanner" hidden style="margin-top:12px; border-color: var(--gold); color: var(--gold-2);"></div>
@@ -2247,6 +2275,9 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 <button type="button" class="step-more" id="stepMore">+ Tambah menu lain</button>
 
       <div class="discount-info-row" id="discountInfoRow" hidden></div>
+
+      <div class="tbv-code-row" id="tbvCodeRow"><input type="text" id="tbvCodeInput" class="field-input" placeholder="Kode promo (opsional)" autocomplete="off" autocapitalize="characters" maxlength="30"><button type="button" class="tbv-code-btn" id="tbvCodeBtn">Pakai</button></div>
+      <div class="tbv-code-msg" id="tbvCodeMsg" hidden></div>
 
       <div class="receipt-total">
         <span class="tlabel">Total</span>
@@ -2675,7 +2706,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   }
 
   function cartHasExcludedFromFirstDiscount_(){
-    return cart.some(function(item){ return item.variant === 'cold-brew-orange' || item.variant === 'cold-brew-peach' || item.variant === 'cappuccino' || (item.variant === 'black-americano' && item.temp === 'hot') || (item.variant === 'hazelnut' && promoSelasaActive_() && isPromoSelasaEligible_(item)); });
+    return cart.some(function(item){ return item.promo === 'tbv' || item.variant === 'cold-brew-orange' || item.variant === 'cold-brew-peach' || item.variant === 'cappuccino' || (item.variant === 'black-americano' && item.temp === 'hot') || (item.variant === 'hazelnut' && promoSelasaActive_() && isPromoSelasaEligible_(item)); });
   }
   function cartHasMontBlanc_(){
     return cart.some(function(item){ return item.variant === 'mont-blanc-orange' || item.variant === 'mont-blanc-strawberry'; });
@@ -2770,7 +2801,8 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
           ice: item.temp === 'hot' ? '-' : LABELS.ice[item.ice],
           unitPrice: item.unitPrice,
           lineTotal: item.unitPrice * item.qty,
-          promo: item.promo || ''
+          promo: item.promo || '',
+          note: item.note || ''
         };
       }),
       delivery: LABELS.delivery[state.delivery],
@@ -2782,6 +2814,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       custName: state.custName,
       custPhone: state.custPhone,
       custAddress: state.custAddress,
+      orderNote: orderNoteText_(),
       total: computeCartTotal()
     };
     transactions.push(record);
@@ -2800,8 +2833,9 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   function sendTransactionToSheet_(record){
     if (!GAS_URL) return;
     var itemsSummary = record.items.map(function(it){
-      return it.qty + 'x ' + it.variant + ' (' + it.temp + (it.shots !== '-' ? ', ' + it.shots : '') + ', ' + it.sugar + (it.ice !== '-' ? ', ' + it.ice : '') + ')' + (it.promo === 'weekend' ? ' [Promo Weekend]' : '');
+      return it.qty + 'x ' + it.variant + ' (' + it.temp + (it.shots !== '-' ? ', ' + it.shots : '') + ', ' + it.sugar + (it.ice !== '-' ? ', ' + it.ice : '') + ')' + (it.promo === 'weekend' ? ' [Promo Weekend]' : '') + (it.promo === 'tbv' ? ' [Promo TBV Gayub]' : '') + (it.note ? ' {Catatan: ' + it.note + '}' : '');
     }).join('; ');
+    if (record.orderNote) itemsSummary += ' | Catatan pesanan: ' + record.orderNote;
     if (record.orderTiming === 'scheduled' && record.scheduleDate){
       var scheduleTag = '[Jadwal: ' + formatScheduleLabel_(record.scheduleDate, record.scheduleTime) + '] ';
       itemsSummary = scheduleTag + itemsSummary;
@@ -2818,7 +2852,8 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       firstPurchaseDiscount: state.firstPurchaseDiscount,
       fifthReward: state.fifthReward,
       total: record.total,
-      usedIndependencePromo: usedPromo1708
+      usedIndependencePromo: usedPromo1708,
+      usedTbvPromo: cart.some(function(item){ return item.promo === 'tbv'; })
     };
     fetch(GAS_URL, {
       method: 'POST',
@@ -2882,7 +2917,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       custName: t.custName,
       custPhone: t.custPhone,
       custAddress: t.custAddress,
-      itemsStr: t.items.map(function(it){ return it.qty + 'x ' + it.variant; }).join('; '),
+      itemsStr: t.items.map(function(it){ return it.qty + 'x ' + it.variant + (it.note ? ' {Catatan: ' + it.note + '}' : ''); }).join('; ') + (t.orderNote ? ' | Catatan pesanan: ' + t.orderNote : ''),
       delivery: t.delivery,
       deliveryArea: t.deliveryArea,
       payment: t.payment,
@@ -2925,7 +2960,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     var rows = [['No', 'Waktu', 'Nama', 'No. HP', 'Alamat', 'Item', 'Delivery', 'Area', 'Pembayaran', 'Total (Rp)']];
     transactions.forEach(function(t, i){
       var itemsStr = t.items.map(function(it){
-        return it.qty + 'x ' + it.variant + ' (' + it.temp + (it.shots !== '-' ? ', ' + it.shots : '') + ', ' + it.sugar + (it.ice !== '-' ? ', ' + it.ice : '') + ')' + (it.promo === 'weekend' ? ' [Promo Weekend]' : '');
+        return it.qty + 'x ' + it.variant + ' (' + it.temp + (it.shots !== '-' ? ', ' + it.shots : '') + ', ' + it.sugar + (it.ice !== '-' ? ', ' + it.ice : '') + ')' + (it.promo === 'weekend' ? ' [Promo Weekend]' : '') + (it.promo === 'tbv' ? ' [Promo TBV Gayub]' : '');
       }).join('; ');
       rows.push([i + 1, formatTs(t.ts), t.custName || '', t.custPhone || '', t.custAddress || '', itemsStr, t.delivery, t.deliveryArea || '', t.payment, t.total]);
     });
@@ -3074,12 +3109,15 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       listEl.innerHTML = '<div class="cart-empty">Belum ada pesanan — pilih varian lalu tekan "Tambah ke Pesanan"</div>';
     } else {
       listEl.innerHTML = cart.map(function(item){
-        var meta = [LABELS.temp[item.temp], shotLabel_(item), LABELS.sugar[item.sugar], item.temp === 'hot' ? null : LABELS.ice[item.ice], item.promo === 'weekend' ? '🎉 Promo Weekend' : null].filter(Boolean).join(' · ');
+        var meta = [LABELS.temp[item.temp], shotLabel_(item), LABELS.sugar[item.sugar], item.temp === 'hot' ? null : LABELS.ice[item.ice], item.promo === 'weekend' ? '🎉 Promo Weekend' : null, item.promo === 'tbv' ? '🏡 Promo TBV Gayub' : null].filter(Boolean).join(' · ');
         var lineTotal = item.unitPrice * item.qty;
         return '<div class="cart-item" data-id="' + item.id + '">'
           + '<div class="cart-item-info">'
           +   '<div class="cart-item-name">' + item.qty + 'x ' + LABELS.variant[item.variant] + '</div>'
           +   '<div class="cart-item-meta">' + meta + '</div>'
+          +   (soldOutNameForItem_(item) ? '<div class="cart-item-soldout">⚠ ' + escapeHtml(soldOutNameForItem_(item)) + ' sedang habis — hapus dari keranjang</div>' : '')
+          +   (item.note ? '<div class="cart-item-note">📝 ' + escapeHtml(item.note) + '</div>' : '')
+          +   '<button type="button" class="cart-note-btn" data-note="' + item.id + '">' + (item.note ? 'Ubah catatan' : '+ Catatan untuk penjual') + '</button>'
           + '</div>'
           + '<div class="cart-item-right">'
           +   '<span class="cart-item-price">' + idr(lineTotal) + '</span>'
@@ -3121,6 +3159,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       btn.classList.toggle('disabled', cart.length === 0);
     });
 
+    try { refreshTbvUI_(); } catch (err){}
     return total;
   }
 
@@ -3136,8 +3175,10 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       lines.push('- Jadwal: ' + formatScheduleLabel_(state.scheduleDate, state.scheduleTime));
     }
     cart.forEach(function(item){
-      lines.push('- ' + item.qty + 'x ' + LABELS.variant[item.variant] + ' (' + LABELS.temp[item.temp] + (shotLabel_(item) ? ', ' + shotLabel_(item) : '') + ', ' + LABELS.sugar[item.sugar] + (item.temp === 'hot' ? '' : ', ' + LABELS.ice[item.ice]) + ')' + (item.promo === 'weekend' ? ' [Promo Weekend]' : '') + ' — ' + idr(item.unitPrice * item.qty));
+      lines.push('- ' + item.qty + 'x ' + LABELS.variant[item.variant] + ' (' + LABELS.temp[item.temp] + (shotLabel_(item) ? ', ' + shotLabel_(item) : '') + ', ' + LABELS.sugar[item.sugar] + (item.temp === 'hot' ? '' : ', ' + LABELS.ice[item.ice]) + ')' + (item.promo === 'weekend' ? ' [Promo Weekend]' : '') + (item.promo === 'tbv' ? ' [Promo TBV Gayub]' : '') + ' — ' + idr(item.unitPrice * item.qty));
+      if (item.note) lines.push('   📝 Catatan: ' + item.note);
     });
+    if (orderNoteText_()) lines.push('- Catatan pesanan: ' + orderNoteText_());
     lines.push('- Delivery: ' + LABELS.delivery[state.delivery]);
     if (ONGKIR[state.deliveryArea]){
       var od = ONGKIR[state.deliveryArea];
@@ -3663,7 +3704,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         state.nextOrderNumber = data.nextOrderNumber || null;
         // Status resmi dari server untuk promo 17 Agustus — ini yang menentukan
         // apakah nomor HP ini sudah pernah pakai promo, terlepas dari device/browser.
-        state.promo1708UsedServer = !!data.usedIndependencePromo;
+        state.promo1708UsedServer = !!data.usedIndependencePromo; if (typeof data.usedTbvThisWeek === 'boolean') state.tbvUsedServer = data.usedTbvThisWeek;
         state.promo1708ServerChecked = true;
         refreshLoyaltyBanner_();
         updatePromo1708UI_();
@@ -3755,7 +3796,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
           state.custChecked = true;
           state.isReturningCustomer = !data.isFirstPurchase;
           state.nextOrderNumber = data.nextOrderNumber || null;
-          state.promo1708UsedServer = !!data.usedIndependencePromo;
+          state.promo1708UsedServer = !!data.usedIndependencePromo; if (typeof data.usedTbvThisWeek === 'boolean') state.tbvUsedServer = data.usedTbvThisWeek;
           state.promo1708ServerChecked = true;
           if (FIRST_PURCHASE_PROMO_ENABLED && data.isFirstPurchase){
             // Nomornya kesimpan di browser tapi server tidak menemukan riwayat order
@@ -4019,7 +4060,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
           state.custChecked = true;
           state.isReturningCustomer = !data.isFirstPurchase;
           state.nextOrderNumber = data.nextOrderNumber || null;
-          state.promo1708UsedServer = !!data.usedIndependencePromo;
+          state.promo1708UsedServer = !!data.usedIndependencePromo; if (typeof data.usedTbvThisWeek === 'boolean') state.tbvUsedServer = data.usedTbvThisWeek;
           state.promo1708ServerChecked = true;
           if (FIRST_PURCHASE_PROMO_ENABLED && data.isFirstPurchase){
             state.firstPurchaseDiscount = true;
@@ -4199,8 +4240,10 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     if (window.famuhaRenderCustomCards) window.famuhaRenderCustomCards(CUSTOM_MENUS);
   }
 
-  var PROMO_BANNERS = [{ id:'b1', enabled:true, title:'Weekend Coffee Deal', text:'Beli 2 Ice Coffee Latte — cocok buat nemenin aktivitasmu.', price:'Rp36.000', img:'' }], PROMO_BANNERS_KEY = 'famuha-promo-banners', ADMIN_BANNER_DRAFT = null, pbIdx = 0, pbTimer = null;
-  try { var _pb = localStorage.getItem(PROMO_BANNERS_KEY); if (_pb){ var _pa = JSON.parse(_pb); if (Array.isArray(_pa)) PROMO_BANNERS = _pa; } } catch (err){}
+  // Banner lama "Weekend Coffee Deal - Beli 2 Ice Coffee Latte Rp36.000" sudah tidak dipakai; dibuang dari default, cache browser, dan config server.
+  function dropOldWeekendBanner_(list){ return (Array.isArray(list) ? list : []).filter(function(b){ return !(b && b.title === 'Weekend Coffee Deal' && /Beli 2 Ice Coffee Latte/.test(b.text || '')); }); }
+  var PROMO_BANNERS = [], PROMO_BANNERS_KEY = 'famuha-promo-banners', ADMIN_BANNER_DRAFT = null, pbIdx = 0, pbTimer = null;
+  try { var _pb = localStorage.getItem(PROMO_BANNERS_KEY); if (_pb){ var _pa = JSON.parse(_pb); if (Array.isArray(_pa)) PROMO_BANNERS = dropOldWeekendBanner_(_pa); } } catch (err){}
   function pbGo_(i){
     var tr = document.getElementById('pbTrack'); if (!tr || !tr.children.length) return;
     pbIdx = (i + tr.children.length) % tr.children.length;
@@ -4234,6 +4277,69 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   // Menu bawaan yang dihapus admin (daftar nama menu; kartu disembunyikan, bukan dihapus dari kode)
   var HIDDEN_MENUS = [], HIDDEN_MENUS_KEY = 'famuha-hidden-menus', ADMIN_HIDDEN_DRAFT = [], ADMIN_BANNER_PENDING = null;
   try { var _hm = localStorage.getItem(HIDDEN_MENUS_KEY); if (_hm) HIDDEN_MENUS = JSON.parse(_hm) || []; } catch (err){}
+  // ---- Stok habis per menu & catatan untuk penjual ----
+  // Status "habis" disimpan di daftar hiddenMenus yang sama dengan fitur Hapus menu,
+  // dengan awalan 'habis::' + nama menu, jadi tidak perlu mengubah backend Apps Script.
+  var SOLDOUT_PREFIX = 'habis::';
+  function isSoldOutName_(name){ return !!name && HIDDEN_MENUS.indexOf(SOLDOUT_PREFIX + name) > -1; }
+  function cleanNote_(v, max){ return String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, max); }
+  function orderNoteText_(){ var el = document.getElementById('orderNote'); return el ? cleanNote_(el.value, 200) : ''; }
+  function cardNameFor_(variant, temp){
+    var cards = [].slice.call(document.querySelectorAll('#fmGrid .fm-card[data-variant="' + CSS.escape(String(variant)) + '"]'));
+    if (!cards.length) return '';
+    var tv = temp || 'cold';
+    var m = cards.filter(function(c){ return (c.dataset.temp || 'cold') === tv; })[0] || cards[0];
+    return m.dataset.name || '';
+  }
+  function soldOutNameForItem_(item){ var n = cardNameFor_(item.variant, item.temp); return isSoldOutName_(n) ? n : ''; }
+  function notifySoldOut_(name){
+    var msg = '😔 Maaf, ' + name + ' sedang habis. Silakan pilih menu lain ya.';
+    if (window.famuhaToast) window.famuhaToast(msg, 3600); else alert(msg);
+  }
+  window.famuhaNotifySoldOut = notifySoldOut_;
+  function blockIfSoldOut_(variant, temp){
+    var n = cardNameFor_(variant, temp);
+    if (isSoldOutName_(n)){ notifySoldOut_(n); return true; }
+    return false;
+  }
+  window.famuhaIsSoldOutNow = function(){ return blockIfSoldOut_(state.variant, state.temp); };
+  function cartSoldOutBlock_(e){
+    var names = [];
+    cart.forEach(function(it){ var n = soldOutNameForItem_(it); if (n && names.indexOf(n) < 0) names.push(n); });
+    if (!names.length) return false;
+    if (e && e.preventDefault) e.preventDefault();
+    var msg = '😔 Maaf, ' + names.join(', ') + ' sedang habis. Hapus dari keranjang dulu ya.';
+    if (window.famuhaToast) window.famuhaToast(msg, 4200); else alert(msg);
+    return true;
+  }
+  function applySoldOut_(){
+    document.querySelectorAll('#fmGrid .fm-card').forEach(function(c){
+      c.classList.toggle('fm-soldout', isSoldOutName_(c.dataset.name));
+    });
+    var row = document.querySelector('.choice-row[data-group="variant"]');
+    if (row){
+      [].forEach.call(row.querySelectorAll('input[name="variant"]'), function(inp){
+        var cards = [].slice.call(document.querySelectorAll('#fmGrid .fm-card[data-variant="' + CSS.escape(inp.value) + '"]'));
+        var all = cards.length > 0 && cards.every(function(c){ return c.classList.contains('fm-soldout'); });
+        if (inp.parentNode) inp.parentNode.classList.toggle('choice-soldout', all);
+      });
+    }
+    try { renderCart(); } catch (err){}
+  }
+  window.famuhaApplySoldOut = applySoldOut_;
+  (function(){
+    var list = document.getElementById('cartList');
+    if (!list) return;
+    list.addEventListener('click', function(e){
+      var b = e.target.closest('[data-note]'); if (!b) return;
+      var id = parseInt(b.getAttribute('data-note'), 10);
+      var it = cart.filter(function(x){ return x.id === id; })[0]; if (!it) return;
+      var v = window.prompt('Catatan untuk penjual (maks. 120 karakter):', it.note || '');
+      if (v === null) return;
+      it.note = cleanNote_(v, 120);
+      update();
+    });
+  })();
   function applyHiddenMenus_(){
     var cards = document.querySelectorAll('#fmGrid .fm-card:not([data-custom])');
     [].forEach.call(cards, function(c){ c.classList.toggle('fm-removed', HIDDEN_MENUS.indexOf(c.dataset.name) > -1); });
@@ -4252,6 +4358,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         if (first){ first.checked = true; first.dispatchEvent(new Event('change', { bubbles:true })); }
       }
     }
+    applySoldOut_();
     var cnt = document.getElementById('fmResultCount');
     if (cnt) cnt.textContent = document.querySelectorAll('#fmGrid .fm-card:not(.fm-removed)').length + ' menu';
   }
@@ -4403,7 +4510,12 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         syncDel();
       });
       syncDel();
-      row.appendChild(th); row.appendChild(info); row.appendChild(fl); row.appendChild(rs); row.appendChild(dl); list.appendChild(row);
+      var sb = admEl_('button', 'adm-btn', 'Tandai Habis'); sb.type = 'button';
+      var sKey = SOLDOUT_PREFIX + name;
+      function syncSold(){ var so = ADMIN_HIDDEN_DRAFT.indexOf(sKey) > -1; row.classList.toggle('adm-soldout', so); sb.textContent = so ? 'Tersedia lagi' : 'Tandai Habis'; sb.classList.toggle('pri', so); }
+      sb.addEventListener('click', function(){ var i = ADMIN_HIDDEN_DRAFT.indexOf(sKey); if (i > -1) ADMIN_HIDDEN_DRAFT.splice(i, 1); else ADMIN_HIDDEN_DRAFT.push(sKey); syncSold(); });
+      syncSold();
+      row.appendChild(th); row.appendChild(info); row.appendChild(fl); row.appendChild(rs); row.appendChild(sb); row.appendChild(dl); list.appendChild(row);
     });
     wrap.appendChild(box);
   }
@@ -4458,10 +4570,16 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         de.addEventListener('click', function(){
           if (!confirm('Hapus menu "' + m.name + '"?')) return;
           ADMIN_MENU_DRAFT = ADMIN_MENU_DRAFT.filter(function(x){ return x.id !== m.id; });
+          var _si = ADMIN_HIDDEN_DRAFT.indexOf(SOLDOUT_PREFIX + m.name); if (_si > -1) ADMIN_HIDDEN_DRAFT.splice(_si, 1);
           if (admEditId === m.id) resetForm();
           drawList();
         });
-        row.appendChild(th); row.appendChild(info); row.appendChild(ed); row.appendChild(de); list.appendChild(row);
+        var sb2 = admEl_('button', 'adm-btn', 'Tandai Habis'); sb2.type = 'button';
+        var sKey2 = SOLDOUT_PREFIX + m.name;
+        function syncSold2(){ var so = ADMIN_HIDDEN_DRAFT.indexOf(sKey2) > -1; row.classList.toggle('adm-soldout', so); sb2.textContent = so ? 'Tersedia lagi' : 'Tandai Habis'; sb2.classList.toggle('pri', so); }
+        sb2.addEventListener('click', function(){ var i = ADMIN_HIDDEN_DRAFT.indexOf(sKey2); if (i > -1) ADMIN_HIDDEN_DRAFT.splice(i, 1); else ADMIN_HIDDEN_DRAFT.push(sKey2); syncSold2(); });
+        syncSold2();
+        row.appendChild(th); row.appendChild(info); row.appendChild(ed); row.appendChild(sb2); row.appendChild(de); list.appendChild(row);
       });
     }
     fFile.addEventListener('change', function(){
@@ -4512,7 +4630,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     }
     if (typeof cfg.storeOpen === 'boolean') STORE_OPEN = cfg.storeOpen;
     if (Array.isArray(cfg.promoBanners)){
-      PROMO_BANNERS = cfg.promoBanners.slice(0, 10);
+      PROMO_BANNERS = dropOldWeekendBanner_(cfg.promoBanners).slice(0, 10);
       try { localStorage.setItem(PROMO_BANNERS_KEY, JSON.stringify(PROMO_BANNERS)); } catch (err){}
     }
     if (cfg.menuImgs && typeof cfg.menuImgs === 'object' && Object.keys(cfg.menuImgs).length){
@@ -4926,6 +5044,8 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   }
 
   function addCurrentItemToCart_(triggerBtn){
+    if (blockIfSoldOut_(state.variant, state.temp)) return;
+    var noteEl = document.getElementById('itemNote');
     cart.push({
       id: cartIdSeq++,
       variant: state.variant,
@@ -4934,8 +5054,11 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       ice: state.ice,
       temp: state.temp,
       qty: state.qty,
-      unitPrice: computeUnitPrice(state)
+      unitPrice: computeUnitPrice(state),
+      note: noteEl ? cleanNote_(noteEl.value, 120) : ''
     });
+    if (noteEl) noteEl.value = '';
+    var fdNoteEl = document.getElementById('fdNote'); if (fdNoteEl) fdNoteEl.value = '';
     state.qty = 1;
     [document.getElementById('addCartBtn'), document.getElementById('addCartBtnM')].forEach(function(btn){
       if (!btn) return;
@@ -4998,6 +5121,8 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         void paidBtnEl.offsetWidth;
         paidBtnEl.classList.add('flash');
         paidBtnEl.scrollIntoView({ behavior:'smooth', block:'center' });
+      } else if (cartSoldOutBlock_(e) || tbvCartBlock_(e)){
+        // diblokir: ada item yang habis
       } else if (!validateCustomerInfo()){
         e.preventDefault();
       } else {
@@ -5007,6 +5132,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         var waMsg = encodeURIComponent(buildWaMessage(total, isQris));
         window.open('https://wa.me/' + WA_NUMBER + '?text=' + waMsg, '_blank');
         recordTransaction();
+        if (cart.some(function(item){ return item.promo === 'tbv'; })) markTbvUsed_();
         if (cart.some(function(item){ return item.unitPrice === PROMO_1708_PRICE; })){
           markPromo1708Used_();
         }
@@ -5017,6 +5143,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
           total
         );
         cart = [];
+        var _onEl = document.getElementById('orderNote'); if (_onEl) _onEl.value = '';
         state.qty = 1;
         state.firstPurchaseDiscount = false;
         state.firstPurchaseAlreadyUsed = false;
@@ -5043,7 +5170,9 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         if (mBtn2) visibleAddBtn2 = mBtn2;
       }
       visibleAddBtn2.scrollIntoView({ behavior:'smooth', block:'center' });
-    } else if (!validateCustomerInfo()){
+    } else if (cartSoldOutBlock_(e) || tbvCartBlock_(e)){
+        // diblokir: ada item yang habis
+      } else if (!validateCustomerInfo()){
       // validation message already shown by validateCustomerInfo
     } else {
       qrisPaidConfirmed = true;
@@ -5094,6 +5223,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   function choosePromoJumatMenu_(variantValue){
     var sugarDefault = variantValue === 'black-americano' ? 'no-sugar' : 'normal-sugar';
     var itemCfg = { variant: variantValue, shots: 'double', sugar: sugarDefault, ice: 'none', temp: 'hot' };
+    if (blockIfSoldOut_(itemCfg.variant, itemCfg.temp)) return;
     cart.push({
       id: cartIdSeq++,
       variant: itemCfg.variant,
@@ -5134,6 +5264,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   var promoSelasaHeroCta = document.getElementById('promoSelasaHeroCta');
   function chooseSelasaMenu_(){
     var itemCfg = { variant: 'hazelnut', shots: 'double', sugar: 'normal-sugar', ice: 'normal', temp: 'cold' };
+    if (blockIfSoldOut_(itemCfg.variant, itemCfg.temp)) return;
     cart.push({
       id: cartIdSeq++,
       variant: itemCfg.variant,
@@ -5197,6 +5328,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     if (promoWeekendOverlay) promoWeekendOverlay.hidden = true;
   }
   function choosePromoWeekend_(){
+    if (blockIfSoldOut_('cappuccino', 'cold')) return;
     // Default promo: Ice Cappuccino x2, Regular, Double Shot, Normal Sugar, Normal Ice.
     // unitPrice = harga paket / jumlah cup, jadi total baris tepat Rp36.000.
     cart.push({
@@ -5221,6 +5353,152 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       btn.classList.add('flash');
     });
   }
+  // ---- Promo TBV Gayub (warga Tran Boge Village) ----
+  // Rp18.000 untuk 1 cup Cappuccino (panas/dingin) atau Ice Coffee Latte, Double Espresso.
+  // Hanya Sabtu & Minggu, maksimal 1x per minggu (Senin-Minggu). Muncul sebagai popup
+  // pertama menggantikan popup Promo Weekend, atau dipakai lewat kode saat checkout.
+  // Preview popup di hari lain: tambahkan ?promo=tbv di URL. Matikan: PROMO_TBV_ENABLED = false.
+  var PROMO_TBV_ENABLED = true;
+  var PROMO_TBV_CODE = 'tbvgayub';
+  var PROMO_TBV_LABEL = 'TBV Gayub';
+  var PROMO_TBV_PRICE = 18000;
+  var PROMO_TBV_USED_KEY = 'famuha-promo-tbv-week';
+  var PROMO_TBV_SEEN_KEY = 'famuha-promo-tbv-seen';
+  var promoTbvOverlay = document.getElementById('promoTbvOverlay');
+  function tbvPreviewActive_(){
+    try { return /[?&]promo=tbv(&|$)/.test(location.search); } catch (e){ return false; }
+  }
+  function tbvWeekendOk_(){ var day = new Date().getDay(); return day === 0 || day === 6; }
+  function tbvWeekId_(){
+    var d = new Date(); d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // mundur ke hari Senin
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function tbvUsed_(){
+    if (state.tbvUsedServer === true) return true;
+    try { return localStorage.getItem(PROMO_TBV_USED_KEY) === tbvWeekId_(); } catch (e){ return false; }
+  }
+  function markTbvUsed_(){
+    try { localStorage.setItem(PROMO_TBV_USED_KEY, tbvWeekId_()); } catch (e){}
+    state.tbvUsedServer = true;
+  }
+  function tbvCartHas_(){ return cart.some(function(i){ return i.promo === 'tbv'; }); }
+  function tbvEligible_(it){
+    if (!it || it.promo || it.shots !== 'double') return false;
+    return it.variant === 'cappuccino' || (it.variant === 'latte' && it.temp === 'cold');
+  }
+  function tbvToast_(msg, ms){ if (window.famuhaToast) window.famuhaToast(msg, ms || 3600); else alert(msg); }
+  function tbvCheck_(){
+    if (!PROMO_TBV_ENABLED) return 'Promo ' + PROMO_TBV_LABEL + ' sedang tidak aktif.';
+    if (!tbvWeekendOk_()) return 'Kode ' + PROMO_TBV_LABEL + ' hanya berlaku Sabtu & Minggu.';
+    if (tbvUsed_()) return 'Kode ' + PROMO_TBV_LABEL + ' sudah dipakai minggu ini (maksimal 1x seminggu).';
+    if (tbvCartHas_()) return 'Promo ' + PROMO_TBV_LABEL + ' sudah terpasang di keranjang (1 cup).';
+    return '';
+  }
+  function tbvCartBlock_(e){
+    if (!tbvCartHas_()) return false;
+    var why = '';
+    if (!PROMO_TBV_ENABLED || !tbvWeekendOk_()) why = 'Promo ' + PROMO_TBV_LABEL + ' hanya berlaku Sabtu & Minggu. Hapus item promo dari keranjang dulu ya.';
+    else if (tbvUsed_()) why = 'Promo ' + PROMO_TBV_LABEL + ' sudah dipakai minggu ini (maksimal 1x seminggu). Hapus item promo dari keranjang dulu ya.';
+    if (!why) return false;
+    if (e && e.preventDefault) e.preventDefault();
+    tbvToast_(why, 4200);
+    return true;
+  }
+  function addTbvMenu_(variant, temp){
+    var why = tbvCheck_(); if (why){ tbvToast_(why); return false; }
+    if (blockIfSoldOut_(variant, temp)) return false;
+    cart.push({
+      id: cartIdSeq++, variant: variant, shots: 'double', sugar: 'normal-sugar',
+      ice: temp === 'hot' ? 'none' : 'normal', temp: temp, qty: 1,
+      unitPrice: PROMO_TBV_PRICE, promo: 'tbv', note: ''
+    });
+    return true;
+  }
+  function openPromoTbv_(pickMode){
+    if (!promoTbvOverlay) return;
+    var main = document.getElementById('tbvMain'), pick = document.getElementById('tbvPick');
+    if (main) main.hidden = !!pickMode;
+    if (pick) pick.hidden = !pickMode;
+    promoTbvOverlay.hidden = false;
+    try { sessionStorage.setItem(PROMO_TBV_SEEN_KEY, '1'); } catch (e){}
+  }
+  function closePromoTbv_(){ if (promoTbvOverlay) promoTbvOverlay.hidden = true; }
+  function pickTbvMenu_(variant, temp){
+    if (!addTbvMenu_(variant, temp)) return;
+    closePromoTbv_();
+    update();
+    var cl = document.getElementById('cartList');
+    if (cl) cl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    tbvToast_('✓ Promo ' + PROMO_TBV_LABEL + ' terpasang: ' + idr(PROMO_TBV_PRICE) + ' untuk 1 cup.', 3200);
+  }
+  function applyTbvCode_(raw){
+    var code = String(raw || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!code) return { ok: false, msg: 'Masukkan kode promo dulu.' };
+    if (code !== PROMO_TBV_CODE) return { ok: false, msg: 'Kode promo tidak dikenali.' };
+    var why = tbvCheck_();
+    if (why) return { ok: false, msg: why };
+    var it = cart.filter(tbvEligible_)[0];
+    if (!it){
+      openPromoTbv_(true);
+      return { ok: true, pick: true, msg: 'Kode benar ✓ Pilih menu promo (Double Espresso) untuk memakainya.' };
+    }
+    if (it.qty > 1){
+      it.qty -= 1;
+      cart.push({ id: cartIdSeq++, variant: it.variant, shots: it.shots, sugar: it.sugar, ice: it.ice, temp: it.temp, qty: 1, unitPrice: PROMO_TBV_PRICE, promo: 'tbv', note: it.note || '' });
+    } else {
+      it.unitPrice = PROMO_TBV_PRICE; it.promo = 'tbv';
+    }
+    update();
+    return { ok: true, msg: '✓ Kode ' + PROMO_TBV_LABEL + ' terpasang: 1 cup ' + LABELS.variant[it.variant] + ' jadi ' + idr(PROMO_TBV_PRICE) + '.' };
+  }
+  function refreshTbvUI_(){
+    var input = document.getElementById('tbvCodeInput'), btn = document.getElementById('tbvCodeBtn'), msg = document.getElementById('tbvCodeMsg');
+    if (!input || !btn) return;
+    var on = tbvCartHas_();
+    input.disabled = on; btn.disabled = on;
+    if (on){
+      input.value = PROMO_TBV_LABEL; btn.textContent = 'Terpasang ✓';
+      if (msg){ msg.hidden = false; msg.className = 'tbv-code-msg ok'; msg.textContent = '✓ Promo ' + PROMO_TBV_LABEL + ': ' + idr(PROMO_TBV_PRICE) + ' untuk 1 cup (berlaku 1x seminggu).'; }
+    } else {
+      btn.textContent = 'Pakai';
+      if (msg && msg.classList.contains('ok') && !msg.dataset.keep){ msg.hidden = true; msg.textContent = ''; input.value = ''; }
+    }
+  }
+  function initPromoTbv_(){
+    var input = document.getElementById('tbvCodeInput'), btn = document.getElementById('tbvCodeBtn'), msg = document.getElementById('tbvCodeMsg');
+    function go(){
+      var r = applyTbvCode_(input.value);
+      if (!msg) return;
+      msg.hidden = false; msg.className = 'tbv-code-msg ' + ((r.ok || r.pick) ? 'ok' : 'err'); msg.textContent = r.msg;
+      msg.dataset.keep = r.pick ? '1' : '';
+    }
+    if (btn) btn.addEventListener('click', go);
+    if (input) input.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); go(); } });
+    if (promoTbvOverlay){
+      var now = document.getElementById('promoTbvNow'), later = document.getElementById('promoTbvLater');
+      var close = document.getElementById('promoTbvClose'), back = document.getElementById('promoTbvBack');
+      if (now) now.addEventListener('click', function(){
+        var why = tbvCheck_();
+        if (why){ tbvToast_(why); closePromoTbv_(); return; }
+        openPromoTbv_(true);
+      });
+      if (later) later.addEventListener('click', function(){
+        closePromoTbv_();
+        tbvToast_('Oke! Masukkan kode ' + PROMO_TBV_LABEL + ' saat checkout ya.', 3600);
+      });
+      if (close) close.addEventListener('click', closePromoTbv_);
+      if (back) back.addEventListener('click', function(){ openPromoTbv_(false); });
+      [].forEach.call(promoTbvOverlay.querySelectorAll('[data-tbv-v]'), function(b){
+        b.addEventListener('click', function(){ pickTbvMenu_(b.getAttribute('data-tbv-v'), b.getAttribute('data-tbv-t')); });
+      });
+      promoTbvOverlay.addEventListener('click', function(e){ if (e.target === promoTbvOverlay) closePromoTbv_(); });
+      document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !promoTbvOverlay.hidden) closePromoTbv_(); });
+      var seen = false; try { seen = sessionStorage.getItem(PROMO_TBV_SEEN_KEY) === '1'; } catch (e){}
+      var show = PROMO_TBV_ENABLED && (tbvPreviewActive_() || (tbvWeekendOk_() && !tbvUsed_() && !seen));
+      if (show) setTimeout(function(){ openPromoTbv_(false); }, 1200);
+    }
+  }
   function initPromoWeekendPopup_(){
     if (!promoWeekendOverlay) return;
     var cta = document.getElementById('promoWeekendCta');
@@ -5235,12 +5513,13 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     document.addEventListener('keydown', function(e){
       if (e.key === 'Escape' && !promoWeekendOverlay.hidden) closePromoWeekend_();
     });
-    if (!promoWeekendActive_()) return;
-    if (promoWeekendSeen_() && !promoWeekendPreviewActive_()) return;
-    // Sedikit jeda supaya tidak menumpuk dengan popup lain saat halaman baru dibuka.
+    // Popup Promo Weekend lama digantikan popup Promo TBV Gayub (lihat initPromoTbv_).
+    // Popup lama hanya tampil untuk preview: ?promo=weekend
+    if (!(PROMO_WEEKEND_ENABLED && promoWeekendPreviewActive_())) return;
     setTimeout(openPromoWeekend_, 1200);
   }
   initPromoWeekendPopup_();
+  initPromoTbv_();
 
   function checkPin(){
     var input = document.getElementById('pinInput');
@@ -5748,6 +6027,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     if (empty) empty.style.display = shown ? 'none' : 'block';
   }
   function pick(card){
+    if (card.classList.contains('fm-soldout')){ if (window.famuhaNotifySoldOut) window.famuhaNotifySoldOut(card.dataset.name); return false; }
     var r = document.querySelector('input[name="variant"][value="' + CSS.escape(card.dataset.variant) + '"]');
     if (!r) return false;
     r.checked = true; r.dispatchEvent(new Event('change', { bubbles:true }));
@@ -5791,7 +6071,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   window.famuhaRenderCustomCards = function(list){
     allCards().forEach(function(c){ if (c.dataset.custom) c.remove(); });
     (list || []).forEach(function(m){ grid.appendChild(build(m)); });
-    allCards().forEach(bind); apply();
+    allCards().forEach(bind); apply(); if (window.famuhaApplySoldOut) window.famuhaApplySoldOut();
   };
   cats.forEach(function(b){ b.addEventListener('click', function(){ cats.forEach(function(x){ x.classList.remove('active'); }); b.classList.add('active'); activeCat = b.dataset.cat; apply(); }); });
   if (search) search.addEventListener('input', apply);
@@ -5848,7 +6128,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   el.innerHTML = '<div class="fd-wrap"><nav class="fd-crumb"><a data-x>Home</a>›<a data-x>Menu</a>›<a data-x id="fdCat"></a>›<b id="fdCrumb"></b></nav>' +
     '<div class="fd-grid"><div><div class="fd-photo" id="fdImg"></div></div>' +
     '<div class="fd-info"><h1 id="fdName"></h1><div class="fd-price" id="fdPrice"></div><hr class="fd-hr">' +
-    '<div id="fdVar"></div><div id="fdOpts"></div><div class="fd-tab">Detail Produk</div>' +
+    '<div id="fdVar"></div><div id="fdOpts"></div><div class="fd-note"><div class="fd-note-t">Catatan untuk penjual <span>(opsional)</span></div><textarea id="fdNote" rows="2" maxlength="120" placeholder="Contoh: es dipisah, jangan terlalu manis"></textarea></div><div class="fd-tab">Detail Produk</div>' +
     '<div class="fd-meta" id="fdMeta"></div><p class="fd-desc" id="fdDesc"></p></div>' +
     '<aside class="fd-panel"><div class="fd-ph" id="fdBadge" hidden></div><div class="fd-box"><h3>Atur jumlah</h3>' +
     '<div class="fd-sel"><i id="fdThumb"></i><div><b id="fdSelName"></b><small id="fdSelSub"></small></div></div>' +
@@ -5907,10 +6187,12 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     });
   }
   function add(){
+    if (window.famuhaIsSoldOutNow && window.famuhaIsSoldOutNow()){ F('fdToast').textContent = '😔 Maaf, menu ini sedang habis'; return false; }
     var c = $('cartList'), before = c.innerHTML; $('addCartBtn').click(); var ok = c.innerHTML !== before;
     sync(); F('fdToast').textContent = ok ? '✓ Ditambahkan ke keranjang' : 'Belum bisa ditambahkan — cek info di halaman pesanan';
     return ok;
   }
+  (function(){ var fn = F('fdNote'); if (fn) fn.addEventListener('input', function(){ var mi = $('itemNote'); if (mi) mi.value = fn.value; }); })();
   F('fdMinus').addEventListener('click', function(){ $('qtyMinus').click(); sync(); });
   F('fdPlus').addEventListener('click', function(){ $('qtyPlus').click(); sync(); });
   F('fdAdd').addEventListener('click', function(){ if (!add()) return; close(); if (window.famuhaGoStep) window.famuhaGoStep(2); });
@@ -5922,7 +6204,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   });
   el.addEventListener('click', function(e){ if (e.target.closest('[data-x]')) close(); });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
-  window.famuhaOpenDetail = function(){ F('fdToast').textContent = ''; sync(); el.classList.add('open'); el.scrollTop = 0; document.body.style.overflow = 'hidden'; };
+  window.famuhaOpenDetail = function(){ F('fdToast').textContent = ''; var _fn = F('fdNote'), _mi = $('itemNote'); if (_fn) _fn.value = ''; if (_mi) _mi.value = ''; sync(); el.classList.add('open'); el.scrollTop = 0; document.body.style.overflow = 'hidden'; };
 })();
 </script>
 
@@ -5975,7 +6257,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       if(addMain) addMain.click();
       var cart=document.getElementById('cartList'); if(cart) setTimeout(function(){cart.scrollIntoView({behavior:'smooth',block:'nearest'});},150);
     });
-    card.addEventListener('click',function(e){if(e.target.closest('button'))return;var radio=document.querySelector('input[name="variant"][value="'+CSS.escape(card.dataset.variant)+'"]');if(radio){radio.checked=true;radio.dispatchEvent(new Event('change',{bubbles:true}));document.getElementById('options').scrollIntoView({behavior:'smooth',block:'start'});}});
+    card.addEventListener('click',function(e){if(e.target.closest('button'))return;if(card.classList.contains('fm-soldout'))return;var radio=document.querySelector('input[name="variant"][value="'+CSS.escape(card.dataset.variant)+'"]');if(radio){radio.checked=true;radio.dispatchEvent(new Event('change',{bubbles:true}));document.getElementById('options').scrollIntoView({behavior:'smooth',block:'start'});}});
   });
   var fab=document.createElement('button');fab.className='fm-cart-fab';fab.type='button';fab.innerHTML='🛒 <span class="fm-cart-count">0</span>';document.body.appendChild(fab);
   var badge=fab.querySelector('.fm-cart-count');
