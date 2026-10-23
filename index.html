@@ -1695,6 +1695,9 @@ body{ background:var(--tp-bg) !important; color:var(--tp-text) !important;
 #welcomePopup .otp-status.err{ color:var(--tp-red) !important; } #welcomePopup .otp-status.ok{ color:var(--tp-green-d) !important; }
 #welcomePopup label{ color:var(--tp-text) !important; }
 #welcomePopup #wcStep2,#welcomePopup #wcOtpFailStatus,#welcomePopup #wcSkipOtpBtn{display:none !important}
+/* Popup "Selamat Datang" sudah dinonaktifkan: sembunyikan langsung lewat CSS supaya tidak sempat tampil
+   saat halaman masih dimuat, atau tertinggal kalau ada skrip lain yang error lebih dulu. */
+#welcomePopup{display:none !important}
 </style>
 
 <style id="famuha-marketplace-v2">
@@ -1794,6 +1797,14 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 .wb-prev{margin-top:8px;background:var(--tp-green-l,#EFFAF0);border-radius:10px;padding:10px 12px;white-space:pre-wrap;font-size:13px;max-height:200px;overflow:auto;color:var(--tp-text,#31353B)}
 .wb-prev small{display:block;color:var(--tp-sub,#6D7588);margin-bottom:4px}
 .wb-wrap{overflow-x:auto;margin-top:8px}
+.vd-h{font-size:14px;font-weight:800;margin:18px 0 6px;color:var(--tp-text,#31353B)}
+.vd-wrap{overflow-x:auto}
+.vd-chart{display:flex;align-items:flex-end;gap:4px;height:90px;border-bottom:1px solid var(--tp-line,#E5E7E9);padding-bottom:4px}
+.vd-chart .c{flex:1;background:var(--tp-green,#03AC0E);border-radius:3px 3px 0 0;min-height:2px}
+.vd-chart-labels{display:flex;gap:4px;margin-top:4px}
+.vd-chart-labels span{flex:1;text-align:center;font-size:10px;color:var(--tp-sub,#6D7588)}
+.vd-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700}
+.vd-badge.ok{background:#E6F6E8;color:#1B7A2B}.vd-badge.no{background:#FDECEC;color:#B42318}.vd-badge.na{background:#F3F4F5;color:#6D7588}
 .wb-tbl{width:100%;border-collapse:collapse;font-size:13px}
 .wb-tbl th{background:#F3F4F5;color:var(--tp-sub,#6D7588);text-align:left;padding:8px;font-size:12px}
 .wb-tbl td{padding:8px;border-bottom:1px solid var(--tp-line,#E5E7E9);vertical-align:middle;color:var(--tp-text,#31353B)}
@@ -2385,6 +2396,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <div class="admin-fields-wrap" id="adminFields"></div>
 
       <button type="button" class="adm-btn pri" id="waBlastOpenBtn" style="width:100%;margin:10px 0 4px;padding:11px">📣 Pengingat WA (kirim promo ke pelanggan)</button>
+      <button type="button" class="adm-btn pri" id="vdOpenBtn" style="width:100%;margin:4px 0 4px;padding:11px">📊 Pengunjung &amp; Sumber Order (TikTok, dll)</button>
       <div class="admin-status" id="adminStatus"></div>
 
       <button type="button" class="cta-btn" id="adminSaveBtn">Simpan Perubahan</button>
@@ -2450,6 +2462,46 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       </details>
       <div class="wb-note">Tombol Kirim membuka WhatsApp dengan pesan terisi, Bapak tinggal menekan kirim di sana. Tanda "terkirim" dicatat per nama kampanye.</div>
       <button type="button" class="history-clear-btn pin-cancel" id="wbClose">Tutup</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="vdOverlay">
+    <div class="overlay-card wb-card">
+      <div class="overlay-logo serif">FAMUHA COFFEE</div>
+      <div class="overlay-title serif">Admin — Pengunjung &amp; Sumber Order</div>
+      <div class="admin-status" id="vdStatus" role="status"></div>
+      <div class="wb-sum" id="vdStats"></div>
+
+      <div class="vd-h">Order per sumber</div>
+      <div class="wb-grid">
+        <div><label for="vdRange">Periode</label>
+          <select id="vdRange"><option value="7">7 hari terakhir</option><option value="30" selected>30 hari terakhir</option><option value="0">Semua</option></select></div>
+      </div>
+      <div class="vd-wrap"><table class="wb-tbl">
+        <thead><tr><th>Sumber</th><th>Kampanye</th><th>Order</th><th>Omzet</th></tr></thead>
+        <tbody id="vdSrcRows"><tr><td colspan="4" class="wb-note">Memuat…</td></tr></tbody>
+      </table></div>
+      <div class="wb-note" id="vdSrcNote"></div>
+
+      <div class="vd-h">Pengunjung per hari (14 hari)</div>
+      <div class="vd-chart" id="vdChart"></div>
+      <div class="vd-chart-labels" id="vdChartLabels"></div>
+      <div class="wb-note" id="vdChartNote"></div>
+
+      <div class="vd-h">Daftar pengunjung</div>
+      <div class="wb-grid">
+        <div><label for="vdQ">Cari nomor HP</label><input type="text" id="vdQ"></div>
+        <div><label for="vdFilter">Tampilkan</label>
+          <select id="vdFilter"><option value="all">Semua</option><option value="phone">Punya nomor HP</option><option value="nobuy">Punya nomor HP, belum order</option></select></div>
+      </div>
+      <div class="vd-wrap"><table class="wb-tbl">
+        <thead><tr><th>Kontak</th><th>Terakhir buka</th><th>Kunjungan</th><th>Isi keranjang</th><th>Order</th><th></th></tr></thead>
+        <tbody id="vdRows"></tbody>
+      </table></div>
+      <div class="wb-note" id="vdRowsNote"></div>
+
+      <button type="button" class="history-clear-btn" id="vdReload">Muat ulang data</button>
+      <button type="button" class="history-clear-btn pin-cancel" id="vdClose">Tutup</button>
     </div>
   </div>
 
@@ -2838,6 +2890,10 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       orderNote: orderNoteText_(),
       total: computeCartTotal()
     };
+    try {
+      var so = JSON.parse(localStorage.getItem('famuha_src') || 'null');
+      if (so && so.s) { record.source = String(so.s).slice(0, 40); record.campaign = String(so.c || '').slice(0, 40); }
+    } catch (e) {}
     transactions.push(record);
     saveTransactions();
     sendTransactionToSheet_(record);
@@ -2857,6 +2913,9 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       return it.qty + 'x ' + it.variant + ' (' + it.temp + (it.shots !== '-' ? ', ' + it.shots : '') + ', ' + it.sugar + (it.ice !== '-' ? ', ' + it.ice : '') + ')' + (it.promo === 'weekend' ? ' [Promo Weekend]' : '') + (it.promo === 'tbv' ? ' [Promo TBV Gayub]' : '') + (it.menuPromo ? ' [Promo Harga]' : '') + (it.note ? ' {Catatan: ' + it.note + '}' : '');
     }).join('; ');
     if (record.orderNote) itemsSummary += ' | Catatan pesanan: ' + record.orderNote;
+    // Penanda sumber ikut masuk kolom Item, jadi langsung terlihat di Sheet & Riwayat
+    // tanpa perlu ubah Apps Script. Kolom khusus (sumber/kampanye) juga dikirim.
+    if (record.source) itemsSummary += ' | Sumber: ' + record.source + (record.campaign ? ' (' + record.campaign + ')' : '');
     if (record.orderTiming === 'scheduled' && record.scheduleDate){
       var scheduleTag = '[Jadwal: ' + formatScheduleLabel_(record.scheduleDate, record.scheduleTime) + '] ';
       itemsSummary = scheduleTag + itemsSummary;
@@ -2867,6 +2926,8 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       custPhone: record.custPhone,
       custAddress: record.custAddress,
       itemsSummary: itemsSummary,
+      sumber: record.source || '',
+      kampanye: record.campaign || '',
       delivery: record.delivery,
       deliveryArea: record.deliveryArea,
       payment: record.payment,
@@ -3852,6 +3913,11 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         });
     }
     tryAutoRecognizeReturningCustomer_();
+
+    // Popup Selamat Datang (beserta form OTP-nya) sudah dihapus di atas, jadi wiring OTP di bawah
+    // tidak punya elemen lagi (otpRow = null -> TypeError). Berhenti di sini; perilaku sama seperti
+    // sebelumnya, hanya tanpa error di konsol.
+    return;
 
     // ---- Step OTP (verifikasi nomor WhatsApp via Fonnte, lewat GAS_URL yang sama) ----
     var wcStep1 = document.getElementById('wcStep1');
@@ -6058,6 +6124,154 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   wbEl('waBlastOpenBtn').addEventListener('click', wbOpen);
   wbEl('wbClose').addEventListener('click', function(){ wbEl('waBlastOverlay').classList.remove('show'); });
   wbEl('waBlastOverlay').addEventListener('click', function(e){ if (e.target === this) this.classList.remove('show'); });
+
+  // ---------------- Pengunjung & Sumber Order (menu Admin) ----------------
+  // Menggabungkan dashboard pengunjung (dulu admin-page-visits.html) dan laporan
+  // order per sumber. Memakai endpoint & kunci yang sama dengan Pengingat WA
+  // (action=history dan action=blastContacts), jadi tidak ada rahasia baru di halaman.
+  var vdVisits = [], vdTx = [], vdTxOk = false, vdVisOk = false, vdHasFirst = false;
+  function vdEl(id){ return document.getElementById(id); }
+  function vdEsc(x){ return String(x == null ? '' : x).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+  function vdStatus(t, cls){ var s = vdEl('vdStatus'); s.textContent = t; s.className = 'admin-status' + (cls ? ' ' + cls : ''); }
+  function vdDate(v){ if (!v) return null; var d = new Date(v); return isNaN(d.getTime()) ? null : d; }
+  function vdFmt(d){ return d ? d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'2-digit' }) + ' ' + d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' }) : '—'; }
+  function vdRp(n){ return 'Rp' + Math.round(Number(n) || 0).toLocaleString('id-ID'); }
+  function vdDayKey(d){ return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function vdPhone(p){ var d = String(p || '').replace(/[^0-9]/g, '').replace(/^0+/, ''); if (d && d.indexOf('62') !== 0) d = '62' + d; return d; }
+  function vdSource(r){
+    var s = String(r.sumber || '').trim(), c = String(r.kampanye || '').trim();
+    if (!s){
+      var m = /\|\s*Sumber:\s*([^|(]+?)\s*(?:\(([^)]*)\))?\s*(?:\||$)/.exec(String(r.itemsSummary || ''));
+      if (m){ s = m[1].trim(); c = (m[2] || '').trim(); }
+    }
+    return { s: s, c: c };
+  }
+  function vdPaidSet(){ var set = {}; vdTx.forEach(function(t){ var n = vdPhone(t.phone); if (n) set[n] = true; }); return set; }
+
+  function vdLoad(){
+    if (!GAS_URL){ vdStatus('GAS_URL belum diatur.', 'err'); return; }
+    vdStatus('Memuat data dari Google Sheet…');
+    var q = '&key=' + encodeURIComponent(GAS_ACCESS_KEY);
+    var pTx = fetch(GAS_URL + '?action=history' + q).then(function(r){ return r.json(); }).then(function(d){
+      if (!d || !d.ok || !Array.isArray(d.rows)) throw new Error('history');
+      vdTx = d.rows.map(function(r){
+        var src = vdSource(r);
+        return { name: r.custName, phone: r.custPhone, d: vdDate(r.ts), total: Number(r.total) || 0, s: src.s, c: src.c };
+      }).filter(function(t){ return !wbIsTest(t.name); });
+      return true;
+    }).catch(function(){ vdTx = []; return false; });
+    var pVis = fetch(GAS_URL + '?action=blastContacts' + q).then(function(r){ return r.json(); }).then(function(d){
+      if (!d || !d.ok || !Array.isArray(d.visits)) throw new Error('blastContacts');
+      vdVisits = d.visits.map(function(r){
+        return { phone: String(r.phone || '').trim(), first: vdDate(r.firstVisit), last: vdDate(r.lastVisit),
+                 count: parseInt(r.visitCount, 10) || 1, cart: String(r.wishlistFilled).toUpperCase() === 'TRUE' };
+      });
+      vdHasFirst = vdVisits.some(function(v){ return !!v.first; });
+      return true;
+    }).catch(function(){ vdVisits = []; return false; });
+    Promise.all([pTx, pVis]).then(function(res){
+      vdTxOk = res[0]; vdVisOk = res[1];
+      vdRender();
+      var msg = '', cls = 'ok';
+      if (!res[0] && !res[1]){ msg = 'Data gagal dimuat dari server.'; cls = 'err'; }
+      else if (!res[0]){ msg = 'Data order gagal dimuat, laporan sumber belum tersedia.'; cls = 'err'; }
+      else if (!res[1]){ msg = 'Data pengunjung belum tersedia dari server (Apps Script belum mendukung). Laporan order tetap tampil.'; cls = 'err'; }
+      else msg = 'Data dimuat.';
+      vdStatus(msg, cls);
+    });
+  }
+
+  function vdRender(){ vdRenderStats(); vdRenderSources(); vdRenderChart(); vdRenderRows(); }
+
+  function vdRangeTx(){
+    var days = parseInt(vdEl('vdRange').value, 10) || 0;
+    if (!days) return vdTx;
+    var from = Date.now() - days * 86400000;
+    return vdTx.filter(function(t){ return t.d && t.d.getTime() >= from; });
+  }
+
+  function vdRenderStats(){
+    var items = [];
+    if (vdVisOk){
+      var today = vdDayKey(new Date());
+      items.push(['' + vdVisits.length, 'Pengunjung unik']);
+      items.push([vdHasFirst ? '' + vdVisits.filter(function(v){ return v.first && vdDayKey(v.first) === today; }).length : '—', 'Pengunjung baru hari ini']);
+      if (vdTxOk){
+        var paid = vdPaidSet();
+        items.push(['' + vdVisits.filter(function(v){ var n = vdPhone(v.phone); return n && !paid[n]; }).length, 'Punya nomor HP, belum order']);
+      }
+    }
+    if (vdTxOk){
+      var tx = vdRangeTx();
+      items.push(['' + tx.length, 'Order (periode dipilih)']);
+      items.push([vdRp(tx.reduce(function(a, t){ return a + t.total; }, 0)), 'Omzet (periode dipilih)']);
+    }
+    vdEl('vdStats').innerHTML = items.map(function(i){ return '<div><b>' + vdEsc(i[0]) + '</b>' + vdEsc(i[1]) + '</div>'; }).join('');
+  }
+
+  function vdRenderSources(){
+    var body = vdEl('vdSrcRows'), note = vdEl('vdSrcNote');
+    if (!vdTxOk){ body.innerHTML = '<tr><td colspan="4" class="wb-note">Data order belum tersedia.</td></tr>'; note.textContent = ''; return; }
+    var tx = vdRangeTx(), map = {}, keys = [];
+    tx.forEach(function(t){
+      var k = (t.s || '') + '|' + (t.c || '');
+      if (!map[k]){ map[k] = { s: t.s, c: t.c, n: 0, sum: 0 }; keys.push(k); }
+      map[k].n++; map[k].sum += t.total;
+    });
+    keys.sort(function(a, b){ return map[b].n - map[a].n || map[b].sum - map[a].sum; });
+    if (!keys.length){ body.innerHTML = '<tr><td colspan="4" class="wb-note">Belum ada order pada periode ini.</td></tr>'; }
+    else {
+      body.innerHTML = keys.map(function(k){
+        var r = map[k];
+        return '<tr><td>' + (r.s ? vdEsc(r.s) : 'Langsung / tanpa penanda') + '</td><td>' + (r.c ? vdEsc(r.c) : '—') + '</td><td>' + r.n + '</td><td>' + vdRp(r.sum) + '</td></tr>';
+      }).join('');
+    }
+    note.textContent = 'Penanda sumber baru tercatat sejak link kampanye (?utm_source=…) dipakai. Order sebelumnya masuk "Langsung / tanpa penanda".';
+  }
+
+  function vdRenderChart(){
+    var chart = vdEl('vdChart'), labels = vdEl('vdChartLabels'), note = vdEl('vdChartNote');
+    if (!vdVisOk){ chart.innerHTML = ''; labels.innerHTML = ''; note.textContent = ''; return; }
+    var days = [], counts = {}, i;
+    for (i = 13; i >= 0; i--){ var d = new Date(); d.setDate(d.getDate() - i); var k = vdDayKey(d); days.push({ k: k, d: d }); counts[k] = 0; }
+    vdVisits.forEach(function(v){ var d = vdHasFirst ? v.first : v.last; if (d){ var k = vdDayKey(d); if (counts.hasOwnProperty(k)) counts[k]++; } });
+    var max = Math.max.apply(null, days.map(function(x){ return counts[x.k]; }).concat([1]));
+    chart.innerHTML = days.map(function(x){ return '<div class="c" title="' + counts[x.k] + '" style="height:' + Math.max(Math.round(counts[x.k] / max * 100), 2) + '%"></div>'; }).join('');
+    labels.innerHTML = days.map(function(x, idx){ return '<span>' + (idx % 2 === 0 ? x.d.getDate() + '/' + (x.d.getMonth() + 1) : '') + '</span>'; }).join('');
+    note.textContent = vdHasFirst ? 'Pengunjung baru per hari (dari kunjungan pertama).' : 'Server belum mengirim tanggal kunjungan pertama, jadi grafik menghitung pengunjung yang terakhir aktif per hari.';
+  }
+
+  function vdRenderRows(){
+    var body = vdEl('vdRows'), note = vdEl('vdRowsNote');
+    if (!vdVisOk){ body.innerHTML = '<tr><td colspan="6" class="wb-note">Data pengunjung belum tersedia.</td></tr>'; note.textContent = ''; return; }
+    var q = vdEl('vdQ').value.replace(/[^0-9]/g, ''), f = vdEl('vdFilter').value, paid = vdTxOk ? vdPaidSet() : null;
+    var rows = vdVisits.slice().sort(function(a, b){ return ((b.last && b.last.getTime()) || 0) - ((a.last && a.last.getTime()) || 0); })
+      .filter(function(v){
+        var n = vdPhone(v.phone);
+        if (q && (!n || n.indexOf(q) === -1)) return false;
+        if (f === 'phone' && !n) return false;
+        if (f === 'nobuy' && (!n || (paid && paid[n]))) return false;
+        return true;
+      });
+    var total = rows.length; rows = rows.slice(0, 200);
+    if (!rows.length){ body.innerHTML = '<tr><td colspan="6" class="wb-note">Belum ada data yang cocok.</td></tr>'; note.textContent = ''; return; }
+    body.innerHTML = rows.map(function(v){
+      var n = vdPhone(v.phone), buy = '<span class="vd-badge na">?</span>', wa = '';
+      if (n && paid){ buy = paid[n] ? '<span class="vd-badge ok">Sudah</span>' : '<span class="vd-badge no">Belum</span>'; }
+      else if (!n){ buy = '<span class="vd-badge na">Anonim</span>'; }
+      if (n && !(paid && paid[n])) wa = '<a class="adm-btn pri" target="_blank" rel="noopener" style="text-decoration:none" href="https://wa.me/' + n + '">Chat WA</a>';
+      return '<tr><td>' + (n ? vdEsc(v.phone) : '<span class="vd-badge na">Anonim</span>') + '</td><td>' + vdFmt(v.last) + '</td><td>' + v.count + '</td><td>' + (v.cart ? '<span class="vd-badge ok">Ya</span>' : '<span class="vd-badge na">Belum</span>') + '</td><td>' + buy + '</td><td>' + wa + '</td></tr>';
+    }).join('');
+    note.textContent = total > rows.length ? 'Menampilkan 200 dari ' + total + ' pengunjung (persempit dengan pencarian).' : total + ' pengunjung.';
+  }
+
+  vdEl('vdOpenBtn').addEventListener('click', function(){ vdEl('vdOverlay').classList.add('show'); vdLoad(); });
+  vdEl('vdReload').addEventListener('click', vdLoad);
+  vdEl('vdClose').addEventListener('click', function(){ vdEl('vdOverlay').classList.remove('show'); });
+  vdEl('vdOverlay').addEventListener('click', function(e){ if (e.target === this) this.classList.remove('show'); });
+  vdEl('vdRange').addEventListener('change', function(){ vdRenderStats(); vdRenderSources(); });
+  vdEl('vdQ').addEventListener('input', vdRenderRows);
+  vdEl('vdFilter').addEventListener('change', vdRenderRows);
   wbEl('wbReload').addEventListener('click', wbLoad);
   wbEl('wbPreset').addEventListener('change', function(){ wbApplyPreset(this.value); wbRender(); });
   wbEl('wbSeg').addEventListener('change', function(){
@@ -6597,16 +6811,44 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     } catch (e) { return 'v_anon'; }
   }
 
+  // ---------- Sumber trafik (TikTok / iklan / dll) ----------
+  // Link kampanye: famuhacoffee.com/?utm_source=tiktok&utm_campaign=pistachio
+  // Disimpan di browser supaya tetap terbawa sampai pembeli checkout.
+  var SRC_KEY = 'famuha_src';
+  function cleanSrc_(v) { return String(v || '').replace(/[^a-zA-Z0-9_\-. ]/g, '').slice(0, 40); }
+  function captureTrafficSource_() {
+    try {
+      var q = new URLSearchParams(location.search);
+      var s = cleanSrc_(q.get('utm_source'));
+      var c = cleanSrc_(q.get('utm_campaign'));
+      if (s) {
+        localStorage.setItem(SRC_KEY, JSON.stringify({ s: s, c: c, t: Date.now() }));
+      } else if (!localStorage.getItem(SRC_KEY) && /tiktok\.com/i.test(document.referrer || '')) {
+        localStorage.setItem(SRC_KEY, JSON.stringify({ s: 'tiktok', c: '', t: Date.now() }));
+      }
+    } catch (e) {}
+  }
+  function getTrafficSource_() {
+    try {
+      var o = JSON.parse(localStorage.getItem(SRC_KEY) || 'null');
+      if (o && o.s) return { s: cleanSrc_(o.s), c: cleanSrc_(o.c) };
+    } catch (e) {}
+    return { s: '', c: '' };
+  }
+
   // ---------- Catat kunjungan (buat dashboard PageVisits) ----------
   // Dikirim maksimal 1x per hari per browser, biar sheet-nya nggak
   // penuh laporan berulang tiap kali orang buka-tutup tab.
   function logPageVisit() {
-    var today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    var src = getTrafficSource_();
+    var today = new Date().toISOString().slice(0, 10) + (src.s ? '|' + src.s : ''); // YYYY-MM-DD[|sumber]
     try {
       if (localStorage.getItem(VISIT_LOGGED_TODAY) === today) return;
     } catch (e) {}
     postToGas({
       action: 'logPageVisit',
+      utmSource: src.s,
+      utmCampaign: src.c,
       visitorId: getOrCreateVisitorId(),
       phone: getPhone(),
       firstVisit: localStorage.getItem(FIRST_VISIT_KEY) || now(),
@@ -6744,6 +6986,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   }
 
   function init() {
+    captureTrafficSource_();
     ensureFirstVisit();
     hookAddToCartButtons();
     logPageVisit();
