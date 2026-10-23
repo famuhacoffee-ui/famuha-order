@@ -2470,6 +2470,12 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <div class="overlay-logo serif">FAMUHA COFFEE</div>
       <div class="overlay-title serif">Admin — Pengunjung &amp; Sumber Order</div>
       <div class="admin-status" id="vdStatus" role="status"></div>
+      <div id="vdSecretBox" style="display:none;margin:10px 0">
+        <label for="vdSecret">Push secret (sama dengan PUSH_SECRET di Apps Script)</label>
+        <input type="password" id="vdSecret" autocomplete="off">
+        <button type="button" class="history-clear-btn" id="vdSecretSave">Simpan &amp; muat data pengunjung</button>
+        <div class="wb-note">Disimpan hanya di browser ini dan hanya dikirim ke Apps Script Anda, sama seperti halaman monitor lama.</div>
+      </div>
       <div class="wb-sum" id="vdStats"></div>
 
       <div class="vd-h">Order per sumber</div>
@@ -2501,6 +2507,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <div class="wb-note" id="vdRowsNote"></div>
 
       <button type="button" class="history-clear-btn" id="vdReload">Muat ulang data</button>
+      <button type="button" class="history-clear-btn" id="vdSecretClear" style="display:none">Lupakan push secret di perangkat ini</button>
       <button type="button" class="history-clear-btn pin-cancel" id="vdClose">Tutup</button>
     </div>
   </div>
@@ -6148,6 +6155,27 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   }
   function vdPaidSet(){ var set = {}; vdTx.forEach(function(t){ var n = vdPhone(t.phone); if (n) set[n] = true; }); return set; }
 
+  var VD_SECRET_KEY = 'famuha_admin_push_secret'; // sama dengan halaman monitor lama
+  var vdVisSt = '';
+  function vdGetSecret(){ try { return localStorage.getItem(VD_SECRET_KEY) || ''; } catch (e) { return ''; } }
+  function vdFetchVisits(q){
+    // 1) blastContacts (kalau Apps Script mendukung)  2) pageVisitsList + push secret
+    //    (action yang sudah dipakai halaman monitor lama, jadi Apps Script tidak perlu diubah)
+    function viaSecret(){
+      var secret = vdGetSecret();
+      if (!secret) return Promise.resolve({ st: 'need' });
+      return fetch(GAS_URL + '?action=pageVisitsList&secret=' + encodeURIComponent(secret))
+        .then(function(r){ return r.json(); })
+        .then(function(res){ return (res && res.ok && Array.isArray(res.visits)) ? { st: 'ok', rows: res.visits } : { st: 'bad' }; })
+        .catch(function(){ return { st: 'fail' }; });
+    }
+    return fetch(GAS_URL + '?action=blastContacts' + q).then(function(r){ return r.json(); }).then(function(d){
+      if (d && d.ok && Array.isArray(d.visits)) return { st: 'ok', rows: d.visits };
+      return viaSecret();
+    }).catch(viaSecret);
+  }
+  function vdTruthy(v){ return v === true || /^(true|ya|yes|1)$/i.test(String(v)); }
+
   function vdLoad(){
     if (!GAS_URL){ vdStatus('GAS_URL belum diatur.', 'err'); return; }
     vdStatus('Memuat data dari Google Sheet…');
@@ -6160,23 +6188,28 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       }).filter(function(t){ return !wbIsTest(t.name); });
       return true;
     }).catch(function(){ vdTx = []; return false; });
-    var pVis = fetch(GAS_URL + '?action=blastContacts' + q).then(function(r){ return r.json(); }).then(function(d){
-      if (!d || !d.ok || !Array.isArray(d.visits)) throw new Error('blastContacts');
-      vdVisits = d.visits.map(function(r){
-        return { phone: String(r.phone || '').trim(), first: vdDate(r.firstVisit), last: vdDate(r.lastVisit),
-                 count: parseInt(r.visitCount, 10) || 1, cart: String(r.wishlistFilled).toUpperCase() === 'TRUE' };
-      });
-      vdHasFirst = vdVisits.some(function(v){ return !!v.first; });
-      return true;
-    }).catch(function(){ vdVisits = []; return false; });
+    var pVis = vdFetchVisits(q).then(function(res){
+      vdVisits = []; vdHasFirst = false;
+      if (res.st === 'ok'){
+        vdVisits = res.rows.map(function(r){
+          return { phone: String(r.phone || '').trim(), first: vdDate(r.firstVisit), last: vdDate(r.lastVisit),
+                   count: parseInt(r.visitCount, 10) || 1, cart: vdTruthy(r.wishlistFilled) };
+        });
+        vdHasFirst = vdVisits.some(function(v){ return !!v.first; });
+      }
+      return res.st;
+    });
     Promise.all([pTx, pVis]).then(function(res){
-      vdTxOk = res[0]; vdVisOk = res[1];
+      vdTxOk = res[0]; vdVisSt = res[1]; vdVisOk = (vdVisSt === 'ok');
+      vdEl('vdSecretBox').style.display = (vdVisSt === 'need' || vdVisSt === 'bad') ? 'block' : 'none';
+      vdEl('vdSecretClear').style.display = vdGetSecret() ? '' : 'none';
       vdRender();
-      var msg = '', cls = 'ok';
-      if (!res[0] && !res[1]){ msg = 'Data gagal dimuat dari server.'; cls = 'err'; }
-      else if (!res[0]){ msg = 'Data order gagal dimuat, laporan sumber belum tersedia.'; cls = 'err'; }
-      else if (!res[1]){ msg = 'Data pengunjung belum tersedia dari server (Apps Script belum mendukung). Laporan order tetap tampil.'; cls = 'err'; }
-      else msg = 'Data dimuat.';
+      var msg = 'Data dimuat.', cls = 'ok';
+      if (!vdTxOk && !vdVisOk){ msg = 'Data gagal dimuat dari server.'; cls = 'err'; }
+      else if (!vdTxOk){ msg = 'Data order gagal dimuat, laporan sumber belum tersedia.'; cls = 'err'; }
+      else if (vdVisSt === 'need'){ msg = 'Masukkan push secret di bawah untuk menampilkan data pengunjung. Laporan order tetap tampil.'; cls = 'err'; }
+      else if (vdVisSt === 'bad'){ msg = 'Push secret salah atau ditolak server. Periksa lalu coba lagi.'; cls = 'err'; }
+      else if (vdVisSt === 'fail'){ msg = 'Data pengunjung gagal dimuat (koneksi ke Apps Script bermasalah).'; cls = 'err'; }
       vdStatus(msg, cls);
     });
   }
@@ -6267,6 +6300,17 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 
   vdEl('vdOpenBtn').addEventListener('click', function(){ vdEl('vdOverlay').classList.add('show'); vdLoad(); });
   vdEl('vdReload').addEventListener('click', vdLoad);
+  vdEl('vdSecretSave').addEventListener('click', function(){
+    var v = vdEl('vdSecret').value.trim();
+    if (!v){ vdStatus('Push secret belum diisi.', 'err'); return; }
+    try { localStorage.setItem(VD_SECRET_KEY, v); } catch (e) {}
+    vdEl('vdSecret').value = '';
+    vdLoad();
+  });
+  vdEl('vdSecretClear').addEventListener('click', function(){
+    try { localStorage.removeItem(VD_SECRET_KEY); } catch (e) {}
+    vdLoad();
+  });
   vdEl('vdClose').addEventListener('click', function(){ vdEl('vdOverlay').classList.remove('show'); });
   vdEl('vdOverlay').addEventListener('click', function(e){ if (e.target === this) this.classList.remove('show'); });
   vdEl('vdRange').addEventListener('change', function(){ vdRenderStats(); vdRenderSources(); });
