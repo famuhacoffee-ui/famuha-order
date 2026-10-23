@@ -2501,7 +2501,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
           <select id="vdFilter"><option value="all">Semua</option><option value="phone">Punya nomor HP</option><option value="nobuy">Punya nomor HP, belum order</option></select></div>
       </div>
       <div class="vd-wrap"><table class="wb-tbl">
-        <thead><tr><th>Kontak</th><th>Terakhir buka</th><th>Kunjungan</th><th>Isi keranjang</th><th>Order</th><th></th></tr></thead>
+        <thead><tr><th>Kontak</th><th>Terakhir aktif</th><th>Kunjungan</th><th>Isi keranjang</th><th>Order</th><th></th></tr></thead>
         <tbody id="vdRows"></tbody>
       </table></div>
       <div class="wb-note" id="vdRowsNote"></div>
@@ -2911,6 +2911,9 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       if (record.custName) localStorage.setItem('customerName', record.custName);
       if (record.custPhone) localStorage.setItem('customerPhone', record.custPhone);
     } catch (e) {}
+    // Catat kunjungan hari ini juga (kalau belum tercatat), supaya "Terakhir aktif"
+    // tetap benar walau halaman dibuka dari tab lama tanpa dimuat ulang.
+    try { if (window.FAMUHA_PUSH && window.FAMUHA_PUSH.logVisit) window.FAMUHA_PUSH.logVisit(); } catch (e) {}
     return record;
   }
 
@@ -6291,11 +6294,23 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     note.textContent = vdHasFirst ? 'Pengunjung baru per hari (dari kunjungan pertama).' : 'Server belum mengirim tanggal kunjungan pertama, jadi grafik menghitung pengunjung yang terakhir aktif per hari.';
   }
 
+  // Order terakhir per nomor HP, supaya "Terakhir aktif" tidak tertinggal dari order.
+  function vdLastOrderMap(){
+    var m = {};
+    vdTx.forEach(function(t){ var n = vdPhone(t.phone); if (n && t.d){ var ms = t.d.getTime(); if (!m[n] || ms > m[n]) m[n] = ms; } });
+    return m;
+  }
+  function vdEffLast(v, lo){
+    var n = vdPhone(v.phone), o = n && lo[n], a = v.last ? v.last.getTime() : 0;
+    return (o && o > a) ? new Date(o) : v.last;
+  }
+
   function vdRenderRows(){
     var body = vdEl('vdRows'), note = vdEl('vdRowsNote');
     if (!vdVisOk){ body.innerHTML = '<tr><td colspan="6" class="wb-note">Data pengunjung belum tersedia.</td></tr>'; note.textContent = ''; return; }
     var q = vdEl('vdQ').value.replace(/[^0-9]/g, ''), f = vdEl('vdFilter').value, paid = vdTxOk ? vdPaidSet() : null;
-    var rows = vdVisits.slice().sort(function(a, b){ return ((b.last && b.last.getTime()) || 0) - ((a.last && a.last.getTime()) || 0); })
+    var lo = vdTxOk ? vdLastOrderMap() : {};
+    var rows = vdVisits.slice().sort(function(a, b){ var la = vdEffLast(a, lo), lb = vdEffLast(b, lo); return ((lb && lb.getTime()) || 0) - ((la && la.getTime()) || 0); })
       .filter(function(v){
         var n = vdPhone(v.phone);
         if (q && (!n || n.indexOf(q) === -1)) return false;
@@ -6310,7 +6325,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       if (n && paid){ buy = paid[n] ? '<span class="vd-badge ok">Sudah</span>' : '<span class="vd-badge no">Belum</span>'; }
       else if (!n){ buy = '<span class="vd-badge na">Anonim</span>'; }
       if (n && !(paid && paid[n])) wa = '<a class="adm-btn pri" target="_blank" rel="noopener" style="text-decoration:none" href="https://wa.me/' + n + '">Chat WA</a>';
-      return '<tr><td>' + (n ? vdEsc(v.phone) : '<span class="vd-badge na">Anonim</span>') + '</td><td>' + vdFmt(v.last) + '</td><td>' + v.count + '</td><td>' + (v.cart ? '<span class="vd-badge ok">Ya</span>' : '<span class="vd-badge na">Belum</span>') + '</td><td>' + buy + '</td><td>' + wa + '</td></tr>';
+      return '<tr><td>' + (n ? vdEsc(v.phone) : '<span class="vd-badge na">Anonim</span>') + '</td><td>' + vdFmt(vdEffLast(v, lo)) + '</td><td>' + v.count + '</td><td>' + (v.cart ? '<span class="vd-badge ok">Ya</span>' : '<span class="vd-badge na">Belum</span>') + '</td><td>' + buy + '</td><td>' + wa + '</td></tr>';
     }).join('');
     note.textContent = total > rows.length ? 'Menampilkan 200 dari ' + total + ' pengunjung (persempit dengan pencarian).' : total + ' pengunjung.';
   }
@@ -6902,7 +6917,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   // penuh laporan berulang tiap kali orang buka-tutup tab.
   function logPageVisit() {
     var src = getTrafficSource_();
-    var today = new Date().toISOString().slice(0, 10) + (src.s ? '|' + src.s : ''); // YYYY-MM-DD[|sumber]
+    var today = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10) + (src.s ? '|' + src.s : ''); // YYYY-MM-DD (hari WIB)[|sumber]
     try {
       if (localStorage.getItem(VISIT_LOGGED_TODAY) === today) return;
     } catch (e) {}
@@ -7069,7 +7084,8 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   // Expose ke luar kalau mau dipanggil manual (mis. setelah checkout sukses)
   window.FAMUHA_PUSH = {
     markWishlistFilled: markWishlistFilled,
-    requestPermissionAndSubscribe: requestPermissionAndSubscribe
+    requestPermissionAndSubscribe: requestPermissionAndSubscribe,
+    logVisit: logPageVisit
   };
 })();
 </script>
