@@ -5523,14 +5523,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         if (cart.some(function(item){ return item.unitPrice === PROMO_1708_PRICE; })){
           markPromo1708Used_();
         }
-        showThankyou(
-          isQris
-            ? 'Terima kasih! WhatsApp sudah terbuka dengan pesan pesananmu. Tekan KIRIM di WhatsApp ya (lampirkan screenshot bukti bayar), supaya pesananmu kami proses.'
-            : 'Terima kasih! WhatsApp sudah terbuka dengan pesan pesananmu. Tekan KIRIM di WhatsApp ya, supaya pesananmu kami proses.',
-          total
-        );
-        var _twa2 = document.getElementById('thankyouWaBtn');
-        if (_twa2){ _twa2.dataset.mode = 'open'; _twa2.setAttribute('href', _waUrl); _twa2.textContent = '💬 Buka WhatsApp'; _twa2.hidden = false; }
+        // Popup "Terima Kasih" sengaja tidak ditampilkan lagi setelah konfirmasi via WhatsApp
         cart = [];
         var _onEl = document.getElementById('orderNote'); if (_onEl) _onEl.value = '';
         state.qty = 1;
