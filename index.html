@@ -2304,7 +2304,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
               <div class="qris-steps-title">Cara bayar via QRIS</div>
               <div class="qris-step active" data-step="1"><span class="num">1</span><span>Scan kode QRIS di atas dan selesaikan pembayaran di aplikasi e-wallet / m-banking kamu.</span></div>
               <div class="qris-step" data-step="2"><span class="num">2</span><span>Setelah berhasil bayar, klik tombol <b>“Saya Sudah Bayar”</b>.</span></div>
-              <div class="qris-step" data-step="3"><span class="num">3</span><span>Tekan tombol hijau <b>“Konfirmasi via WhatsApp”</b>, WhatsApp terbuka otomatis dengan pesan pesananmu. Tinggal tekan <b>Kirim</b> (lampirkan screenshot bukti bayar). Pesanan baru kami proses setelah ini.</span></div>
+              <div class="qris-step" data-step="3"><span class="num">3</span><span>Tekan tombol hijau <b>“Konfirmasi via WhatsApp”</b>, WhatsApp terbuka otomatis dengan pesan pesananmu. Tinggal tekan <b>Kirim</b>. Pesanan baru kami proses setelah ini.</span></div>
             </div>
             <a href="#" target="_blank" class="paid-btn" id="paidBtn">✓ Saya Sudah Bayar</a>
             <button type="button" class="qris-wa-btn" id="qrisWaBtn" hidden>💬 Konfirmasi via WhatsApp</button>
@@ -2368,7 +2368,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       </div>
       <a href="#" target="_blank" rel="noopener" class="cta-btn" id="thankyouWaBtn" style="display:block;text-align:center;text-decoration:none;margin-bottom:10px" hidden>💬 Kirim Pesanan via WhatsApp</a>
       <button type="button" class="cta-btn" id="thankyouClose">Tutup</button>
-      <div class="overlay-note" id="thankyouNote">Kalau WhatsApp belum terbuka, tekan tombol "Buka WhatsApp" di atas</div>
+      <div class="overlay-note" id="thankyouNote">Kalau WhatsApp belum terbuka atau pesan belum terkirim, tekan tombol di atas</div>
     </div>
   </div>
 
@@ -5523,7 +5523,14 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         if (cart.some(function(item){ return item.unitPrice === PROMO_1708_PRICE; })){
           markPromo1708Used_();
         }
-        // Popup "Terima Kasih" sengaja tidak ditampilkan lagi setelah konfirmasi via WhatsApp
+        showThankyou(
+          isQris
+            ? 'Konfirmasi pesanan telah kami terima, pesananmu sedang kami proses. Mohon menunggu sekitar 5–10 menit ya ☕'
+            : 'Konfirmasi pesanan telah kami terima, pesananmu sedang kami proses. Mohon menunggu sekitar 5–10 menit ya ☕',
+          total
+        );
+        var _twa2 = document.getElementById('thankyouWaBtn');
+        if (_twa2){ _twa2.dataset.mode = 'open'; _twa2.setAttribute('href', _waUrl); _twa2.textContent = '💬 Pesan belum terkirim? Buka WhatsApp lagi'; _twa2.hidden = false; }
         cart = [];
         var _onEl = document.getElementById('orderNote'); if (_onEl) _onEl.value = '';
         state.qty = 1;
@@ -5561,7 +5568,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       qrisPaidConfirmed = true;
       window.__famuhaStayStep2 = true;
       var total = computeCartTotal();
-      showThankyou('Pembayaran tercatat. Langkah terakhir: tekan tombol hijau di bawah, WhatsApp akan terbuka otomatis dengan pesan pesananmu. Tinggal tekan KIRIM (lampirkan screenshot bukti bayar). Pesanan baru kami proses setelah pesan terkirim.', total);
+      showThankyou('Pembayaran tercatat. Langkah terakhir: tekan tombol hijau di bawah, WhatsApp akan terbuka otomatis dengan pesan pesananmu. Tinggal tekan KIRIM. Pesanan baru kami proses setelah pesan terkirim.', total);
       var _twa3 = document.getElementById('thankyouWaBtn');
       if (_twa3){ _twa3.dataset.mode = 'confirm'; _twa3.setAttribute('href', '#'); _twa3.textContent = '💬 Konfirmasi via WhatsApp'; _twa3.hidden = false; }
       var _tn3 = document.getElementById('thankyouNote'); if (_tn3) _tn3.hidden = true;
