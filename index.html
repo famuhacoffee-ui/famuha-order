@@ -1953,6 +1953,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     <div class="tp-actions" id="tpActions"></div>
     <button type="button" class="history-btn" id="historyBtn">📊 Riwayat Transaksi</button>
     <button type="button" class="history-btn" id="adminBtn" style="right:auto; left:16px;">⚙️ Admin</button>
+    <button type="button" class="history-btn" id="menuOnlineBtn">🍽️ Menu Online</button>
     
     <div class="store-status-badge" id="storeStatusBadge"><span class="dot"></span><span id="storeStatusText">Memuat status toko...</span></div>
     <div class="eyebrow">Famuha Coffee Roastery</div>
@@ -2489,6 +2490,41 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     </div>
   </div>
 
+  <style id="famuha-menu-online">
+  #moOverlay .mo-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0}
+  #moOverlay .mo-bar label{font-size:12px;color:var(--tp-sub,#6D7588);display:flex;align-items:center;gap:6px}
+  #moOverlay .mo-bar input[type=number]{width:70px;padding:6px 8px;border:1px solid var(--tp-line,#E5E7EB);border-radius:8px;font-size:13px;background:#fff;color:var(--tp-text,#31353B)}
+  #moOverlay .mo-chip.on{background:var(--tp-green,#03AC0E);border-color:var(--tp-green,#03AC0E);color:#fff}
+  #moOverlay .mo-item{border-top:1px solid var(--tp-line,#E5E7EB);padding:10px 0}
+  #moOverlay .mo-top{display:flex;align-items:center;gap:8px}
+  #moOverlay .mo-name{flex:1;font-weight:700;font-size:14px;color:var(--tp-text,#31353B)}
+  #moOverlay .mo-meta{font-size:12px;color:var(--tp-sub,#6D7588);margin-top:2px}
+  #moOverlay .mo-desc{font-size:12px;color:var(--tp-sub,#6D7588);margin-top:4px;line-height:1.4}
+  #moOverlay .mo-prices{font-size:13px;margin-top:6px;color:var(--tp-text,#31353B)}
+  #moOverlay .mo-addons{border-top:1px solid var(--tp-line,#E5E7EB);padding:10px 0;font-size:12px;color:var(--tp-sub,#6D7588);line-height:1.6}
+  </style>
+  <div class="overlay" id="moOverlay">
+    <div class="overlay-card wb-card">
+      <div class="overlay-logo serif">FAMUHA COFFEE</div>
+      <div class="overlay-title serif">Admin — Menu Online</div>
+      <div class="overlay-msg">Daftar menu siap salin untuk GrabMerchant dan ShopeeFood. Satu ukuran (Regular), harga normal tanpa promo, sudah termasuk 1 shot espresso, dan mengikuti harga terbaru di Admin.</div>
+      <div class="admin-status" id="moStatus" role="status"></div>
+      <div class="mo-bar">
+        <button type="button" class="adm-btn mo-chip" id="moChipGrab" data-p="GrabFood">GrabFood</button>
+        <button type="button" class="adm-btn mo-chip" id="moChipShopee" data-p="ShopeeFood">ShopeeFood</button>
+        <label>Markup <input type="number" id="moMarkup" min="0" max="100" step="1" value="0"> %</label>
+        <label><input type="checkbox" id="moRound" checked> Bulatkan ke Rp500</label>
+      </div>
+      <div class="wb-sum" id="moSum"></div>
+      <div id="moList"></div>
+      <div class="mo-addons" id="moAddons"></div>
+      <div class="wb-actions">
+        <button type="button" class="adm-btn pri" id="moCopyAll">Salin semua (tabel)</button>
+      </div>
+      <button type="button" class="history-clear-btn pin-cancel" id="moClose">Tutup</button>
+    </div>
+  </div>
+
   <div class="overlay" id="vdOverlay">
     <div class="overlay-card wb-card">
       <div class="overlay-logo serif">FAMUHA COFFEE</div>
@@ -2512,6 +2548,14 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         <tbody id="vdSrcRows"><tr><td colspan="4" class="wb-note">Memuat…</td></tr></tbody>
       </table></div>
       <div class="wb-note" id="vdSrcNote"></div>
+
+      <div class="vd-h">Corong: dari lihat menu sampai order</div>
+      <div class="wb-sum" id="vdFunSum"></div>
+      <div class="vd-wrap"><table class="wb-tbl">
+        <thead><tr><th>Menu</th><th>Orang yang klik</th><th>Orang yang masuk keranjang</th></tr></thead>
+        <tbody id="vdFunRows"><tr><td colspan="3" class="wb-note">Memuat…</td></tr></tbody>
+      </table></div>
+      <div class="wb-note" id="vdFunNote"></div>
 
       <div class="vd-h">Pengunjung per hari (14 hari)</div>
       <div class="vd-chart" id="vdChart"></div>
@@ -5601,6 +5645,11 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 
   function requestPinFor(action){
     pendingPinAction = action;
+    var _pt = document.querySelector('#pinOverlay .overlay-title'), _pm = document.querySelector('#pinOverlay .overlay-msg');
+    if (_pt && _pm){
+      if (action === 'menuonline'){ _pt.textContent = 'Akses Menu Online'; _pm.textContent = 'Masukkan PIN admin untuk membuka Menu Online.'; }
+      else { _pt.textContent = 'Akses Riwayat'; _pm.textContent = 'Masukkan PIN untuk melihat riwayat transaksi.'; }
+    }
     document.getElementById('pinError').classList.remove('show');
     document.getElementById('pinInput').value = '';
     document.getElementById('pinOverlay').classList.add('show');
@@ -6020,12 +6069,15 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 
   function checkPin(){
     var input = document.getElementById('pinInput');
-    var expectedPin = pendingPinAction === 'admin' ? ADMIN_PIN : HISTORY_PIN;
+    var expectedPin = (pendingPinAction === 'admin' || pendingPinAction === 'menuonline') ? ADMIN_PIN : HISTORY_PIN;
     if (input.value === expectedPin){
       document.getElementById('pinOverlay').classList.remove('show');
       if (pendingPinAction === 'admin'){
         adminUnlocked = true;
         openAdmin();
+      } else if (pendingPinAction === 'menuonline'){
+        adminUnlocked = true;
+        moOpen();
       } else {
         historyUnlocked = true;
         openHistory();
@@ -6363,6 +6415,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   function vdLoad(){
     if (!GAS_URL){ vdStatus('GAS_URL belum diatur.', 'err'); return; }
     vdStatus('Memuat data dari Google Sheet…');
+    vdFetchFunnel();
     var q = '&key=' + encodeURIComponent(GAS_ACCESS_KEY);
     var pTx = fetch(GAS_URL + '?action=history' + q).then(function(r){ return r.json(); }).then(function(d){
       if (!d || !d.ok || !Array.isArray(d.rows)) throw new Error('history');
@@ -6398,7 +6451,56 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     });
   }
 
-  function vdRender(){ vdRenderStats(); vdRenderSources(); vdRenderChart(); vdRenderRows(); }
+  // ---- Corong menu: klik menu -> masuk keranjang -> buka checkout -> order selesai ----
+  var vdFun = { st: 'idle', rows: [] };
+  function vdFetchFunnel(){
+    var sec = vdGetSecret();
+    if (!sec){ vdFun = { st: 'need', rows: [] }; vdRenderFunnel(); return; }
+    var days = parseInt(vdEl('vdRange').value, 10) || 0;
+    fetch(GAS_URL + '?action=eventStats&days=' + days + '&secret=' + encodeURIComponent(sec))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d && d.ok && Array.isArray(d.rows)) vdFun = { st: 'ok', rows: d.rows };
+        else vdFun = { st: (d && d.error === 'unauthorized') ? 'bad' : 'old', rows: [] };
+        vdRenderFunnel();
+      })
+      .catch(function(){ vdFun = { st: 'fail', rows: [] }; vdRenderFunnel(); });
+  }
+  function vdRenderFunnel(){
+    var body = vdEl('vdFunRows'), note = vdEl('vdFunNote'), sum = vdEl('vdFunSum');
+    body.textContent = ''; sum.textContent = '';
+    function msg(t){ var tr = document.createElement('tr'), td = document.createElement('td'); td.colSpan = 3; td.className = 'wb-note'; td.textContent = t; tr.appendChild(td); body.appendChild(tr); note.textContent = ''; }
+    if (vdFun.st === 'idle') return msg('Memuat…');
+    if (vdFun.st === 'need') return msg('Masukkan push secret (kotak di atas) untuk menampilkan corong menu.');
+    if (vdFun.st === 'bad') return msg('Push secret ditolak server.');
+    if (vdFun.st === 'old') return msg('Apps Script belum diperbarui dengan kode pelacak menu (action eventStats).');
+    if (vdFun.st === 'fail') return msg('Data corong gagal dimuat.');
+    var days = parseInt(vdEl('vdRange').value, 10) || 0, from = days ? Date.now() - days * 86400000 : 0;
+    var checkout = 0, menus = {};
+    vdFun.rows.forEach(function(r){
+      var u = Number(r.unique) || 0;
+      if (r.event === 'checkout_open'){ checkout += u; return; }
+      var m = r.menu || '(tanpa nama)';
+      if (!menus[m]) menus[m] = { v: 0, a: 0 };
+      if (r.event === 'menu_view') menus[m].v += u;
+      if (r.event === 'add_to_cart') menus[m].a += u;
+    });
+    var active = vdVisOk ? vdVisits.filter(function(v){ return v.last && v.last.getTime() >= from; }).length : null;
+    var orders = vdTxOk ? vdRangeTx().length : null;
+    [[active == null ? '—' : active, 'Pengunjung aktif'], [checkout, 'Buka checkout'], [orders == null ? '—' : orders, 'Order selesai']].forEach(function(i){
+      var d = document.createElement('div'), b = document.createElement('b'); b.textContent = String(i[0]); d.appendChild(b); d.appendChild(document.createTextNode(i[1])); sum.appendChild(d);
+    });
+    var names = Object.keys(menus).sort(function(a, b){ return menus[b].v - menus[a].v || menus[b].a - menus[a].a; });
+    if (!names.length) msg('Belum ada data klik menu pada periode ini.');
+    names.forEach(function(n){
+      var tr = document.createElement('tr');
+      [n, menus[n].v, menus[n].a].forEach(function(t){ var td = document.createElement('td'); td.textContent = String(t); tr.appendChild(td); });
+      body.appendChild(tr);
+    });
+    note.textContent = 'Dihitung per orang (bukan per klik), sejak pelacak menu aktif. Perangkat admin tidak ikut dihitung.';
+  }
+
+  function vdRender(){ vdRenderStats(); vdRenderSources(); vdRenderChart(); vdRenderRows(); vdRenderFunnel(); }
 
   function vdRangeTx(){
     var days = parseInt(vdEl('vdRange').value, 10) || 0;
@@ -6509,7 +6611,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   });
   vdEl('vdClose').addEventListener('click', function(){ vdEl('vdOverlay').classList.remove('show'); });
   vdEl('vdOverlay').addEventListener('click', function(e){ if (e.target === this) this.classList.remove('show'); });
-  vdEl('vdRange').addEventListener('change', function(){ vdRenderStats(); vdRenderSources(); });
+  vdEl('vdRange').addEventListener('change', function(){ vdRenderStats(); vdRenderSources(); vdFetchFunnel(); });
   vdEl('vdQ').addEventListener('input', vdRenderRows);
   vdEl('vdFilter').addEventListener('change', vdRenderRows);
   wbEl('wbReload').addEventListener('click', wbLoad);
@@ -6659,7 +6761,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         return 'Famuha Coffee buka setiap hari jam ' + SCHEDULE_TIME_MIN + '–' + SCHEDULE_TIME_MAX + ' WIB.\nSaat ini status toko: ' + (STORE_OPEN ? 'Buka ✅' : 'Tutup ❌') + '.';
       }
       if (/(menu|varian|rasa|harga|price)/.test(q)){
-        return 'Menu andalan kami: Pistachio, Hazelnut, Vanilla, Cappuccino, Gula Aren, Black Americano, Mont Blanc Orange, Mont Blanc Strawberry, Cold Brew Orange, Cold Brew Peach, Matcha Vanilla Latte.\nHarga size Small mulai ' + rupiah(PRICES.size.small) + ', Regular ' + rupiah(PRICES.size.regular) + ', Large ' + rupiah(PRICES.size.large) + ' (harga dasar, belum termasuk topping/susu/shot tambahan).\nKamu bisa custom langsung lewat form "Build Your Own Iced Latte" di halaman ini.';
+        return 'Menu andalan kami: Pistachio, Hazelnut, Vanilla, Cappuccino, Gula Aren, Black Americano, Mont Blanc Orange, Mont Blanc Strawberry, Cold Brew Orange, Cold Brew Peach, Matcha Vanilla Latte.\nHarga mulai ' + rupiah(PRICES.size.regular) + ' untuk 1 ukuran dengan single shot (harga dasar, belum termasuk topping/susu/shot tambahan).\nKamu bisa custom langsung lewat form "Build Your Own Iced Latte" di halaman ini.';
       }
       if (/(ongkir|antar|kirim|delivery|area|jangkau)/.test(q)){
         var lines = Object.keys(ONGKIR).map(function(k){
@@ -6711,6 +6813,137 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       if (e.key === 'Enter') askChatSend.click();
     });
   })();
+
+  /* ---------- Menu Online (admin): daftar menu siap salin untuk GrabFood / ShopeeFood ---------- */
+  var MO_PLATFORM_KEY = 'famuha-mo-platform', MO_MARKUP_KEY = 'famuha-mo-markup', MO_ROUND_KEY = 'famuha-mo-round';
+  var MO_CATS = { coffee:'Kopi', hot:'Kopi panas', matcha:'Matcha', chocolate:'Cokelat', noncoffee:'Non-kopi' };
+  var MO_SIZES = ['small', 'regular', 'large'];
+  var moPlatform = 'GrabFood', moMarkups = {}, moRows = [], moPrefsLoaded = false;
+
+  function moEl(id){ return document.getElementById(id); }
+  function moRp(n){ return 'Rp' + n.toLocaleString('id-ID'); }
+  function moLoadPrefs(){
+    if (moPrefsLoaded) return; moPrefsLoaded = true;
+    try {
+      var p = localStorage.getItem(MO_PLATFORM_KEY); if (p === 'GrabFood' || p === 'ShopeeFood') moPlatform = p;
+      var m = JSON.parse(localStorage.getItem(MO_MARKUP_KEY) || '{}'); if (m && typeof m === 'object') moMarkups = m;
+      if (localStorage.getItem(MO_ROUND_KEY) === '0') moEl('moRound').checked = false;
+    } catch (err){}
+  }
+  function moSavePrefs(){
+    try {
+      localStorage.setItem(MO_PLATFORM_KEY, moPlatform);
+      localStorage.setItem(MO_MARKUP_KEY, JSON.stringify(moMarkups));
+      localStorage.setItem(MO_ROUND_KEY, moEl('moRound').checked ? '1' : '0');
+    } catch (err){}
+  }
+  // Harga normal (tanpa promo) dengan rumus yang sama seperti keranjang: ukuran + max(harga shot, tambahan varian)
+  function moBasePrice(variant, size, temp){
+    var lk = VARIANT_LOCKS[variant] || {};
+    var shotKey = lk.shots || (lk.shotsAllowed ? lk.shotsAllowed[0] : 'single');
+    var total = (PRICES.size[size] || 0) + Math.max(PRICES.shots[shotKey] || 0, PRICES.variant[variant] || 0);
+    if (variant === 'cappuccino' && temp === 'hot') total -= CAPPUCCINO_HOT_DISCOUNT;
+    return Math.max(0, total);
+  }
+  function moFinal(base){
+    var mk = Number(moEl('moMarkup').value) || 0;
+    var p = base * (1 + mk / 100);
+    return moEl('moRound').checked ? Math.round(p / 500) * 500 : Math.round(p);
+  }
+  function moCollect(){
+    var rows = [];
+    [].forEach.call(document.querySelectorAll('#fmGrid .fm-card:not(.fm-removed)'), function(c){
+      var v = c.dataset.variant;
+      if (!v || !Object.prototype.hasOwnProperty.call(PRICES.variant, v)) return;
+      var d = c.querySelector('.fm-desc');
+      rows.push({ name: c.dataset.name || '', cat: MO_CATS[c.dataset.cat] || c.dataset.cat || '',
+        desc: d ? d.textContent.trim() : '', variant: v, temp: c.dataset.temp || 'cold', soldout: c.classList.contains('fm-soldout') });
+    });
+    return rows;
+  }
+  function moFlat(t){ return String(t || '').replace(/[\t\r\n]+/g, ' ').trim(); }
+  function moItemText(r){
+    return r.name + '\n' + r.desc + '\nHarga: ' + r.prices[0];
+  }
+  function moTableText(){
+    var lines = ['Nama\tKategori\tDeskripsi\tHarga'];
+    moRows.forEach(function(r){ lines.push([moFlat(r.name), moFlat(r.cat), moFlat(r.desc), r.prices[0]].join('\t')); });
+    return lines.join('\n');
+  }
+  function moStatus(msg, ok){
+    var st = moEl('moStatus'); st.textContent = msg; st.className = 'admin-status ' + (ok ? 'ok' : 'err');
+  }
+  function moCopy(text, okMsg){
+    function fallback(){
+      try {
+        var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        var ok = document.execCommand('copy'); document.body.removeChild(ta);
+        moStatus(ok ? okMsg : 'Gagal menyalin. Salin manual dari daftar.', ok);
+      } catch (err){ moStatus('Gagal menyalin. Salin manual dari daftar.', false); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ moStatus(okMsg, true); }, fallback);
+    } else { fallback(); }
+  }
+  function moRender(){
+    var list = moEl('moList'); list.textContent = '';
+    moRows = moCollect();
+    moRows.forEach(function(r){
+      r.prices = [moFinal(moBasePrice(r.variant, 'regular', r.temp))];
+      var box = document.createElement('div'); box.className = 'mo-item';
+      var top = document.createElement('div'); top.className = 'mo-top';
+      var nm = document.createElement('div'); nm.className = 'mo-name'; nm.textContent = r.name + (r.soldout ? ' (habis)' : '');
+      var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'adm-btn'; btn.textContent = 'Salin';
+      btn.addEventListener('click', function(){ moCopy(moItemText(r), 'Menu "' + r.name + '" disalin'); });
+      top.appendChild(nm); top.appendChild(btn); box.appendChild(top);
+      var meta = document.createElement('div'); meta.className = 'mo-meta'; meta.textContent = r.cat; box.appendChild(meta);
+      if (r.desc){ var ds = document.createElement('div'); ds.className = 'mo-desc'; ds.textContent = r.desc; box.appendChild(ds); }
+      var pr = document.createElement('div'); pr.className = 'mo-prices';
+      pr.textContent = 'Harga ' + moRp(r.prices[0]) + '  (1 ukuran, incl. 1 shot)';
+      box.appendChild(pr); list.appendChild(box);
+    });
+    var mk = Number(moEl('moMarkup').value) || 0;
+    moEl('moSum').textContent = moRows.length + ' menu  ·  ' + moPlatform + '  ·  markup ' + mk + '%';
+    var add = [];
+    Object.keys(PRICES.milk).forEach(function(k){
+      if (PRICES.milk[k] > 0) add.push((LABELS.milk && LABELS.milk[k] ? LABELS.milk[k] : k) + ' +' + moRp(moFinal(PRICES.milk[k])));
+    });
+    var addS = [];
+    ['double','triple'].forEach(function(k){
+      if (PRICES.shots[k] > 0) addS.push((LABELS.shots && LABELS.shots[k] ? LABELS.shots[k] : k) + ' +' + moRp(moFinal(PRICES.shots[k])));
+    });
+    var addT = [];
+    if (add.length) addT.push('Tambahan susu (opsional): ' + add.join('  ·  '));
+    if (addS.length) addT.push('Tambahan shot (opsional): ' + addS.join('  ·  '));
+    moEl('moAddons').textContent = addT.join('   |   ');
+    moEl('moChipGrab').classList.toggle('on', moPlatform === 'GrabFood');
+    moEl('moChipShopee').classList.toggle('on', moPlatform === 'ShopeeFood');
+  }
+  function moSetPlatform(p){
+    moMarkups[moPlatform] = Number(moEl('moMarkup').value) || 0;
+    moPlatform = p;
+    moEl('moMarkup').value = moMarkups[moPlatform] || 0;
+    moSavePrefs(); moRender();
+  }
+  function moOpen(){
+    moLoadPrefs();
+    moEl('moMarkup').value = moMarkups[moPlatform] || 0;
+    moStatus('', true);
+    moRender();
+    moEl('moOverlay').classList.add('show');
+  }
+  moEl('menuOnlineBtn').addEventListener('click', function(){
+    if (adminUnlocked){ moOpen(); return; }
+    requestPinFor('menuonline');
+  });
+  moEl('moChipGrab').addEventListener('click', function(){ moSetPlatform('GrabFood'); });
+  moEl('moChipShopee').addEventListener('click', function(){ moSetPlatform('ShopeeFood'); });
+  moEl('moMarkup').addEventListener('input', function(){ moMarkups[moPlatform] = Number(this.value) || 0; moSavePrefs(); moRender(); });
+  moEl('moRound').addEventListener('change', function(){ moSavePrefs(); moRender(); });
+  moEl('moCopyAll').addEventListener('click', function(){ moCopy(moTableText(), moRows.length + ' menu disalin sebagai tabel'); });
+  moEl('moClose').addEventListener('click', function(){ moEl('moOverlay').classList.remove('show'); });
+  moEl('moOverlay').addEventListener('click', function(e){ if (e.target === this) this.classList.remove('show'); });
 
   update();
   updateTimingUI();
@@ -7257,7 +7490,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 <script>
 (function(){
   var a=document.getElementById('tpActions');
-  ['adminBtn','historyBtn'].forEach(function(id){var b=document.getElementById(id); if(b&&a){a.appendChild(b);}});
+  ['adminBtn','historyBtn','menuOnlineBtn'].forEach(function(id){var b=document.getElementById(id); if(b&&a){a.appendChild(b);}});
   var s=document.getElementById('tpSearch');
   if(s){ s.addEventListener('input',function(){
     var q=s.value.trim().toLowerCase();
@@ -7565,6 +7798,54 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   if ($('totalPrice')) new MutationObserver(render).observe($('totalPrice'), { childList:true, subtree:true, characterData:true });
   $('kaGo').addEventListener('click', function(){ if (window.famuhaGoStep) window.famuhaGoStep(2); });
   render();
+})();
+</script>
+<script id="famuha-menu-tracker">
+(function(){
+  'use strict';
+  var URL_ = 'https://script.google.com/macros/s/AKfycbzGwMhiIx3o6VWSpOO5nvA125bQAr5QdIqQHEaWzUZ_2HhiFS44-iQX_uVIhKoShbiC/exec';
+  var SENT_KEY = 'famuha_ev_sent';
+  function isAdminDevice(){ try { return !!localStorage.getItem('famuha_admin_push_secret'); } catch (e) { return false; } }
+  function vid(){ try { return localStorage.getItem('famuha_visitor_id') || ''; } catch (e) { return ''; } }
+  function day(){ return new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10); }
+  function seen(k){
+    try {
+      var o = JSON.parse(localStorage.getItem(SENT_KEY) || '{}');
+      if (o.d !== day()) o = { d: day(), k: {} };
+      if (o.k[k]) return true;
+      o.k[k] = 1; localStorage.setItem(SENT_KEY, JSON.stringify(o));
+      return false;
+    } catch (e) { return false; }
+  }
+  function track(ev, menu){
+    try {
+      menu = String(menu || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+      var id = vid();
+      if (!id || id === 'v_anon' || isAdminDevice()) return;
+      if (seen(ev + '|' + menu)) return;
+      fetch(URL_, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, keepalive: true,
+        body: JSON.stringify({ action: 'logEvent', event: ev, menu: menu, visitorId: id }) }).catch(function(){});
+    } catch (e) {}
+  }
+  function cardName(card){
+    if (!card) return '';
+    var n = card.querySelector('.fm-name');
+    return (n && n.textContent.trim()) || card.dataset.name || '';
+  }
+  document.addEventListener('click', function(e){
+    var t = e.target; if (!t || !t.closest) return;
+    var add = t.closest('.fm-add');
+    if (add){ track('add_to_cart', cardName(add.closest('.fm-card'))); return; }
+    var fd = t.closest('#fdAdd, #fdAddMore');
+    if (fd){ var nm = document.getElementById('fdName'); track('add_to_cart', nm ? nm.textContent : ''); return; }
+    var card = t.closest('.fm-card');
+    if (card && !t.closest('button')) track('menu_view', cardName(card));
+  }, true);
+  try {
+    new MutationObserver(function(){
+      if (document.body.getAttribute('data-step') === '2') track('checkout_open', '');
+    }).observe(document.body, { attributes: true, attributeFilter: ['data-step'] });
+  } catch (e) {}
 })();
 </script>
 </body>
