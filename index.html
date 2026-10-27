@@ -2520,6 +2520,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <div class="mo-addons" id="moAddons"></div>
       <div class="wb-actions">
         <button type="button" class="adm-btn pri" id="moCopyAll">Salin semua (tabel)</button>
+        <button type="button" class="adm-btn" id="moDlAll">Unduh semua foto</button>
       </div>
       <button type="button" class="history-clear-btn pin-cancel" id="moClose">Tutup</button>
     </div>
@@ -6845,10 +6846,48 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     if (variant === 'cappuccino' && temp === 'hot') total -= CAPPUCCINO_HOT_DISCOUNT;
     return Math.max(0, total);
   }
+  function moCanShot(variant){
+    var lk = VARIANT_LOCKS[variant] || {};
+    return !(lk.shots || lk.noShot || lk.shotsAllowed);
+  }
+  // Selisih harga akhir (setelah markup/pembulatan) dibanding single shot
+  function moShotDelta(variant, shotKey){
+    var one = (PRICES.size.regular || 0) + Math.max(PRICES.shots.single || 0, PRICES.variant[variant] || 0);
+    var two = (PRICES.size.regular || 0) + Math.max(PRICES.shots[shotKey] || 0, PRICES.variant[variant] || 0);
+    return moFinal(two) - moFinal(one);
+  }
+  function moShotText(r){
+    if (!r.canShot) return '';
+    var parts = [];
+    [['double', 'Double Shot'], ['triple', 'Triple Shot']].forEach(function(k){
+      var d = moShotDelta(r.variant, k[0]);
+      if (d > 0) parts.push(k[1] + ' +' + moRp(d));
+    });
+    return parts.join('  ·  ');
+  }
   function moFinal(base){
     var mk = Number(moEl('moMarkup').value) || 0;
     var p = base * (1 + mk / 100);
     return moEl('moRound').checked ? Math.round(p / 500) * 500 : Math.round(p);
+  }
+  function moImgUrl(card){
+    var ci = card.querySelector('.cupimg');
+    if (!ci || ci.classList.contains('noimg')) return '';
+    var bg = getComputedStyle(ci).backgroundImage || '';
+    var m = bg.match(/url\((?:"|')?(.*?)(?:"|')?\)\s*$/);
+    return m ? m[1] : '';
+  }
+  function moSlug(t){ return String(t || 'menu').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'menu'; }
+  function moDownload(r){
+    if (!r.img) return Promise.resolve(false);
+    return fetch(r.img).then(function(res){ return res.blob(); }).then(function(b){
+      var ext = (b.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(b); a.download = moSlug(r.name + (r.temp === 'hot' ? '-hot' : '')) + '.' + ext;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+      return true;
+    }).catch(function(){ return false; });
   }
   function moCollect(){
     var rows = [];
@@ -6857,13 +6896,13 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       if (!v || !Object.prototype.hasOwnProperty.call(PRICES.variant, v)) return;
       var d = c.querySelector('.fm-desc');
       rows.push({ name: c.dataset.name || '', cat: MO_CATS[c.dataset.cat] || c.dataset.cat || '',
-        desc: d ? d.textContent.trim() : '', variant: v, temp: c.dataset.temp || 'cold', soldout: c.classList.contains('fm-soldout') });
+        desc: d ? d.textContent.trim() : '', variant: v, temp: c.dataset.temp || 'cold', soldout: c.classList.contains('fm-soldout'), img: moImgUrl(c), canShot: moCanShot(v) });
     });
     return rows;
   }
   function moFlat(t){ return String(t || '').replace(/[\t\r\n]+/g, ' ').trim(); }
   function moItemText(r){
-    return r.name + '\n' + r.desc + '\nHarga: ' + r.prices[0];
+    var st = moShotText(r); return r.name + '\n' + r.desc + '\nHarga: ' + r.prices[0] + (st ? '\nAdd-on shot: ' + st : '');
   }
   function moTableText(){
     var lines = ['Nama\tKategori\tDeskripsi\tHarga'];
@@ -6896,11 +6935,21 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       var nm = document.createElement('div'); nm.className = 'mo-name'; nm.textContent = r.name + (r.soldout ? ' (habis)' : '');
       var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'adm-btn'; btn.textContent = 'Salin';
       btn.addEventListener('click', function(){ moCopy(moItemText(r), 'Menu "' + r.name + '" disalin'); });
-      top.appendChild(nm); top.appendChild(btn); box.appendChild(top);
+      if (r.img){
+        var th = document.createElement('img'); th.src = r.img; th.alt = ''; th.style.cssText = 'width:44px;height:44px;border-radius:8px;object-fit:cover;flex:none;margin-right:8px';
+        top.insertBefore(th, top.firstChild);
+      }
+      top.appendChild(nm); top.appendChild(btn);
+      if (r.img){
+        var dl = document.createElement('button'); dl.type = 'button'; dl.className = 'adm-btn'; dl.style.marginLeft = '6px'; dl.textContent = 'Unduh foto';
+        dl.addEventListener('click', function(){ moDownload(r).then(function(ok){ moStatus(ok ? 'Foto "' + r.name + '" diunduh' : 'Foto gagal diunduh', ok); }); });
+        top.appendChild(dl);
+      }
+      box.appendChild(top);
       var meta = document.createElement('div'); meta.className = 'mo-meta'; meta.textContent = r.cat; box.appendChild(meta);
       if (r.desc){ var ds = document.createElement('div'); ds.className = 'mo-desc'; ds.textContent = r.desc; box.appendChild(ds); }
       var pr = document.createElement('div'); pr.className = 'mo-prices';
-      pr.textContent = 'Harga ' + moRp(r.prices[0]) + '  (1 ukuran, incl. 1 shot)';
+      var stx = moShotText(r); pr.textContent = 'Harga ' + moRp(r.prices[0]) + '  (1 ukuran, incl. 1 shot)' + (stx ? '   |   Add-on shot: ' + stx : '   |   Tanpa pilihan shot');
       box.appendChild(pr); list.appendChild(box);
     });
     var mk = Number(moEl('moMarkup').value) || 0;
@@ -6909,13 +6958,9 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     Object.keys(PRICES.milk).forEach(function(k){
       if (PRICES.milk[k] > 0) add.push((LABELS.milk && LABELS.milk[k] ? LABELS.milk[k] : k) + ' +' + moRp(moFinal(PRICES.milk[k])));
     });
-    var addS = [];
-    ['double','triple'].forEach(function(k){
-      if (PRICES.shots[k] > 0) addS.push((LABELS.shots && LABELS.shots[k] ? LABELS.shots[k] : k) + ' +' + moRp(moFinal(PRICES.shots[k])));
-    });
     var addT = [];
     if (add.length) addT.push('Tambahan susu (opsional): ' + add.join('  ·  '));
-    if (addS.length) addT.push('Tambahan shot (opsional): ' + addS.join('  ·  '));
+    addT.push('Add-on shot dihitung per menu (lihat tiap menu); menu tanpa keterangan shot tidak punya pilihan shot.');
     moEl('moAddons').textContent = addT.join('   |   ');
     moEl('moChipGrab').classList.toggle('on', moPlatform === 'GrabFood');
     moEl('moChipShopee').classList.toggle('on', moPlatform === 'ShopeeFood');
@@ -6942,6 +6987,14 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   moEl('moMarkup').addEventListener('input', function(){ moMarkups[moPlatform] = Number(this.value) || 0; moSavePrefs(); moRender(); });
   moEl('moRound').addEventListener('change', function(){ moSavePrefs(); moRender(); });
   moEl('moCopyAll').addEventListener('click', function(){ moCopy(moTableText(), moRows.length + ' menu disalin sebagai tabel'); });
+  moEl('moDlAll').addEventListener('click', function(){
+    var list = moRows.filter(function(r){ return r.img; }), i = 0, okN = 0;
+    if (!list.length){ moStatus('Tidak ada menu yang punya foto.', false); return; }
+    (function next(){
+      if (i >= list.length){ moStatus(okN + ' dari ' + list.length + ' foto diunduh. Kalau browser menanyakan izin unduh banyak file, pilih Izinkan.', okN > 0); return; }
+      moDownload(list[i++]).then(function(ok){ if (ok) okN++; setTimeout(next, 350); });
+    })();
+  });
   moEl('moClose').addEventListener('click', function(){ moEl('moOverlay').classList.remove('show'); });
   moEl('moOverlay').addEventListener('click', function(e){ if (e.target === this) this.classList.remove('show'); });
 
