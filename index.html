@@ -6455,9 +6455,10 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   var vdFun = { st: 'idle', rows: [] };
   function vdFetchFunnel(){
     var sec = vdGetSecret();
-    if (!sec){ vdFun = { st: 'need', rows: [] }; vdRenderFunnel(); return; }
     var days = parseInt(vdEl('vdRange').value, 10) || 0;
-    fetch(GAS_URL + '?action=eventStats&days=' + days + '&secret=' + encodeURIComponent(sec))
+    var url = GAS_URL + '?action=eventStats&days=' + days + '&key=' + encodeURIComponent(GAS_ACCESS_KEY) +
+      (sec ? '&secret=' + encodeURIComponent(sec) : '');
+    fetch(url)
       .then(function(r){ return r.json(); })
       .then(function(d){
         if (d && d.ok && Array.isArray(d.rows)) vdFun = { st: 'ok', rows: d.rows };
@@ -6471,8 +6472,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     body.textContent = ''; sum.textContent = '';
     function msg(t){ var tr = document.createElement('tr'), td = document.createElement('td'); td.colSpan = 3; td.className = 'wb-note'; td.textContent = t; tr.appendChild(td); body.appendChild(tr); note.textContent = ''; }
     if (vdFun.st === 'idle') return msg('Memuat…');
-    if (vdFun.st === 'need') return msg('Masukkan push secret (kotak di atas) untuk menampilkan corong menu.');
-    if (vdFun.st === 'bad') return msg('Push secret ditolak server.');
+    if (vdFun.st === 'bad') return msg('Kunci akses ditolak server. Pastikan ACCESS_KEY di Apps Script sama dengan di index.html.');
     if (vdFun.st === 'old') return msg('Apps Script belum diperbarui dengan kode pelacak menu (action eventStats).');
     if (vdFun.st === 'fail') return msg('Data corong gagal dimuat.');
     var days = parseInt(vdEl('vdRange').value, 10) || 0, from = days ? Date.now() - days * 86400000 : 0;
