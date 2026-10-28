@@ -2449,6 +2449,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         <div><label for="wbPreset">Contoh pesan</label>
           <select id="wbPreset">
             <option value="setia">Pelanggan setia (beli 5 gratis 1)</option>
+            <option value="voucher">Voucher Loyal (kirim kode Rp5.000)</option>
             <option value="pertama">Ajakan order pertama</option>
             <option value="jumat">Promo Jumat (Rp18.000)</option>
             <option value="kosong">Pesan kosong</option>
@@ -2459,7 +2460,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 
       <label for="wbMsg">Isi pesan</label>
       <textarea id="wbMsg"></textarea>
-      <div class="wb-note">Variabel: {nama} (nama depan, jika kosong jadi "Kak"), {jumlah_order}, {jumlah_kunjungan}. Format WhatsApp: *tebal*, _miring_.</div>
+      <div class="wb-note">Variabel: {nama} (nama depan, jika kosong jadi "Kak"), {jumlah_order}, {jumlah_kunjungan}, {kode} (kode voucher loyal milik penerima; kalau dipakai, daftar otomatis hanya berisi pelanggan yang voucher-nya belum terkirim). Format WhatsApp: *tebal*, _miring_.</div>
       <div class="wb-prev" id="wbPrev" aria-live="polite"></div>
 
       <div class="wb-sum" id="wbSum"></div>
@@ -6200,7 +6201,9 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     jumat: "Halo {nama}, Jumat lebih nikmat di FAMUHA Coffee! 🔥\n\nNikmati Hot Cappuccino atau Hot Americano hanya Rp18.000.\n\n📅 Setiap hari Jumat\n☕ Hot Cappuccino & Hot Americano\n💰 Rp18.000\n✅ Berlaku untuk pelanggan terverifikasi\n\nOrder sekarang:\nhttps://famuhacoffee-ui.github.io/famuha-order/\n\nFAMUHA Coffee\n_Secangkir kopi penuh makna_ ☕",
     kosong: ""
   };
-  var WB_CAMP = { setia: 'Promo Pelanggan Setia', pertama: 'Ajakan Order Pertama', jumat: 'Promo Jumat', kosong: '' };
+  WB_PRESETS.voucher = "Halo {nama}, terima kasih sudah jadi pelanggan setia FAMUHA Coffee ☕\n\nKamu dapat *voucher diskon Rp5.000* 🎟️\nKode: *{kode}*\n\nMasukkan kode ini saat checkout di famuhacoffee.com. Berlaku 1x pakai dan hanya untuk nomor WhatsApp ini.";
+  var WB_CAMP = { setia: 'Promo Pelanggan Setia', voucher: 'Voucher Loyal', pertama: 'Ajakan Order Pertama', jumat: 'Promo Jumat', kosong: '' };
+  var wbVoucher = {}; // nomor (62...) -> kode voucher loyal aktif yang WA-nya belum terkirim
   var wbSrc = { tx: [], visit: [], contact: [] };
   var wbPeople = [], wbBad = 0, wbAnon = 0, wbTest = 0, wbSent = {};
 
@@ -6312,6 +6315,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       var c = map[k];
       c.name = c.txName || c.name || '';
       c.segment = c.count > 0 ? 'buyer' : 'visitor';
+      c.kode = wbVoucher[c.phone] || '';
       c.activity = c.segment === 'buyer' ? c.last : c.lastVisit;
       return c;
     });
@@ -6342,12 +6346,19 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       wbSaveSent();
       return true;
     }).catch(function(){ return false; });
-    Promise.all([pTx, pVis]).then(function(res){
+    var pVouch = fetch(GAS_URL + '?action=voucherLoyalPending' + q).then(function(r){ return r.json(); }).then(function(d){
+      if (!d || !d.ok || !Array.isArray(d.pending)) throw new Error('voucherLoyalPending');
+      wbVoucher = {};
+      d.pending.forEach(function(v){ var p = wbNorm(v.phone); if (p && v.kode) wbVoucher[p] = String(v.kode); });
+      return true;
+    }).catch(function(){ return false; });
+    Promise.all([pTx, pVis, pVouch]).then(function(res){
       wbRebuild(); wbRender();
       var msg = '', cls = '';
       if (!res[0]) { msg = 'Data transaksi gagal dimuat dari server. Gunakan file CSV Transaksi di bagian bawah.'; cls = 'err'; wbEl('wbCsvBox').open = true; }
       else if (!res[1]) { msg = 'Data pengunjung belum tersedia dari server (Apps Script belum diperbarui). Pelanggan sudah dimuat. Untuk pengunjung, tambahkan kode dari pengingat-wa-appsscript.gs atau unggah CSV PageVisits / Buku Tamu di bagian bawah.'; cls = 'err'; wbEl('wbCsvBox').open = true; }
       else { msg = 'Data dimuat.'; cls = 'ok'; }
+      if (!res[2]) msg += ' Data voucher loyal belum bisa dimuat (pastikan Code.gs terbaru sudah di-deploy).';
       if (wbAnon) msg += ' ' + wbAnon + ' pengunjung tanpa nomor tidak bisa dihubungi.';
       if (wbTest) msg += ' ' + wbTest + ' entri uji coba dilewati.';
       wbSetStatus(msg, cls);
@@ -6356,14 +6367,16 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 
   /* ---- pesan dan daftar ---- */
   function wbFill(tpl, c){
-    return tpl.replace(/\{nama\}/gi, wbFirst(c.name)).replace(/\{jumlah_order\}/gi, String(c.count)).replace(/\{jumlah_kunjungan\}/gi, String(c.visits));
+    return tpl.replace(/\{nama\}/gi, wbFirst(c.name)).replace(/\{jumlah_order\}/gi, String(c.count)).replace(/\{jumlah_kunjungan\}/gi, String(c.visits)).replace(/\{kode\}/gi, String(c.kode || ''));
   }
+  function wbUsesKode(){ return /\{kode\}/i.test(wbEl('wbMsg').value); }
   function wbFiltered(){
     var q = wbEl('wbQ').value.trim().toLowerCase(), qd = q.replace(/\D+/g, '');
     var seg = wbEl('wbSeg').value, minO = Math.max(1, parseInt(wbEl('wbMin').value, 10) || 1);
     var idle = Math.max(0, parseInt(wbEl('wbIdle').value, 10) || 0), todo = wbEl('wbTodo').value === 'todo', now = Date.now();
     return wbPeople.filter(function(c){
       if (seg !== 'all' && c.segment !== seg) return false;
+      if (wbUsesKode() && !c.kode) return false;
       if (q && c.name.toLowerCase().indexOf(q) < 0 && !(qd && c.phone.indexOf(qd) >= 0)) return false;
       if (minO > 1 && c.count < minO) return false;
       if (idle > 0){ if (!c.activity) return false; if ((now - c.activity.getTime()) / 86400000 < idle) return false; }
@@ -6386,7 +6399,8 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       '<div><b>' + (wbPeople.length - buyers) + '</b>belum transaksi, pernah buka web</div>' +
       '<div><b>' + list.length + '</b>sesuai filter</div>' +
       '<div><b>' + sent + '</b>sudah dikirim</div>' +
-      '<div><b>' + wbBad + '</b>nomor tidak valid</div>';
+      '<div><b>' + wbBad + '</b>nomor tidak valid</div>' +
+      (Object.keys(wbVoucher).length ? '<div><b>' + Object.keys(wbVoucher).length + '</b>voucher loyal belum terkirim</div>' : '');
     wbEl('wbNext').disabled = !list.some(function(c){ return !wbIsSent(c.phone); }) || !wbEl('wbMsg').value.trim();
     if (!wbPeople.length) body.innerHTML = '<tr><td colspan="3" class="wb-note">Belum ada data penerima.</td></tr>';
     else if (!list.length) body.innerHTML = '<tr><td colspan="3" class="wb-note">Tidak ada penerima yang cocok dengan filter.</td></tr>';
@@ -6409,6 +6423,13 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     if (!wbSent[k]) wbSent[k] = {};
     wbSent[k][phone] = new Date().toISOString();
     wbSaveSent();
+    // Pesan berisi kode voucher loyal -> tandai di sheet "Voucher Loyal" bahwa WA-nya sudah dikirim
+    if (wbUsesKode() && c.kode){
+      try {
+        fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'voucherLoyalMarkSent', pin: ADMIN_PIN, kode: c.kode }) }).catch(function(){});
+      } catch (e){}
+    }
     // catat juga ke Sheet "Log Blast" (diabaikan kalau Apps Script belum mendukung)
     try {
       fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -6698,7 +6719,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
   wbEl('wbReload').addEventListener('click', wbLoad);
   wbEl('wbPreset').addEventListener('change', function(){ wbApplyPreset(this.value); wbRender(); });
   wbEl('wbSeg').addEventListener('change', function(){
-    if (wbMsgIsPreset()){ var v = this.value; if (v === 'visitor') wbApplyPreset('pertama'); else if (v === 'buyer') wbApplyPreset('setia'); }
+    if (wbMsgIsPreset() && wbEl('wbMsg').value !== WB_PRESETS.voucher){ var v = this.value; if (v === 'visitor') wbApplyPreset('pertama'); else if (v === 'buyer') wbApplyPreset('setia'); }
     wbRender();
   });
   ['wbMsg', 'wbCampaign', 'wbQ', 'wbMin', 'wbIdle', 'wbTodo'].forEach(function(id){
