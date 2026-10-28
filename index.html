@@ -6411,7 +6411,8 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         '<td><button type="button" class="adm-btn' + (d ? '' : ' pri') + '" data-wbphone="' + c.phone + '">' + (d ? 'Kirim lagi' : 'Kirim WA') + '</button></td></tr>';
     }).join('');
     var sample = list[0] || wbPeople[0] || { name: 'Adinda', count: 3, visits: 2 }, t = wbEl('wbMsg').value;
-    wbEl('wbPrev').innerHTML = '<small>Contoh tampilan untuk ' + wbEsc(wbFirst(sample.name)) + '</small>' + wbEsc(t ? wbFill(t, sample) : '(pesan masih kosong)');
+    var prevSample = { name: sample.name, count: sample.count, visits: sample.visits, kode: sample.kode || 'SETIA-XXXXXX' };
+    wbEl('wbPrev').innerHTML = '<small>Contoh tampilan untuk ' + wbEsc(wbFirst(sample.name)) + '</small>' + wbEsc(t ? wbFill(t, prevSample) : '(pesan masih kosong)');
   }
   function wbSend(phone){
     var c = wbPeople.find(function(x){ return x.phone === phone; });
