@@ -2332,6 +2332,9 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <div class="tbv-code-row" id="tbvCodeRow"><input type="text" id="tbvCodeInput" class="field-input" placeholder="Kode promo (opsional)" autocomplete="off" autocapitalize="characters" maxlength="30"><button type="button" class="tbv-code-btn" id="tbvCodeBtn">Pakai</button></div>
       <div class="tbv-code-msg" id="tbvCodeMsg" hidden></div>
 
+      <div class="tbv-code-row" id="voucherLoyalRow"><input type="text" id="voucherLoyalInput" class="field-input" placeholder="Kode voucher (opsional)" autocomplete="off" autocapitalize="characters" maxlength="20"><button type="button" class="tbv-code-btn" id="voucherLoyalBtn">Pakai</button></div>
+      <div class="tbv-code-msg" id="voucherLoyalMsg" hidden></div>
+
       <div class="receipt-total">
         <span class="tlabel">Total</span>
         <span class="tprice" id="totalPrice">Rp 0</span>
@@ -2716,6 +2719,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     custName:'', custPhone:'', custAddress:'', deliveryArea:'',
     orderTiming:'now', scheduleDate:'', scheduleTime:'',
     firstPurchaseDiscount:false, firstPurchaseAlreadyUsed:false, fifthReward:false, custChecked:false, nextOrderNumber:null,
+    voucherCode:'', voucherAmount:0,
     isReturningCustomer:false,
     promo1708UsedServer:false, promo1708ServerChecked:false
   };
@@ -2881,6 +2885,9 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     if (subtotal > 0 && state.firstPurchaseDiscount && !cartHasExcludedFromFirstDiscount_()){
       subtotal = Math.max(0, subtotal - firstPurchaseDiscountAmount_());
     }
+    if (subtotal > 0 && state.voucherCode && state.voucherAmount > 0){
+      subtotal = Math.max(0, subtotal - state.voucherAmount);
+    }
     return subtotal;
   }
 
@@ -3022,6 +3029,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       payment: record.payment,
       firstPurchaseDiscount: state.firstPurchaseDiscount,
       fifthReward: state.fifthReward,
+      voucherCode: state.voucherCode || '',
       total: record.total,
       usedIndependencePromo: usedPromo1708,
       usedTbvPromo: cart.some(function(item){ return item.promo === 'tbv'; })
@@ -3030,7 +3038,20 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       method: 'POST',
       body: JSON.stringify(payload)
     })
-      .then(function(res){ console.log('[record transaksi] terkirim ke Sheet, status:', res.status); })
+      .then(function(res){
+        console.log('[record transaksi] terkirim ke Sheet, status:', res.status);
+        try { return res.json(); } catch (e){ return null; }
+      })
+      .then(function(data){
+        // Voucher loyal baru terbit (pembelian ke-5): kabari pelanggan, kodenya dikirim lewat WhatsApp.
+        if (data && data.voucherLoyal){
+          var vmsg = '🎟️ Selamat! Kamu dapat voucher diskon ' + idr(data.voucherLoyal.nominal || 5000) + (data.voucherLoyal.waSent
+            ? ' — kodenya sudah dikirim ke WhatsApp kamu.'
+            : ' — kodenya segera dikirim ke WhatsApp kamu.');
+          try { var tm = document.getElementById('thankyouMsg'); if (tm) tm.textContent += ' ' + vmsg; } catch (e){}
+          try { if (window.famuhaToast) window.famuhaToast(vmsg, 7000); } catch (e){}
+        }
+      })
       .catch(function(err){ console.error('[record transaksi] gagal kirim ke Sheet:', err, '— transaksi tetap tercatat lokal'); });
   }
 
@@ -3358,6 +3379,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     lines.push('- Pembayaran: ' + LABELS.payment[state.payment]);
     if (state.firstPurchaseDiscount && !cartHasExcludedFromFirstDiscount_()) lines.push('🎉 Diskon pembelian pertama: -' + idr(firstPurchaseDiscountAmount_()) + ' (sudah dipotong dari total)');
     if (state.fifthReward) lines.push('🎁 GRATIS 1 CUP (reward pembelian ke-5) — mohon diproses oleh kasir');
+    if (state.voucherCode && state.voucherAmount > 0) lines.push('🎟️ Voucher ' + state.voucherCode + ': -' + idr(state.voucherAmount) + ' (sudah dipotong dari total)');
     lines.push('Total: ' + idr(total));
     if (alreadyPaid) lines.push('Mohon dikonfirmasi ya, terima kasih 🙏');
     return lines.join('\n');
@@ -5427,6 +5449,63 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       });
   }
 
+  // ---------------- Voucher Loyal (diskon setelah 5x beli, 1x pakai) ----------------
+  function voucherMsg_(text, ok){
+    var m = document.getElementById('voucherLoyalMsg');
+    if (!m) return;
+    if (!text){ m.hidden = true; m.textContent = ''; return; }
+    m.hidden = false; m.className = 'tbv-code-msg ' + (ok ? 'ok' : 'err'); m.textContent = text;
+  }
+  function clearVoucherLoyal_(clearInput){
+    state.voucherCode = '';
+    state.voucherAmount = 0;
+    if (clearInput){ var i = document.getElementById('voucherLoyalInput'); if (i) i.value = ''; }
+    voucherMsg_('');
+  }
+  (function(){
+    var btn = document.getElementById('voucherLoyalBtn');
+    var input = document.getElementById('voucherLoyalInput');
+    if (!btn || !input) return;
+    function apply_(){
+      var kode = input.value.trim().toUpperCase();
+      var phone = (state.custPhone || '').replace(/[^0-9]/g, '');
+      if (!kode){ voucherMsg_('Masukkan kode voucher dulu ya.', false); return; }
+      if (phone.length < 8){ voucherMsg_('Isi No. HP kamu di Data Pelanggan dulu, karena voucher terikat ke nomor HP.', false); return; }
+      if (!GAS_URL){ voucherMsg_('Voucher belum bisa dicek saat ini.', false); return; }
+      btn.disabled = true; btn.textContent = 'Cek...';
+      fetch(GAS_URL + '?action=voucherLoyalCheck&kode=' + encodeURIComponent(kode) + '&phone=' + encodeURIComponent(phone))
+        .then(function(res){ if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+        .then(function(data){
+          if (data && data.ok && data.valid){
+            state.voucherCode = kode;
+            state.voucherAmount = Number(data.potongan) || 0;
+            input.value = kode;
+            voucherMsg_('✓ Voucher dipakai: -' + idr(state.voucherAmount) + ' (berlaku 1x pakai).', true);
+          } else {
+            clearVoucherLoyal_(false);
+            voucherMsg_((data && data.pesan) || 'Kode voucher tidak valid.', false);
+          }
+          update();
+        })
+        .catch(function(err){
+          console.error('[voucher loyal] gagal cek:', err);
+          clearVoucherLoyal_(false);
+          voucherMsg_('Gagal mengecek voucher. Coba lagi sebentar lagi.', false);
+          update();
+        })
+        .then(function(){ btn.disabled = false; btn.textContent = 'Pakai'; });
+    }
+    btn.addEventListener('click', apply_);
+    input.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); apply_(); } });
+    // Ubah kode atau nomor HP -> voucher yang sudah dipakai dilepas, harus dicek ulang.
+    input.addEventListener('input', function(){
+      if (state.voucherCode && input.value.trim().toUpperCase() !== state.voucherCode){ clearVoucherLoyal_(false); update(); }
+    });
+    custPhoneEl.addEventListener('input', function(){
+      if (state.voucherCode){ clearVoucherLoyal_(false); update(); }
+    });
+  })();
+
   function validateCustomerInfo(){
     var ok = true;
     var custInfoInvalid = false;
@@ -5582,6 +5661,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         state.firstPurchaseDiscount = false;
         state.firstPurchaseAlreadyUsed = false;
         state.fifthReward = false;
+        clearVoucherLoyal_(true);
         document.getElementById('loyaltyBanner').hidden = true;
         qrisPaidConfirmed = false;
         window.__famuhaStayStep2 = false;
