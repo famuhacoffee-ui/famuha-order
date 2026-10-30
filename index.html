@@ -2546,7 +2546,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <div class="vd-h">Order per sumber</div>
       <div class="wb-grid">
         <div><label for="vdRange">Periode</label>
-          <select id="vdRange"><option value="7">7 hari terakhir</option><option value="30" selected>30 hari terakhir</option><option value="0">Semua</option></select></div>
+          <select id="vdRange"><option value="1">Hari ini</option><option value="7">7 hari terakhir</option><option value="30" selected>30 hari terakhir</option><option value="0">Semua</option></select></div>
       </div>
       <div class="vd-wrap"><table class="wb-tbl">
         <thead><tr><th>Sumber</th><th>Kampanye</th><th>Order</th><th>Omzet</th></tr></thead>
@@ -6578,7 +6578,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     if (vdFun.st === 'bad') return msg('Kunci akses ditolak server. Pastikan ACCESS_KEY di Apps Script sama dengan di index.html.');
     if (vdFun.st === 'old') return msg('Apps Script belum diperbarui dengan kode pelacak menu (action eventStats).');
     if (vdFun.st === 'fail') return msg('Data corong gagal dimuat.');
-    var days = parseInt(vdEl('vdRange').value, 10) || 0, from = days ? Date.now() - days * 86400000 : 0;
+    var days = parseInt(vdEl('vdRange').value, 10) || 0, from = vdRangeFrom_(days);
     var checkout = 0, menus = {};
     vdFun.rows.forEach(function(r){
       var u = Number(r.unique) || 0;
@@ -6600,15 +6600,21 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       [n, menus[n].v, menus[n].a].forEach(function(t){ var td = document.createElement('td'); td.textContent = String(t); tr.appendChild(td); });
       body.appendChild(tr);
     });
-    note.textContent = 'Dihitung per orang (bukan per klik), sejak pelacak menu aktif. Perangkat admin tidak ikut dihitung.';
+    note.textContent = 'Dihitung per orang (bukan per klik), sejak pelacak menu aktif. Perangkat admin tidak ikut dihitung.' + (days === 1 ? ' Untuk "Hari ini", klik menu dihitung dari 24 jam terakhir; order, omzet, dan pengunjung aktif dihitung sejak 00.00 WIB.' : '');
   }
 
   function vdRender(){ vdRenderStats(); vdRenderSources(); vdRenderChart(); vdRenderRows(); vdRenderFunnel(); }
 
+  // Awal periode (ms). days=1 berarti "Hari ini": mulai 00.00 WIB hari ini. Lainnya: N hari terakhir (bergulir).
+  function vdRangeFrom_(days){
+    if (!days) return 0;
+    if (days === 1){ var w = Date.now() + 7 * 3600000; return Math.floor(w / 86400000) * 86400000 - 7 * 3600000; }
+    return Date.now() - days * 86400000;
+  }
   function vdRangeTx(){
     var days = parseInt(vdEl('vdRange').value, 10) || 0;
     if (!days) return vdTx;
-    var from = Date.now() - days * 86400000;
+    var from = vdRangeFrom_(days);
     return vdTx.filter(function(t){ return t.d && t.d.getTime() >= from; });
   }
 
