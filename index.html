@@ -1775,6 +1775,16 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 .adm-item{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid #E5E7EB;border-radius:10px;margin-bottom:8px;background:#fff;color:#111827}
 .adm-thumb{width:44px;height:44px;border-radius:8px;background:#F3F4F6 center/cover no-repeat;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}
 .adm-info{flex:1;min-width:0;font-size:13px;line-height:1.3}.adm-info b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.adm-info span{color:#6B7280;font-size:11.5px}
+/* Tata letak khusus editor menu agar kolom nama tidak terjepit tombol di layar sempit. */
+.adm-existing-menu-row{flex-wrap:wrap;align-items:flex-start}
+.adm-existing-menu-row .adm-thumb{width:60px;height:60px}
+.adm-existing-menu-row .adm-info{flex:1 1 230px;min-width:220px}
+.adm-existing-menu-row .adm-info .adm-menu-name-label{display:block;color:#374151;font-size:12px;font-weight:700;margin-top:7px}
+.adm-existing-menu-row .adm-info input[type="text"]{display:block;width:100%;min-width:0;min-height:38px;padding:8px 10px;border:1px solid #D1D5DB;border-radius:8px;font:inherit;color:#111827;background:#fff}
+.adm-existing-menu-row .adm-info .adm-menu-name-hint{display:block;color:#6B7280;font-size:11px;line-height:1.4;margin:2px 0 7px}
+.adm-existing-menu-row .adm-info input[type="number"]{min-height:36px;padding:6px;border:1px solid #D1D5DB;border-radius:8px}
+.adm-existing-menu-row>.adm-btn{flex:0 0 auto;white-space:normal}
+@media(max-width:700px){.adm-existing-menu-row{gap:8px}.adm-existing-menu-row .adm-info{flex-basis:calc(100% - 76px);min-width:0}.adm-existing-menu-row>.adm-btn{font-size:11px;padding:7px 9px}}
 .adm-btn{border:1px solid #D1D5DB;background:#fff;color:#111827;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer}
 .adm-btn.pri{background:var(--tp-green);border-color:var(--tp-green);color:#fff}.adm-btn.del{color:#DC2626;border-color:#FCA5A5}
 .fm-card.fm-removed{display:none!important}.fm-card.fm-soldout{opacity:.72;cursor:not-allowed}.fm-card.fm-soldout .fm-photo{position:relative;overflow:hidden}.fm-card.fm-soldout .cupimg{filter:grayscale(1)}.fm-card.fm-soldout .fm-photo::after{content:'HABIS';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(17,24,39,.55);color:#fff;font-weight:800;letter-spacing:.14em;font-size:15px}.choice.choice-soldout{opacity:.45;text-decoration:line-through}.adm-item.adm-soldout .adm-info b::after{content:' · HABIS';color:#DC2626;font-size:11px;font-weight:800}.fd-note{margin:14px 0 4px}.fd-note .fd-note-t{font-weight:700;font-size:13px;margin-bottom:6px}.fd-note .fd-note-t span{font-weight:400;opacity:.65}.fd-note textarea{width:100%;box-sizing:border-box;border:1px solid #D1D5DB;border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:vertical;min-height:58px}.cart-item-note{font-size:12px;opacity:.85;margin-top:3px;word-break:break-word}.cart-note-btn{background:none;border:0;padding:0;margin-top:4px;font-size:12px;font-weight:700;color:var(--gold-2,#B45309);cursor:pointer;text-decoration:underline}.cart-item-soldout{font-size:12px;font-weight:700;color:#DC2626;margin-top:3px}.tbv-code-row{display:flex;gap:8px;margin:12px 0 4px}.tbv-code-row input{flex:1;min-width:0}.tbv-code-btn{border:0;border-radius:10px;padding:0 16px;font-weight:700;font-size:13px;background:var(--tp-green,#00AA13);color:#fff;cursor:pointer;min-height:42px}.tbv-code-btn:disabled{opacity:.6;cursor:default}.tbv-code-msg{font-size:12px;margin:4px 0 8px;line-height:1.4}.tbv-code-msg.ok{color:#047857}.tbv-code-msg.err{color:#DC2626}.tbv-pick-btn{display:block;width:100%;margin-top:8px}.menupromo-count{font-variant-numeric:tabular-nums;font-weight:800;font-size:19px;color:#DC2626;margin:8px 0 2px;text-align:center}.menupromo-img{width:160px;height:160px;max-width:60%;border-radius:18px;margin:14px auto 2px;background-size:cover;background-position:center;background-color:#f3ece3;box-shadow:0 6px 18px rgba(0,0,0,.18)}.menupromo-desc{font-size:13px;line-height:1.45;opacity:.8;margin:2px 0 4px;text-align:center}.menupromo-until{font-size:12.5px;opacity:.75;text-align:center;margin:0 0 6px}.menupromo-old{text-decoration:line-through;opacity:.6}.fm-price s{opacity:.5;font-weight:500;font-size:.82em;margin-right:5px}.fm-photo .fm-promo-badge{position:absolute;left:8px;bottom:8px;top:auto;background:#DC2626;color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px}.adm-item.adm-removed{opacity:.5}.adm-item.adm-removed .adm-info b{text-decoration:line-through}
@@ -4882,7 +4892,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     var list = admEl_('div', 'adm-list'); box.appendChild(list);
     document.querySelectorAll('#fmGrid .fm-card:not([data-custom])').forEach(function(c){
       var name = c.dataset.name, v = c.dataset.variant, shared = !!c.dataset.temp;
-      var row = admEl_('div', 'adm-item'), th = admEl_('div', 'adm-thumb'), info = admEl_('div', 'adm-info');
+      var row = admEl_('div', 'adm-item adm-existing-menu-row'), th = admEl_('div', 'adm-thumb'), info = admEl_('div', 'adm-info');
       function showThumb(){ admThumb_(th, { img: ADMIN_IMG_DRAFT[name] || '', cat: c.dataset.cat }); if (!ADMIN_IMG_DRAFT[name]){ var ci = c.querySelector('.cupimg'); var bg = ci ? ci.style.backgroundImage || getComputedStyle(ci).backgroundImage : ''; if (bg && bg !== 'none'){ th.style.backgroundImage = bg; th.textContent = ''; } } }
       showThumb();
       info.appendChild(admEl_('b', '', name));
@@ -4894,7 +4904,10 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         var nn = cleanMenuName_(nmIn.value);
         if (nn && nn !== name) ADMIN_HIDDEN_DRAFT.push(MENU_NAME_PREFIX + name + '::' + nn);
       });
-      info.appendChild(admEl_('span', '', 'Nama di web (kosongkan = nama asli)')); info.appendChild(nmIn);
+      var nameLabel = admEl_('span', 'adm-menu-name-label', 'Nama menu di website');
+      info.appendChild(nameLabel); info.appendChild(nmIn);
+      var nameHint = admEl_('span', 'adm-menu-name-hint', 'Isi nama baru, lalu klik Simpan Perubahan. Kosongkan untuk memakai nama asli.');
+      info.appendChild(nameHint);
       var pr = admEl_('input'); pr.type = 'number'; pr.step = '500'; pr.style.width = '110px';
       pr.value = PRICES.size.regular + (PRICES.variant[v] || 0); pr.disabled = shared;
       pr.title = shared ? 'Ikut harga menu dingin yang sama' : 'Harga Regular (Rp)';
