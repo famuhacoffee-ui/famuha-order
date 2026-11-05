@@ -6,7 +6,6 @@
 <meta name="google-site-verification" content="o5mXH3b_CCgST4KRKmdquIOjoLp8GZcFxVE_dzjOWzw" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/png" href="/favicon.png">
 <title>Famuha Coffee Bojong Gede | Menu & Pesan Kopi Online</title>
 <meta name="description" content="Famuha Coffee di Bojong Gede, Bogor. Jelajahi menu kopi, latte, matcha, dan minuman favorit, lalu pesan online untuk pickup atau pengantaran lokal.">
 <!-- Pratinjau link (WhatsApp / sosmed). Ganti og:image kalau mau ganti thumbnail. -->
@@ -1845,6 +1844,46 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 .wa-pulse{animation:waPulse 1.2s ease 3}
 @keyframes waPulse{0%,100%{box-shadow:0 0 0 0 rgba(3,172,14,.0)}50%{box-shadow:0 0 0 8px rgba(3,172,14,.28)}}
 </style>
+<style id="famuha-hero-banner">
+.fhb{position:relative;overflow:hidden;border-radius:22px;background:#F4F2EE;margin:0 0 16px}
+.fhb[hidden]{display:none}
+.fhb-track{display:flex;transition:transform .6s cubic-bezier(.6,.05,.2,1)}
+.fhb-slide{flex:0 0 100%;box-sizing:border-box;display:grid;grid-template-columns:1fr 1fr;align-items:center;min-height:460px;padding:40px 0 48px 84px}
+.fhb-copy{padding-right:24px}
+.fhb-copy h2{margin:0;font-size:clamp(34px,5vw,64px);line-height:1.04;letter-spacing:-.03em;font-weight:800;color:var(--fm-green-dark,#15803D)}
+.fhb-copy p{margin:16px 0 0;max-width:34ch;font-size:clamp(15px,1.5vw,20px);line-height:1.45;color:#8FA05A;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.fhb-buy{display:flex;align-items:center;gap:18px;margin-top:26px;flex-wrap:wrap}
+.fhb-price{font-size:22px;font-weight:800;color:var(--fm-green-dark,#15803D)}
+.fhb-price s{font-size:.7em;font-weight:500;opacity:.5;margin-right:6px}
+.fhb-btn{border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;color:#fff;background:var(--fm-green,#16A34A);padding:14px 30px;border-radius:999px}
+.fhb-btn:hover{background:var(--fm-green-dark,#15803D)}
+.fhb-btn:focus-visible,.fhb-arrow:focus-visible,.fhb-dots button:focus-visible{outline:3px solid #8FA05A;outline-offset:3px}
+/* foto memenuhi sisi kanan sampai ke tepi, bagian kirinya memudar ke latar banner */
+.fhb-pic{position:relative;align-self:stretch;margin:-40px 0 -48px}
+.fhb-photo{position:absolute;inset:0;background-color:#EBE7E1;background-position:center center;background-size:cover;background-repeat:no-repeat;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 40%);mask-image:linear-gradient(to right,transparent 0,#000 40%)}
+.fhb-emoji{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:110px}
+.fhb-badge{position:absolute;top:18px;right:70px;background:#DC2626;color:#fff;font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px;z-index:1}
+.fhb-arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.88);box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer;color:var(--fm-green-dark,#15803D);padding:0;z-index:2}
+.fhb-arrow svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.fhb-arrow.prev{left:14px}.fhb-arrow.next{right:14px}
+.fhb-dots{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:center;gap:6px;flex-wrap:wrap;padding:0 60px;z-index:2}
+.fhb-dots button{width:8px;height:8px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.25);cursor:pointer}
+.fhb-dots button.on{width:24px;border-radius:5px;background:var(--fm-green-dark,#15803D);transition:width .3s}
+.fhb-dots.count span{background:rgba(255,255,255,.9);color:#374151;font-size:13px;font-weight:700;padding:4px 12px;border-radius:999px;box-shadow:0 1px 6px rgba(0,0,0,.15)}
+@media(max-width:760px){
+.fhb{border-radius:16px}
+.fhb-slide{grid-template-columns:1fr;min-height:0;padding:0 20px 46px}
+.fhb-pic{order:-1;height:250px;margin:0 -20px 18px;align-self:auto}
+.fhb-photo{-webkit-mask-image:linear-gradient(to bottom,#000 62%,transparent);mask-image:linear-gradient(to bottom,#000 62%,transparent)}
+.fhb-badge{top:12px;right:auto;left:14px}
+.fhb-copy{padding-right:0}
+.fhb-copy h2{font-size:clamp(28px,8.5vw,40px)}
+.fhb-buy{margin-top:16px}
+.fhb-emoji{font-size:80px}
+.fhb-arrow{top:125px;width:36px;height:36px}.fhb-arrow.prev{left:8px}.fhb-arrow.next{right:8px}
+}
+@media(prefers-reduced-motion:reduce){.fhb-track{transition:none}}
+</style>
 </head>
 <body data-step="1"><div id='welcomePopup'><div class='card'>
   <div class='wc-step active' id='wcStep1'>
@@ -1976,6 +2015,12 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 
 
   <section class="fm-market" aria-label="Katalog Famuha Coffee">
+    <section class="fhb" id="fhbRoot" aria-label="Menu andalan Famuha Coffee" hidden>
+  <div class="fhb-track" id="fhbTrack"></div>
+  <button type="button" class="fhb-arrow prev" aria-label="Menu sebelumnya"><svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8"/></svg></button>
+  <button type="button" class="fhb-arrow next" aria-label="Menu berikutnya"><svg viewBox="0 0 24 24"><path d="m9 4 8 8-8 8"/></svg></button>
+  <div class="fhb-dots" id="fhbDots"></div>
+</section>
     <div class="pb-slider" id="fmPromoBanner"><div class="pb-track" id="pbTrack"></div><div class="pb-dots" id="pbDots"></div></div>
     <div class="fm-section-head"><h2>Pilih Minuman</h2><small>Fresh dibuat setelah order</small></div>
     <div class="fm-cats" id="fmCats">
@@ -8124,6 +8169,132 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
       if (document.body.getAttribute('data-step') === '2') track('checkout_open', '');
     }).observe(document.body, { attributes: true, attributeFilter: ['data-step'] });
   } catch (e) {}
+})();
+</script>
+<script id="famuha-hero-banner-js">
+(function(){
+  var root = document.getElementById('fhbRoot'), track = document.getElementById('fhbTrack'), dots = document.getElementById('fhbDots'), grid = document.getElementById('fmGrid');
+  if (!root || !grid) return;
+  var cur = 0, n = 0, timer = null, startX = null, rebuildT = null, refs = [], lastSig = '';
+
+  function mk(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function nameOf(c){ var f = c.querySelector('.fm-name'); return c.dataset.name || (f && f.textContent.trim()) || ''; }
+  function allLive(){
+    return [].slice.call(grid.querySelectorAll('.fm-card')).filter(function(c){
+      return !c.classList.contains('fm-removed') && !c.classList.contains('fm-soldout');
+    });
+  }
+  // banner hanya menampilkan menu yang punya badge (Best Seller, Favorit, Promo, dst.); kalau tidak ada satupun, tampilkan semua
+  function bannerCards(){
+    var all = allLive(), tagged = all.filter(function(c){ var b = c.querySelector('.badge'); return b && b.textContent.trim(); });
+    return tagged.length ? tagged : all;
+  }
+  function bgOf(card){
+    var cup = card.querySelector('.cupimg');
+    if (!cup) return 'none';
+    var bg = cup.style.backgroundImage || getComputedStyle(cup).backgroundImage;
+    return bg || 'none';
+  }
+  function signature(cards){
+    return cards.map(function(c){
+      var p = c.querySelector('.fm-price'), d = c.querySelector('.fm-desc'), b = c.querySelector('.badge');
+      return nameOf(c) + '|' + (p ? p.innerHTML : '') + '|' + (d ? d.textContent : '') + '|' + (b ? b.textContent : '');
+    }).join(';;');
+  }
+  function orderMenu(name){
+    var c = allLive().filter(function(x){ return nameOf(x) === name; })[0];
+    if (!c) return;
+    c.click(); // pakai alur yang sama persis dengan klik kartu menu di katalog
+  }
+
+  function build(){
+    var keep = (track.children[cur] && track.children[cur].dataset.name) || '';
+    var cards = bannerCards();
+    n = cards.length; refs = []; lastSig = signature(cards);
+    root.hidden = !n;
+    track.innerHTML = ''; dots.innerHTML = '';
+    cards.forEach(function(c, i){
+      var name = nameOf(c);
+      var d = c.querySelector('.fm-desc'), p = c.querySelector('.fm-price'), cup = c.querySelector('.cupimg'), bd = c.querySelector('.badge');
+      var s = mk('div', 'fhb-slide'); s.dataset.name = name;
+      var copy = mk('div', 'fhb-copy');
+      copy.appendChild(mk('h2', '', name));
+      if (d && d.textContent.trim()) copy.appendChild(mk('p', '', d.textContent.trim()));
+      var buy = mk('div', 'fhb-buy');
+      var pr = mk('span', 'fhb-price'); if (p) pr.innerHTML = p.innerHTML; buy.appendChild(pr);
+      var btn = mk('button', 'fhb-btn', 'Pesan sekarang'); btn.type = 'button';
+      btn.addEventListener('click', function(){ orderMenu(name); });
+      buy.appendChild(btn); copy.appendChild(buy);
+      var pic = mk('div', 'fhb-pic'), ph = mk('div', 'fhb-photo');
+      ph.setAttribute('role', 'img'); ph.setAttribute('aria-label', name);
+      var bg = bgOf(c);
+      if (bg !== 'none') ph.style.backgroundImage = bg;
+      else if (cup) ph.appendChild(mk('span', 'fhb-emoji', cup.textContent.trim() || '☕'));
+      refs.push({ card: c, ph: ph, bg: bg });
+      pic.appendChild(ph);
+      if (bd && bd.textContent.trim()) pic.appendChild(mk('span', 'fhb-badge', bd.textContent.trim()));
+      s.appendChild(copy); s.appendChild(pic); track.appendChild(s);
+      var b = mk('button'); b.type = 'button'; b.setAttribute('aria-label', 'Menu ' + (i + 1));
+      b.addEventListener('click', function(){ go(i); restart(); });
+      if (cards.length <= 10) dots.appendChild(b);
+    });
+    var idx = 0;
+    for (var k = 0; k < n; k++) if (track.children[k].dataset.name === keep) idx = k;
+    track.style.transition = 'none'; go(idx); void track.offsetWidth; track.style.transition = ''; restart();
+  }
+
+  // samakan foto banner dengan foto di katalog (foto dari admin dimuat belakangan)
+  function syncImages(){
+    refs.forEach(function(r){
+      var bg = bgOf(r.card);
+      if (bg === r.bg) return;
+      r.bg = bg;
+      r.ph.textContent = '';
+      if (bg !== 'none') r.ph.style.backgroundImage = bg; else r.ph.style.backgroundImage = '';
+    });
+  }
+  function resync(){
+    var cards = bannerCards();
+    if (signature(cards) !== lastSig) build(); else syncImages();
+  }
+
+  function go(x){
+    if (!n) return;
+    cur = (x + n) % n;
+    track.style.transform = 'translateX(' + (-cur * 100) + '%)';
+    if (n > 10) { dots.className = 'fhb-dots count'; dots.innerHTML = ''; var sp = document.createElement('span'); sp.textContent = (cur + 1) + ' / ' + n; dots.appendChild(sp); }
+    else { dots.className = 'fhb-dots'; for (var k = 0; k < dots.children.length; k++) dots.children[k].classList.toggle('on', k === cur); }
+    syncImages();
+  }
+  function restart(){
+    clearInterval(timer);
+    if (n > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) timer = setInterval(function(){ go(cur + 1); }, 5500);
+  }
+  root.querySelector('.fhb-arrow.prev').addEventListener('click', function(){ go(cur - 1); restart(); });
+  root.querySelector('.fhb-arrow.next').addEventListener('click', function(){ go(cur + 1); restart(); });
+  root.addEventListener('mouseenter', function(){ clearInterval(timer); });
+  root.addEventListener('mouseleave', restart);
+  track.addEventListener('touchstart', function(e){ startX = e.touches[0].clientX; clearInterval(timer); }, { passive: true });
+  track.addEventListener('touchend', function(e){
+    if (startX !== null) { var dx = e.changedTouches[0].clientX - startX; if (Math.abs(dx) > 40) go(dx < 0 ? cur + 1 : cur - 1); }
+    startX = null; restart();
+  });
+
+  // menu/foto bisa berubah dari admin -> banner menyesuaikan (pemantau + cek berkala sebagai cadangan)
+  function schedule(){ clearTimeout(rebuildT); rebuildT = setTimeout(resync, 250); }
+  try {
+    new MutationObserver(function(list){
+      for (var q = 0; q < list.length; q++) {
+        var m = list[q], t = m.target;
+        if (m.type === 'childList') { schedule(); return; }
+        if (t.classList && (t.classList.contains('fm-card') || t.classList.contains('cupimg'))) { schedule(); return; }
+      }
+    }).observe(grid, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+  } catch (e) {}
+  setInterval(resync, 2500);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) resync(); });
+  window.addEventListener('load', schedule);
+  build();
 })();
 </script>
 </body>
