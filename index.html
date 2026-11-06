@@ -1925,6 +1925,22 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 .site-footer{max-width:1180px;margin:10px auto 0;padding:18px 14px 26px;text-align:center;font-size:12px;color:var(--fm-muted);border-top:1px solid var(--fm-line)}
 body[data-step="2"] .site-footer{display:none}
 </style>
+<style>
+/* ===== Maskot sapaan ===== */
+.mk{position:fixed;right:10px;bottom:150px;z-index:80;display:flex;align-items:flex-end;gap:8px;max-width:calc(100vw - 20px);pointer-events:none}
+.mk>*{pointer-events:auto}
+.mk-bubble{position:relative;background:#fff;color:var(--fm-text);border:1px solid var(--fm-line);border-radius:14px 14px 4px 14px;padding:10px 30px 10px 12px;max-width:min(230px,calc(100vw - 110px));font-size:13px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.14);cursor:pointer;margin-bottom:22px}
+.mk-bubble b{color:var(--fm-green-dark)}
+.mk-bubble small{display:block;margin-top:4px;color:var(--fm-green-dark);font-weight:700;font-size:12px}
+.mk-x{position:absolute;top:2px;right:4px;border:0;background:none;color:var(--fm-muted);font-size:18px;line-height:1;padding:4px 6px;cursor:pointer}
+.mk-bubble[hidden]{display:none}
+.mk-btn{border:0;background:none;padding:0;cursor:pointer;width:64px;height:76px;flex:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,.22))}
+.mk-btn svg,.mk-btn img{width:100%;height:100%;display:block;object-fit:contain}
+.mk-btn:focus-visible,.mk-bubble:focus-visible{outline:2px solid var(--fm-green);outline-offset:2px}
+@media(min-width:880px){.mk{bottom:40px;right:18px}.mk-btn{width:78px;height:92px}}
+@media(prefers-reduced-motion:no-preference){.mk-btn svg,.mk-btn img{animation:mkBob 3.2s ease-in-out infinite}@keyframes mkBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}}
+body[data-step="2"] .mk{display:none}
+</style>
 </head>
 <body data-step="1"><div id='welcomePopup'><div class='card'>
   <div class='wc-step active' id='wcStep1'>
@@ -2455,6 +2471,15 @@ body[data-step="2"] .site-footer{display:none}
 
   <footer class="site-footer">&copy; 2026 Famuha Coffee Bojong Gede. All rights reserved.</footer>
 
+  <div class="mk" id="mk" aria-live="polite">
+    <div class="mk-bubble" id="mkBubble" role="button" tabindex="0" hidden>
+      <button type="button" class="mk-x" id="mkX" aria-label="Tutup sapaan">&times;</button>
+      <span id="mkText"></span>
+      <small>Lihat menu</small>
+    </div>
+    <button type="button" class="mk-btn" id="mkBtn" aria-label="Maskot Famuha, ketuk untuk sapaan"></button>
+  </div>
+
   <div class="mobile-bar">
     <div class="mobile-bar-row mobile-bar-add">
       <div class="qty-control qty-control-sm">
@@ -2813,6 +2838,7 @@ body[data-step="2"] .site-footer{display:none}
   // tidak mengikuti nominal diskon di halaman Admin.
   var MONT_BLANC_FIRST_PURCHASE_DISCOUNT = 3000;
   var GAS_ACCESS_KEY = 'famuha2026';
+  window.__famuhaGas = { url: GAS_URL, key: GAS_ACCESS_KEY };
   // Status buka/tutup toko. Diatur lewat panel Admin, tersambung ke Google Sheet
   // supaya customer bisa lihat status ini di halaman order.
   var STORE_OPEN = true;
@@ -8541,6 +8567,99 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   // Muat dari cache lokal dulu; versi server menyusul lewat loadConfig().
   try { var c = localStorage.getItem('famuha-lokasi'); if (c) data = clean(JSON.parse(c)); } catch (e) {}
   render();
+})();
+</script>
+<script>
+(function () {
+  // Ganti dengan link gambar maskot sendiri (https) kalau sudah punya, mis. 'https://famuhacoffee.com/assets/maskot.png'.
+  // Kosong = pakai gambar cangkir kopi bawaan.
+  var MASKOT_IMG = '';
+  var btn = document.getElementById('mkBtn'), bub = document.getElementById('mkBubble'),
+      txt = document.getElementById('mkText'), x = document.getElementById('mkX');
+  if (!btn || !bub) return;
+
+  btn.innerHTML = MASKOT_IMG && /^https:\/\//.test(MASKOT_IMG)
+    ? '<img src="' + MASKOT_IMG.replace(/"/g, '') + '" alt="">'
+    : '<svg viewBox="0 0 80 96" aria-hidden="true">' +
+      '<path d="M30 14c-4-5 4-8 0-13M42 14c-4-5 4-8 0-13M54 14c-4-5 4-8 0-13" fill="none" stroke="#9CA3AF" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<path d="M58 40h6a9 9 0 0 1 0 22h-8" fill="none" stroke="#3d2717" stroke-width="5" stroke-linecap="round"/>' +
+      '<path d="M12 24h52v34a24 24 0 0 1-24 24h-4a24 24 0 0 1-24-24z" fill="#16A34A"/>' +
+      '<path d="M12 24h52v9H12z" fill="#15803D"/>' +
+      '<ellipse cx="38" cy="24" rx="26" ry="5" fill="#3d2717"/>' +
+      '<ellipse cx="38" cy="24" rx="22" ry="3.2" fill="#6b4328"/>' +
+      '<circle cx="28" cy="54" r="4" fill="#fff"/><circle cx="48" cy="54" r="4" fill="#fff"/>' +
+      '<circle cx="29" cy="55" r="2" fill="#1f2937"/><circle cx="49" cy="55" r="2" fill="#1f2937"/>' +
+      '<path d="M31 65q7 7 14 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="22" cy="63" r="3.5" fill="#F97316" opacity=".45"/><circle cx="54" cy="63" r="3.5" fill="#F97316" opacity=".45"/>' +
+      '<path d="M12 46l-7 6" stroke="#15803D" stroke-width="5" stroke-linecap="round"/>' +
+      '</svg>';
+
+  // Nama diambil dari riwayat TRANSAKSI (bukan Buku Tamu), dicocokkan lewat nomor HP di perangkat ini.
+  var TRX_KEY = 'famuha-trx-name', busy = false, nextTry = 0;
+  function normPhone(p) { return String(p || '').replace(/\D/g, '').replace(/^62/, '').replace(/^0+/, ''); }
+  function curPhone() { try { return normPhone(localStorage.getItem('customerPhone')); } catch (e) { return ''; } }
+  function readCache() { try { return JSON.parse(localStorage.getItem(TRX_KEY) || 'null'); } catch (e) { return null; } }
+  function namaDepan() {
+    var c = readCache(), ph = curPhone();
+    if (!c || !ph || c.phone !== ph || !c.name) return '';
+    var n = String(c.name).trim().split(/\s+/)[0].slice(0, 20);
+    return n.charAt(0).toUpperCase() + n.slice(1);
+  }
+  function syncNama() {
+    var ph = curPhone(), g = window.__famuhaGas;
+    if (busy || !ph || !g || !g.url || Date.now() < nextTry) return;
+    var c = readCache(), age = c ? Date.now() - c.ts : Infinity;
+    if (c && c.phone === ph && age < (c.name ? 86400000 : 600000)) return;
+    busy = true;
+    fetch(g.url + '?action=history&key=' + encodeURIComponent(g.key))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok || !Array.isArray(d.rows)) throw new Error('bad');
+        var nama = '';
+        for (var i = d.rows.length - 1; i >= 0; i--) {
+          var nm = String(d.rows[i].custName || '').trim();
+          if (nm && normPhone(d.rows[i].custPhone) === ph) { nama = nm; break; }
+        }
+        try { localStorage.setItem(TRX_KEY, JSON.stringify({ phone: ph, name: nama, ts: Date.now() })); } catch (e) {}
+        lastName = null; isiTeks();
+      })
+      .catch(function () { nextTry = Date.now() + 300000; })
+      .then(function () { busy = false; });
+  }
+  var lastName = null;
+  function isiTeks() {
+    var n = namaDepan();
+    if (n === lastName) return;
+    lastName = n;
+    txt.textContent = '';
+    if (n) {
+      txt.appendChild(document.createTextNode('Selamat datang kembali, '));
+      var b = document.createElement('b'); b.textContent = n; txt.appendChild(b);
+      txt.appendChild(document.createTextNode('! Mau pesan apa?'));
+    } else {
+      txt.textContent = 'Halo! Mau pesan apa hari ini?';
+    }
+  }
+
+  function keMenu() {
+    var t = document.getElementById('fmCats') || document.getElementById('fmGrid') || document.querySelector('.fm-market');
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function tutup() { bub.hidden = true; try { sessionStorage.setItem('mkTutup', '1'); } catch (e) {} }
+  function buka() { isiTeks(); bub.hidden = false; }
+
+  x.addEventListener('click', function (e) { e.stopPropagation(); tutup(); });
+  bub.addEventListener('click', function () { keMenu(); tutup(); });
+  bub.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); keMenu(); tutup(); } });
+  btn.addEventListener('click', function () { if (bub.hidden) buka(); else tutup(); });
+
+  isiTeks();
+  syncNama();
+  var sudahTutup = false;
+  try { sudahTutup = sessionStorage.getItem('mkTutup') === '1'; } catch (e) {}
+  if (!sudahTutup) setTimeout(buka, 1500);
+  // Nomor HP bisa baru terisi setelah popup Buku Tamu ditutup, jadi cek berkala.
+  setInterval(function () { syncNama(); if (!bub.hidden) isiTeks(); }, 2000);
 })();
 </script>
 </body>
