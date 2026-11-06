@@ -1884,6 +1884,40 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
 }
 @media(prefers-reduced-motion:reduce){.fhb-track{transition:none}}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* ===== Lokasi Kami (publik) ===== */
+.lk{margin:26px 0 8px}
+#lk-map{height:300px;border-radius:14px;overflow:hidden;border:1px solid var(--fm-line);z-index:0}
+.lk-list{display:grid;gap:12px;margin-top:14px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.lk-card{background:#fff;border:1px solid var(--fm-line);border-radius:14px;padding:12px;cursor:pointer;color:var(--fm-text);transition:border-color .2s,box-shadow .2s}
+.lk-card.aktif{border-color:var(--fm-green);box-shadow:0 0 0 2px #16A34A33}
+.lk-card img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;background:#eee;display:block}
+.lk-card h3{margin:10px 0 6px;font-size:16px}
+.lk-row{display:flex;gap:9px;font-size:13px;color:var(--fm-muted);margin:5px 0;line-height:1.45}
+.lk-row svg{flex:none;width:17px;height:17px;fill:var(--fm-green);margin-top:1px}
+.lk-row a{color:var(--fm-green-dark);font-weight:600;text-decoration:none}
+.lk-pin{width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--fm-green-dark);border:2px solid #fff;box-shadow:0 1px 4px #0006;display:grid;place-items:center}
+.lk-pin::after{content:"";width:8px;height:8px;border-radius:50%;background:#fff}
+.lk-ig{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0 8px;padding:12px 16px;border:1px solid var(--fm-green);border-radius:14px;background:#fff;color:var(--fm-green-dark);text-decoration:none;font-size:14px}
+.lk-ig svg{width:22px;height:22px;fill:var(--fm-green-dark);flex:none}
+.lk-ig:active{background:var(--fm-green-soft)}
+.lk-share{margin-top:10px}
+.lk-share-btn,.lk-chip{border:1px solid var(--fm-green);background:#fff;color:var(--fm-green-dark);border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.lk-share-btn[aria-expanded="true"],.lk-chip:active{background:var(--fm-green-soft)}
+.lk-share-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.lk-share-msg{font-size:12px;color:var(--fm-green-dark);margin:6px 0 0;min-height:1em}
+/* ===== Lokasi Kami (panel Admin) ===== */
+.adm-lk-item{display:block}
+.adm-lk-item label{display:block;font-size:12px;font-weight:700;color:#374151;margin-top:8px}
+.adm-lk-in{display:block;width:100%;min-height:38px;padding:8px 10px;border:1px solid #D1D5DB;border-radius:8px;font:inherit;color:#111827;background:#fff;margin-top:3px}
+.adm-lk-in.bad{border-color:#EF4444}
+.adm-lk-head{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+</style>
+<style>
+.site-footer{max-width:1180px;margin:10px auto 0;padding:18px 14px 26px;text-align:center;font-size:12px;color:var(--fm-muted);border-top:1px solid var(--fm-line)}
+body[data-step="2"] .site-footer{display:none}
+</style>
 </head>
 <body data-step="1"><div id='welcomePopup'><div class='card'>
   <div class='wc-step active' id='wcStep1'>
@@ -2047,6 +2081,15 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <article class="fm-card" data-cat="coffee" data-name="Cold Brew Peach" data-variant="cold-brew-peach"><div class="fm-photo"><button class="fm-heart" aria-label="Favorit">♡</button><div class="cupimg noimg" role="img" aria-label="Cold Brew Peach">🍑</div></div><div class="fm-body"><div class="fm-name">Cold Brew Peach</div><div class="fm-desc">Cold brew halus beraroma peach yang manis harum. Segar, ringan, dan beda dari biasanya.</div><div class="fm-bottom"><div class="fm-price">Rp24.000</div></div></div></article>
     </div>
     <div class="fm-empty" id="fmEmpty">Menu yang kamu cari belum tersedia.</div>
+    <section class="lk" id="lokasi" aria-label="Lokasi Famuha Coffee" hidden>
+      <div class="fm-section-head"><h2>Lokasi Kami</h2><small>Ketuk kartu untuk lihat di peta</small></div>
+      <div id="lk-map"></div>
+      <div id="lk-list" class="lk-list"></div>
+    </section>
+    <a class="lk-ig" href="https://www.instagram.com/famuhacoffee/" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2zm0 2A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9a3.5 3.5 0 0 0 3.5-3.5v-9A3.5 3.5 0 0 0 16.5 4h-9zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm5.25-3.25a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5z"/></svg>
+      <span>Kunjungi Instagram kami <b>@famuhacoffee</b></span>
+    </a>
     <div class="fm-section-head fm-hide-selera" style="margin-top:22px"><h2>Atur Sesuai Selera</h2><small>Pilih shot, gula, es & lainnya</small></div>
   </section>
 
@@ -2402,6 +2445,8 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       <div class="cta-note">Tambahkan minimal 1 varian ke pesanan · Konfirmasi akhir via WhatsApp</div>
     </div>
   </div>
+
+  <footer class="site-footer">&copy; 2026 Famuha Coffee Bojong Gede. All rights reserved.</footer>
 
   <div class="mobile-bar">
     <div class="mobile-bar-row mobile-bar-add">
@@ -5140,6 +5185,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       applyCustomMenus_(cfg.customMenus);
       try { localStorage.setItem(CUSTOM_MENUS_KEY, JSON.stringify(CUSTOM_MENUS)); } catch (err){}
     }
+    if (Array.isArray(cfg.lokasi)) applyLokasi_(cfg.lokasi);
     refreshShotsPriceLabels();
     update();
   }
@@ -5171,6 +5217,101 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(data.config)); } catch (err){}
       })
       .catch(function(err){ console.error('[config] gagal memuat konfigurasi harga:', err); });
+  }
+
+  // ---------------- Lokasi Kami (diatur dari panel Admin) ----------------
+  var LOKASI_KEY = 'famuha-lokasi', ADMIN_LOKASI_DRAFT = [];
+  function cleanLokasi_(list){
+    if (!Array.isArray(list)) return null;
+    var out = [];
+    list.slice(0, 20).forEach(function(t){
+      if (!t || !String(t.nama || '').trim()) return;
+      var la = parseFloat(t.lat), ln = parseFloat(t.lng);
+      if (!(la >= -90 && la <= 90 && ln >= -180 && ln <= 180)) return;
+      var foto = String(t.foto || '').trim();
+      if (!/^https:\/\/[^\s'")<>]+$/.test(foto)) foto = '';
+      var hp = String(t.hp || '').replace(/[^0-9+\s-]/g, '').trim().slice(0, 20);
+      var em = String(t.email || '').trim().slice(0, 80);
+      if (!/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(em)) em = '';
+      out.push({ nama: String(t.nama).trim().slice(0, 60), alamat: String(t.alamat || '').trim().slice(0, 160),
+        jam: String(t.jam || '').trim().slice(0, 40), lat: la, lng: ln, foto: foto, hp: hp, email: em });
+    });
+    return out;
+  }
+  window.famuhaCleanLokasi = cleanLokasi_;
+  function applyLokasi_(list){
+    var c = cleanLokasi_(list); if (!c) return;
+    try { localStorage.setItem(LOKASI_KEY, JSON.stringify(c)); } catch (err){}
+    if (window.famuhaLokasi) window.famuhaLokasi.set(c);
+  }
+  function parseLatLng_(s){
+    s = String(s || '').trim(); if (!s) return null;
+    var m = s.match(/@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/) ||
+            s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/) ||
+            s.match(/[?&](?:q|query|ll)=(-?\d+(?:\.\d+)?)(?:,|%2C)(-?\d+(?:\.\d+)?)/) ||
+            s.match(/^\(?\s*(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*\)?$/);
+    if (!m) return null;
+    var la = parseFloat(m[1]), ln = parseFloat(m[2]);
+    if (!(la >= -90 && la <= 90 && ln >= -180 && ln <= 180)) return null;
+    return { lat: la, lng: ln };
+  }
+  function adminLokasiError_(){
+    for (var i = 0; i < ADMIN_LOKASI_DRAFT.length; i++){
+      var t = ADMIN_LOKASI_DRAFT[i], n = 'Lokasi ' + (i + 1) + (t.nama ? ' (' + t.nama + ')' : '');
+      if (!String(t.nama || '').trim()) return n + ': nama toko belum diisi.';
+      if (typeof t.lat !== 'number' || typeof t.lng !== 'number') return n + ': koordinat belum benar. Tempel \"lat, lng\" atau link panjang Google Maps.';
+      if (t.foto && !/^https:\/\//.test(t.foto)) return n + ': link foto harus diawali https://';
+      var dg = String(t.hp || '').replace(/\D/g, '');
+      if (dg && (dg.length < 8 || dg.length > 15)) return n + ': nomor HP tidak valid (8-15 angka).';
+      if (t.email && !/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(String(t.email).trim())) return n + ': format email tidak valid.';
+    }
+    return '';
+  }
+  function renderAdminLokasiSection_(wrap){
+    var cur = (window.famuhaLokasi && window.famuhaLokasi.get()) || [];
+    ADMIN_LOKASI_DRAFT = cur.map(function(t){ var o = Object.assign({}, t); o.ll = t.lat + ', ' + t.lng; return o; });
+    var box = admEl_('div', 'adm-menu');
+    box.appendChild(admEl_('div', 'admin-section-title', 'Lokasi Kami'));
+    box.appendChild(admEl_('div', 'adm-note', 'Toko yang tampil di peta dan kartu \"Lokasi Kami\" pada halaman pelanggan. Koordinat: tempel \"lat, lng\" (di Google Maps, tekan lama pada titik toko lalu salin angkanya) atau link panjang Google Maps (link pendek maps.app.goo.gl tidak bisa dibaca). Nomor HP dan email boleh dikosongkan. Foto: link gambar https, boleh dikosongkan. Kalau daftar kosong, bagian ini disembunyikan. Klik \"Simpan Perubahan\" setelah selesai.'));
+    var list = admEl_('div'); box.appendChild(list);
+    function field(label, ph, val, onInput){
+      var i = document.createElement('input'); i.type = 'text'; i.className = 'adm-lk-in';
+      i.placeholder = ph; i.value = val || '';
+      i.addEventListener('input', function(){ onInput(i.value, i); });
+      return admField_(label, i);
+    }
+    function draw(){
+      list.innerHTML = '';
+      if (!ADMIN_LOKASI_DRAFT.length) list.appendChild(admEl_('div', 'adm-note', 'Belum ada lokasi.'));
+      ADMIN_LOKASI_DRAFT.forEach(function(t, idx){
+        var card = admEl_('div', 'adm-item adm-lk-item');
+        var head = admEl_('div', 'adm-lk-head');
+        head.appendChild(admEl_('b', '', 'Lokasi ' + (idx + 1)));
+        var del = admEl_('button', 'adm-btn', 'Hapus'); del.type = 'button';
+        del.addEventListener('click', function(){ ADMIN_LOKASI_DRAFT.splice(idx, 1); draw(); });
+        head.appendChild(del); card.appendChild(head);
+        card.appendChild(field('Nama toko', 'Famuha Coffee Bojong Gede', t.nama, function(v){ t.nama = v; }));
+        card.appendChild(field('Alamat', 'Alamat lengkap', t.alamat, function(v){ t.alamat = v; }));
+        card.appendChild(field('Jam buka (opsional)', '07:00 - 23:00', t.jam, function(v){ t.jam = v; }));
+        card.appendChild(field('Koordinat', '-6.4948, 106.7946 atau link Google Maps', t.ll, function(v, el){
+          t.ll = v; var p = parseLatLng_(v);
+          if (p){ t.lat = p.lat; t.lng = p.lng; el.classList.remove('bad'); }
+          else { delete t.lat; delete t.lng; el.classList.toggle('bad', !!v.trim()); }
+        }));
+        card.appendChild(field('Nomor HP / WhatsApp (opsional)', '0812xxxxxxxx', t.hp, function(v){ t.hp = v.trim(); }));
+        card.appendChild(field('Email (opsional)', 'nama@email.com', t.email, function(v){ t.email = v.trim(); }));
+        card.appendChild(field('Link foto (opsional)', 'https://...', t.foto, function(v){ t.foto = v.trim(); }));
+        list.appendChild(card);
+      });
+    }
+    var add = admEl_('button', 'adm-btn', '+ Tambah Lokasi'); add.type = 'button';
+    add.addEventListener('click', function(){
+      if (ADMIN_LOKASI_DRAFT.length >= 20) return;
+      ADMIN_LOKASI_DRAFT.push({ nama: '', alamat: '', jam: '', ll: '', foto: '' }); draw();
+    });
+    box.appendChild(add);
+    draw();
+    wrap.appendChild(box);
   }
 
   function renderAdminForm(){
@@ -5396,6 +5537,7 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
     renderBannerSection_(wrap);
     renderExistingMenusSection_(wrap);
     renderAdminMenuSection_(wrap);
+    renderAdminLokasiSection_(wrap);
   }
 
   function openAdmin(){
@@ -5481,11 +5623,14 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
       statusEl.className = 'admin-status err';
       return;
     }
+    var lkErr = adminLokasiError_();
+    if (lkErr){ statusEl.textContent = lkErr; statusEl.className = 'admin-status err'; return; }
     var newConfig = collectAdminFormValues_();
     newConfig.customMenus = ADMIN_MENU_DRAFT.map(function(m){ return Object.assign({}, m); });
     ADMIN_MENU_DRAFT.forEach(function(m){ delete newConfig.prices.variant[m.id]; });
     newConfig.menuImgs = Object.assign({}, ADMIN_IMG_DRAFT);
     newConfig.hiddenMenus = ADMIN_HIDDEN_DRAFT.slice();
+    newConfig.lokasi = cleanLokasi_(ADMIN_LOKASI_DRAFT) || [];
     if (ADMIN_BANNER_DRAFT) newConfig.promoBanners = ADMIN_BANNER_DRAFT.map(function(b){ return Object.assign({}, b); });
     Object.keys(ADMIN_EXIST_PRICE).forEach(function(v){ newConfig.prices.variant[v] = Math.max(0, ADMIN_EXIST_PRICE[v] - PRICES.size.regular); });
     var saveBtn = document.getElementById('adminSaveBtn');
@@ -5528,6 +5673,11 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-seri
         statusEl.className = serverKeeps ? 'admin-status ok' : 'admin-status err';
         if (!applied.popups || !applied.promoTbv){
           statusEl.textContent += ' Pengaturan popup/Promo TBV baru tersimpan di perangkat ini; server (Apps Script) belum menyimpannya, jadi pelanggan lain belum terpengaruh.';
+          statusEl.className = 'admin-status err';
+        }
+        if (!Array.isArray(applied.lokasi)){
+          applyLokasi_(newConfig.lokasi);
+          statusEl.textContent += ' Daftar Lokasi Kami baru tersimpan di perangkat ini; server (Apps Script) belum menyimpannya, jadi pelanggan lain belum melihatnya.';
           statusEl.className = 'admin-status err';
         }
         var kb = Math.round(JSON.stringify(newConfig).length / 1024);
@@ -8295,6 +8445,95 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) resync(); });
   window.addEventListener('load', schedule);
   build();
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function () {
+  var sec = document.getElementById('lokasi'), mapEl = document.getElementById('lk-map'), listEl = document.getElementById('lk-list');
+  if (!sec || !mapEl || !window.L) return;
+  var data = [], map = null, layer = null, cards = [];
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function clean(l){ return (window.famuhaCleanLokasi ? window.famuhaCleanLokasi(l) : null) || []; }
+  function copyText(txt){
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt).catch(function(){ return fallbackCopy(txt); });
+    return fallbackCopy(txt);
+  }
+  function fallbackCopy(txt){
+    return new Promise(function(res){
+      var ta = document.createElement('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta); res();
+    });
+  }
+  function wa(hp){ var d = String(hp).replace(/\D/g, ''); if (d.charAt(0) === '0') d = '62' + d.slice(1); return 'https://wa.me/' + d; }
+  function aktif(card){ cards.forEach(function(c){ c.classList.remove('aktif'); }); card.classList.add('aktif'); }
+
+  function render() {
+    listEl.innerHTML = ''; cards = [];
+    if (!data.length) { sec.hidden = true; return; }
+    sec.hidden = false;
+    if (!map) {
+      map = L.map(mapEl, { scrollWheelZoom: false });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+      layer = L.layerGroup().addTo(map);
+      if (window.ResizeObserver) new ResizeObserver(function(){ map.invalidateSize(); }).observe(mapEl);
+    }
+    layer.clearLayers();
+    var icon = L.divIcon({ className: '', html: '<div class="lk-pin"></div>', iconSize: [26, 26], iconAnchor: [13, 26] });
+    var pts = [];
+    data.forEach(function (t) {
+      var gmaps = 'https://www.google.com/maps/search/?api=1&query=' + t.lat + ',' + t.lng;
+      var card = document.createElement('div');
+      card.className = 'lk-card';
+      card.innerHTML =
+        (t.foto ? '<img src="' + esc(t.foto) + '" alt="' + esc(t.nama) + '" loading="lazy">' : '') +
+        '<h3>' + esc(t.nama) + '</h3>' +
+        '<div class="lk-row"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg><div>' + (t.alamat ? esc(t.alamat) + '<br>' : '') + '<a href="' + gmaps + '" target="_blank" rel="noopener">Lihat di Google Maps</a></div></div>' +
+        (t.hp ? '<div class="lk-row"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg><div><a href="tel:' + esc(t.hp.replace(/[^0-9+]/g, '')) + '">' + esc(t.hp) + '</a> &nbsp;<a href="' + wa(t.hp) + '" target="_blank" rel="noopener">WhatsApp</a></div></div>' : '') +
+        (t.email ? '<div class="lk-row"><svg viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm9 7.2L4.5 7v.1L12 12.4 19.5 7.1V7L12 12.2z"/></svg><div><a href="mailto:' + esc(t.email) + '">' + esc(t.email) + '</a></div></div>' : '') +
+        (t.jam ? '<div class="lk-row"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.2 13.5L11 12.4V6h1.5v5.6l4.5 2.6z"/></svg><div>' + esc(t.jam) + '</div></div>' : '');
+      var pageUrl = location.origin + location.pathname + '#lokasi';
+      var shareTxt = t.nama + (t.alamat ? '\n' + t.alamat : '') + '\nPeta: ' + gmaps + '\nPesan online: ' + pageUrl;
+      var sh = document.createElement('div'); sh.className = 'lk-share';
+      var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'lk-share-btn'; btn.textContent = 'Bagikan';
+      btn.setAttribute('aria-expanded', 'false');
+      var row = document.createElement('div'); row.className = 'lk-share-row'; row.hidden = true;
+      var msg = document.createElement('p'); msg.className = 'lk-share-msg';
+      function say(x){ msg.textContent = x; setTimeout(function(){ msg.textContent = ''; }, 5000); }
+      function chip(label, fn){ var b = document.createElement('button'); b.type = 'button'; b.className = 'lk-chip'; b.textContent = label; b.addEventListener('click', fn); row.appendChild(b); }
+      chip('WhatsApp', function(){ window.open('https://wa.me/?text=' + encodeURIComponent(shareTxt), '_blank', 'noopener'); });
+      chip('Threads', function(){ window.open('https://www.threads.net/intent/post?text=' + encodeURIComponent(shareTxt), '_blank', 'noopener'); });
+      chip('Instagram', function(){
+        copyText(shareTxt); window.open('https://www.instagram.com/', '_blank', 'noopener');
+        say('Teks dan link disalin. Tempel di Story, DM, atau bio Instagram.');
+      });
+      chip('Salin link', function(){ copyText(shareTxt).then(function(){ say('Tersalin.'); }); });
+      if (navigator.share) chip('Lainnya', function(){ navigator.share({ title: t.nama, text: shareTxt, url: gmaps }).catch(function(){}); });
+      btn.addEventListener('click', function(){ row.hidden = !row.hidden; btn.setAttribute('aria-expanded', String(!row.hidden)); });
+      sh.appendChild(btn); sh.appendChild(row); sh.appendChild(msg); card.appendChild(sh);
+      listEl.appendChild(card); cards.push(card);
+      var m = L.marker([t.lat, t.lng], { icon: icon }).addTo(layer).bindPopup('<b>' + esc(t.nama) + '</b>');
+      pts.push([t.lat, t.lng]);
+      card.addEventListener('click', function (e) {
+        if (e.target.closest('a, button, .lk-share')) return;
+        aktif(card); map.flyTo([t.lat, t.lng], 16, { duration: .8 }); m.openPopup();
+      });
+      m.on('click', function () { aktif(card); card.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+    });
+    map.invalidateSize();
+    if (location.hash === '#lokasi' && !window.__lkScrolled) { window.__lkScrolled = true; setTimeout(function(){ sec.scrollIntoView(); }, 400); }
+    if (pts.length > 1) map.fitBounds(pts, { padding: [30, 30] });
+    else map.setView(pts[0], 15);
+  }
+
+  window.famuhaLokasi = {
+    set: function (l) { data = clean(l); render(); },
+    get: function () { return data.map(function (t) { return Object.assign({}, t); }); }
+  };
+  // Muat dari cache lokal dulu; versi server menyusul lewat loadConfig().
+  try { var c = localStorage.getItem('famuha-lokasi'); if (c) data = clean(JSON.parse(c)); } catch (e) {}
+  render();
 })();
 </script>
 </body>
