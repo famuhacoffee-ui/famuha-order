@@ -5,7 +5,14 @@
   
 <meta name="google-site-verification" content="o5mXH3b_CCgST4KRKmdquIOjoLp8GZcFxVE_dzjOWzw" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2b1a12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Famuha">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Famuha Coffee Bojong Gede | Menu & Pesan Kopi Online</title>
 <meta name="description" content="Famuha Coffee di Bojong Gede, Bogor. Jelajahi menu kopi, latte, matcha, dan minuman favorit, lalu pesan online untuk pickup atau pengantaran lokal.">
 <!-- Pratinjau link (WhatsApp / sosmed). Ganti og:image kalau mau ganti thumbnail. -->
@@ -8724,6 +8731,87 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   if (!sudahTutup) setTimeout(buka, 1500);
   // Nomor HP bisa baru terisi setelah popup Buku Tamu ditutup, jadi cek berkala.
   setInterval(function () { syncNama(); if (!bub.hidden) isiTeks(); }, 2000);
+})();
+</script>
+
+<!-- ===== FAMUHA PWA: ajakan "Pasang di HP" ===== -->
+<script id="famuha-pwa-install">
+(function () {
+  'use strict';
+  var DISMISS_KEY = 'famuha_pwa_dismissed_at';
+  var COOLDOWN_MS = 7 * 24 * 3600 * 1000; // tanya lagi setelah 7 hari kalau ditutup
+  var deferred = null;
+
+  function isStandalone() {
+    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+           window.navigator.standalone === true;
+  }
+  function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  function recentlyDismissed() {
+    try {
+      var t = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
+      return t && (Date.now() - t) < COOLDOWN_MS;
+    } catch (e) { return false; }
+  }
+  function dismiss(el) {
+    try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {}
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  }
+  function showBar(html, onYes) {
+    if (document.getElementById('famuhaPwaBar')) return;
+    var bar = document.createElement('div');
+    bar.id = 'famuhaPwaBar';
+    bar.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));' +
+      'z-index:99998;background:#2b1a12;color:#fff;border-radius:14px;padding:12px 14px;display:flex;' +
+      'align-items:center;gap:10px;box-shadow:0 8px 28px rgba(0,0,0,.35);font:14px/1.35 Inter,system-ui,sans-serif;max-width:520px;margin:0 auto;';
+    bar.innerHTML =
+      '<img src="/icon-192.png" alt="" width="40" height="40" style="border-radius:9px;flex:none">' +
+      '<div style="flex:1;min-width:0">' + html + '</div>' +
+      (onYes ? '<button id="famuhaPwaYes" style="background:#16A34A;color:#fff;border:none;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer">Pasang</button>' : '') +
+      '<button id="famuhaPwaNo" aria-label="Tutup" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;padding:8px 10px;cursor:pointer">✕</button>';
+    document.body.appendChild(bar);
+    document.getElementById('famuhaPwaNo').addEventListener('click', function () { dismiss(bar); });
+    if (onYes) document.getElementById('famuhaPwaYes').addEventListener('click', function () { onYes(bar); });
+  }
+
+  // Android / Chrome / Edge: pakai prompt bawaan browser
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferred = e;
+    if (isStandalone() || recentlyDismissed()) return;
+    setTimeout(function () {
+      if (!deferred) return;
+      showBar('<b>Pasang Famuha di HP</b><br><span style="opacity:.8">Pesan lebih cepat &amp; dapat info promo.</span>', function (bar) {
+        deferred.prompt();
+        deferred.userChoice.then(function () { deferred = null; if (bar.parentNode) bar.parentNode.removeChild(bar); });
+      });
+    }, 8000);
+  });
+
+  window.addEventListener('appinstalled', function () {
+    deferred = null;
+    var b = document.getElementById('famuhaPwaBar'); if (b) b.remove();
+  });
+
+  // iPhone / iPad (Safari): tidak ada prompt otomatis, tampilkan petunjuk manual
+  function maybeShowIOSHint() {
+    if (!isIOS() || isStandalone() || recentlyDismissed()) return;
+    setTimeout(function () {
+      showBar('<b>Pasang Famuha di iPhone</b><br><span style="opacity:.85">Ketuk tombol <b>Bagikan</b> ⎋ lalu pilih <b>Tambah ke Layar Utama</b>.</span>', null);
+    }, 8000);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', maybeShowIOSHint);
+  else maybeShowIOSHint();
+
+  // Pastikan service worker terdaftar (sama dengan sw.js untuk push)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function () {});
+    });
+  }
 })();
 </script>
 </body>
