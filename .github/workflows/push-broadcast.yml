@@ -1,0 +1,32 @@
+name: Kirim Notifikasi Famuha
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # cek antrean tiap ±5 menit (GitHub kadang telat beberapa menit)
+  workflow_dispatch:         # bisa dijalankan manual dari tab Actions
+
+concurrency:
+  group: push-broadcast
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Pasang web-push
+        run: npm install --no-save web-push@3.6.7
+      - name: Kirim antrean notifikasi
+        run: node scripts/push-broadcast.js
+        env:
+          GAS_URL: 'https://script.google.com/macros/s/AKfycbzGwMhiIx3o6VWSpOO5nvA125bQAr5QdIqQHEaWzUZ_2HhiFS44-iQX_uVIhKoShbiC/exec'
+          VAPID_PUBLIC_KEY: 'BDCCwgMZwl5gDx0kVoZraSNdlChIdaK9JjxS724cLM7h6b2FLoNdMBHQts8g24Aj8FUk9ku6gE4bb6f6uSzvRMQ'
+          VAPID_SUBJECT: 'mailto:famuhacoffee@gmail.com'
+          PUSH_SECRET: ${{ secrets.PUSH_SECRET }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
