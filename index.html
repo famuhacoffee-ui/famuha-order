@@ -2631,11 +2631,39 @@ body[data-step="2"] .fq{display:none}
 
       <button type="button" class="adm-btn pri" id="waBlastOpenBtn" style="width:100%;margin:10px 0 4px;padding:11px">📣 Pengingat WA (kirim promo ke pelanggan)</button>
       <button type="button" class="adm-btn pri" id="vdOpenBtn" style="width:100%;margin:4px 0 4px;padding:11px">📊 Pengunjung &amp; Sumber Order (TikTok, dll)</button>
+      <button type="button" class="adm-btn pri" id="pnOpenBtn" style="width:100%;margin:4px 0 4px;padding:11px">🔔 Kirim Notifikasi &amp; Pengumuman</button>
       <div class="admin-status" id="adminStatus"></div>
 
       <button type="button" class="cta-btn" id="adminSaveBtn">Simpan Perubahan</button>
       <button type="button" class="history-clear-btn pin-cancel" id="adminClose">Tutup</button>
       <div class="overlay-note">Perubahan tersimpan di server dan berlaku untuk semua perangkat.</div>
+    </div>
+  </div>
+
+  <div class="overlay" id="pnOverlay">
+    <div class="overlay-card wb-card" style="max-width:520px!important">
+      <div class="overlay-logo serif">FAMUHA COFFEE</div>
+      <div class="overlay-title serif">Admin — Notifikasi &amp; Pengumuman</div>
+      <div class="admin-status" id="pnStatus" role="status"></div>
+
+      <label for="pnTitle">Judul (maks 60 huruf)</label>
+      <input type="text" id="pnTitle" maxlength="60" placeholder="Contoh: Promo Jumat Rp18.000 ☕">
+      <label for="pnBody">Isi pesan (maks 200 huruf)</label>
+      <textarea id="pnBody" maxlength="200" style="min-height:90px" placeholder="Contoh: Hari ini semua latte hanya Rp18.000. Yuk pesan sekarang!"></textarea>
+      <label for="pnUrl">Halaman tujuan saat diketuk</label>
+      <input type="text" id="pnUrl" value="/">
+
+      <label style="display:flex;gap:8px;align-items:center;font-weight:600;margin-top:14px"><input type="checkbox" id="pnDoBanner" checked> Tampilkan sebagai pengumuman di web (semua pengunjung)</label>
+      <label for="pnDays">Pengumuman tampil selama (hari, 1–14)</label>
+      <input type="number" id="pnDays" min="1" max="14" value="3">
+      <label style="display:flex;gap:8px;align-items:center;font-weight:600;margin-top:14px"><input type="checkbox" id="pnDoPush" checked> Kirim notifikasi push (pelanggan yang sudah mengizinkan)</label>
+      <div class="wb-note">Pengumuman web muncul langsung. Push dikirim otomatis dalam kira-kira 5–15 menit, dan hanya sampai ke pelanggan yang sudah mengizinkan notifikasi.</div>
+
+      <div class="wb-actions">
+        <button type="button" class="cta-btn" id="pnSend">Kirim sekarang</button>
+        <button type="button" class="history-clear-btn" id="pnStop">Hentikan pengumuman aktif</button>
+        <button type="button" class="history-clear-btn" id="pnClose">Tutup</button>
+      </div>
     </div>
   </div>
 
@@ -6864,6 +6892,80 @@ body[data-step="2"] .fq{display:none}
   wbEl('wbClose').addEventListener('click', function(){ wbEl('waBlastOverlay').classList.remove('show'); });
   wbEl('waBlastOverlay').addEventListener('click', function(e){ if (e.target === this) this.classList.remove('show'); });
 
+  // ---------------- Kirim Notifikasi & Pengumuman (menu Admin) ----------------
+  // Satu form: pengumuman di web (semua pengunjung) + antrean push (pelanggan yang sudah mengizinkan).
+  // Server: PushBroadcast.gs. Push dikirim GitHub Action (push-broadcast.yml).
+  function pnEl(id){ return document.getElementById(id); }
+  function pnStatus(msg, cls){ var el = pnEl('pnStatus'); el.textContent = msg || ''; el.className = 'admin-status' + (cls ? ' ' + cls : ''); }
+  function pnPost(payload){
+    return fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
+      .then(function(r){ return r.json(); });
+  }
+  pnEl('pnOpenBtn').addEventListener('click', function(){ pnStatus(''); pnEl('pnOverlay').classList.add('show'); });
+  pnEl('pnClose').addEventListener('click', function(){ pnEl('pnOverlay').classList.remove('show'); });
+  pnEl('pnOverlay').addEventListener('click', function(e){ if (e.target === this) this.classList.remove('show'); });
+  pnEl('pnSend').addEventListener('click', function(){
+    var title = pnEl('pnTitle').value.trim(), msg = pnEl('pnBody').value.trim(), url = pnEl('pnUrl').value.trim() || '/';
+    var doBanner = pnEl('pnDoBanner').checked, doPush = pnEl('pnDoPush').checked;
+    var days = parseInt(pnEl('pnDays').value, 10) || 3;
+    if (!title || !msg){ pnStatus('Judul dan isi pesan wajib diisi.', 'err'); return; }
+    if (!doBanner && !doPush){ pnStatus('Pilih minimal satu: pengumuman web atau push.', 'err'); return; }
+    if (!window.confirm('Kirim sekarang?\n\n' + title + '\n' + msg)) return;
+    var btn = pnEl('pnSend'); btn.disabled = true; pnStatus('Mengirim...');
+    pnPost({ action: 'pushBroadcastCreate', pin: ADMIN_PIN, title: title, body: msg, url: url,
+             doPush: doPush, doBanner: doBanner, bannerDays: days })
+      .then(function(res){
+        if (!res || !res.ok){ pnStatus((res && res.error) || 'Gagal mengirim.', 'err'); return; }
+        var parts = [];
+        if (res.banner) parts.push('Pengumuman web aktif sampai ' + res.bannerUntil + '.');
+        if (res.push) parts.push('Push masuk antrean untuk ' + res.subscribers + ' perangkat; terkirim dalam beberapa menit.');
+        pnStatus(parts.join(' '), 'ok');
+        pnEl('pnTitle').value = ''; pnEl('pnBody').value = '';
+      })
+      .catch(function(){ pnStatus('Tidak bisa terhubung ke server. Coba lagi.', 'err'); })
+      .then(function(){ btn.disabled = false; });
+  });
+  pnEl('pnStop').addEventListener('click', function(){
+    if (!window.confirm('Hentikan pengumuman yang sedang tampil di web?')) return;
+    pnStatus('Memproses...');
+    pnPost({ action: 'announcementStop', pin: ADMIN_PIN })
+      .then(function(res){ pnStatus(res && res.ok ? 'Pengumuman dihentikan.' : ((res && res.error) || 'Gagal.'), res && res.ok ? 'ok' : 'err'); })
+      .catch(function(){ pnStatus('Tidak bisa terhubung ke server.', 'err'); });
+  });
+
+  // ---------------- Pengumuman di web (tampil ke semua pengunjung) ----------------
+  function annShow(a, seenKey){
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px';
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#2b1a12;color:#fff;border-radius:18px;padding:22px 20px 18px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);font:14px/1.5 Inter,system-ui,sans-serif;text-align:center';
+    var h = document.createElement('div'); h.style.cssText = 'font-size:18px;font-weight:800;margin-bottom:8px'; h.textContent = a.title;
+    var p = document.createElement('div'); p.style.cssText = 'opacity:.92;white-space:pre-line;margin-bottom:16px'; p.textContent = a.body;
+    var row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;justify-content:center';
+    function close(){ try { localStorage.setItem(seenKey, '1'); } catch (e){} if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }
+    var go = document.createElement('button'); go.type = 'button'; go.textContent = (a.url && a.url !== '/') ? 'Lihat' : 'Oke';
+    go.style.cssText = 'background:#16A34A;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer';
+    go.addEventListener('click', function(){ close(); if (a.url && a.url !== '/') window.location.href = a.url; });
+    row.appendChild(go);
+    if (a.url && a.url !== '/'){
+      var no = document.createElement('button'); no.type = 'button'; no.textContent = 'Tutup';
+      no.style.cssText = 'background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:10px;padding:10px 16px;cursor:pointer';
+      no.addEventListener('click', close); row.appendChild(no);
+    }
+    card.appendChild(h); card.appendChild(p); card.appendChild(row); wrap.appendChild(card);
+    wrap.addEventListener('click', function(e){ if (e.target === wrap) close(); });
+    document.body.appendChild(wrap);
+  }
+  try {
+    fetch(GAS_URL + '?action=announcement').then(function(r){ return r.json(); }).then(function(res){
+      var a = res && res.announcement;
+      if (!a || !a.id) return;
+      var key = 'famuha_ann_seen_' + a.id;
+      try { if (localStorage.getItem(key)) return; } catch (e){}
+      setTimeout(function(){ annShow(a, key); }, 2500);
+    }).catch(function(){});
+  } catch (e){}
+
   // ---------------- Pengunjung & Sumber Order (menu Admin) ----------------
   // Menggabungkan dashboard pengunjung (dulu admin-page-visits.html) dan laporan
   // order per sumber. Memakai endpoint & kunci yang sama dengan Pengingat WA
@@ -7915,6 +8017,29 @@ body[data-step="2"] .fq{display:none}
     });
   }
 
+  // ---------- Catat pemakaian dari layar utama (PWA) ----------
+  // Memakai action 'logPageVisit' yang sudah ada: sumber = "pwa",
+  // kampanye = "homescreen" (buka dari ikon) / "installed" (baru dipasang).
+  // Maksimal 1x per hari per jenis, per perangkat.
+  function logInstalledApp(kind) {
+    var key = 'famuha_pwa_logged_' + kind;
+    var today = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+    try { if (localStorage.getItem(key) === today) return; } catch (e) {}
+    postToGas({
+      action: 'logPageVisit',
+      utmSource: 'pwa',
+      utmCampaign: kind,
+      visitorId: getOrCreateVisitorId(),
+      phone: getPhone(),
+      firstVisit: localStorage.getItem(FIRST_VISIT_KEY) || now(),
+      wishlistFilled: hasWishlist(),
+      referrer: '',
+      userAgent: navigator.userAgent
+    }).then(function (res) {
+      if (res && res.ok) { try { localStorage.setItem(key, today); } catch (e) {} }
+    });
+  }
+
   function urlBase64ToUint8Array(base64String) {
     var padding = '='.repeat((4 - base64String.length % 4) % 4);
     var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -8059,7 +8184,8 @@ body[data-step="2"] .fq{display:none}
   window.FAMUHA_PUSH = {
     markWishlistFilled: markWishlistFilled,
     requestPermissionAndSubscribe: requestPermissionAndSubscribe,
-    logVisit: logPageVisit
+    logVisit: logPageVisit,
+    logInstalled: logInstalledApp
   };
 })();
 </script>
@@ -8734,13 +8860,14 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
 })();
 </script>
 
-<!-- ===== FAMUHA PWA: ajakan "Pasang di HP" ===== -->
+<!-- ===== FAMUHA PWA: ajakan "Pasang di HP" + pencatatan pemakai layar utama ===== -->
 <script id="famuha-pwa-install">
 (function () {
   'use strict';
   var DISMISS_KEY = 'famuha_pwa_dismissed_at';
   var COOLDOWN_MS = 7 * 24 * 3600 * 1000; // tanya lagi setelah 7 hari kalau ditutup
   var deferred = null;
+  var SHARE_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"/></svg>';
 
   function isStandalone() {
     return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
@@ -8749,6 +8876,13 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   function isIOS() {
     return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  function iosBrowser() {
+    var ua = navigator.userAgent;
+    if (/CriOS/i.test(ua)) return 'chrome';
+    if (/FxiOS/i.test(ua)) return 'firefox';
+    if (/EdgiOS/i.test(ua)) return 'edge';
+    return 'safari';
   }
   function recentlyDismissed() {
     try {
@@ -8759,6 +8893,9 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   function dismiss(el) {
     try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {}
     if (el && el.parentNode) el.parentNode.removeChild(el);
+  }
+  function track(kind) {
+    try { if (window.FAMUHA_PUSH && window.FAMUHA_PUSH.logInstalled) window.FAMUHA_PUSH.logInstalled(kind); } catch (e) {}
   }
   function showBar(html, onYes) {
     if (document.getElementById('famuhaPwaBar')) return;
@@ -8794,24 +8931,67 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   window.addEventListener('appinstalled', function () {
     deferred = null;
     var b = document.getElementById('famuhaPwaBar'); if (b) b.remove();
+    track('installed');
   });
 
-  // iPhone / iPad (Safari): tidak ada prompt otomatis, tampilkan petunjuk manual
+  // iPhone / iPad: tidak ada prompt otomatis, tampilkan petunjuk sesuai browser
   function maybeShowIOSHint() {
     if (!isIOS() || isStandalone() || recentlyDismissed()) return;
+    var where = iosBrowser() === 'safari'
+      ? 'Ketuk tombol <b>Bagikan</b> ' + SHARE_ICON + ' di bawah layar'
+      : 'Ketuk ikon <b>Bagikan</b> ' + SHARE_ICON + ' di dekat kolom alamat';
     setTimeout(function () {
-      showBar('<b>Pasang Famuha di iPhone</b><br><span style="opacity:.85">Ketuk tombol <b>Bagikan</b> ⎋ lalu pilih <b>Tambah ke Layar Utama</b>.</span>', null);
+      showBar('<b>Pasang Famuha di iPhone</b><br><span style="opacity:.85">' + where + ', lalu pilih <b>Tambah ke Layar Utama</b>.</span>', null);
     }, 8000);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', maybeShowIOSHint);
   else maybeShowIOSHint();
 
-  // Pastikan service worker terdaftar (sama dengan sw.js untuk push)
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/sw.js').catch(function () {});
+  // ---------- Tes notifikasi sederhana (untuk pemilik) ----------
+  // Cara: ketuk logo FAMUHA COFFEE 5x cepat. Notifikasi tes muncul 5 detik kemudian.
+  function toast(msg) {
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;left:16px;right:16px;top:calc(16px + env(safe-area-inset-top,0px));z-index:99999;' +
+      'background:#2b1a12;color:#fff;border-radius:12px;padding:12px 14px;font:14px/1.4 Inter,system-ui,sans-serif;' +
+      'max-width:480px;margin:0 auto;box-shadow:0 8px 28px rgba(0,0,0,.35)';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 6000);
+  }
+  function testNotif() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      toast('Notifikasi belum didukung di sini. Buka Famuha dari ikon di layar utama.');
+      return;
+    }
+    Notification.requestPermission().then(function (perm) {
+      if (perm !== 'granted') { toast('Izin notifikasi belum aktif. Cek Pengaturan → Notifikasi → Famuha.'); return; }
+      toast('Oke! Tutup aplikasi sekarang. Notifikasi tes muncul 5 detik lagi.');
+      setTimeout(function () {
+        navigator.serviceWorker.ready.then(function (reg) {
+          return reg.showNotification('Famuha Coffee ☕', {
+            body: 'Tes notifikasi berhasil! Ketuk untuk membuka Famuha.',
+            icon: '/icon-192.png', tag: 'famuha-tes', data: { url: '/' }
+          });
+        }).catch(function () {});
+      }, 5000);
     });
   }
+  var taps = [];
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest || !e.target.closest('.tp-logo')) return;
+    var n = Date.now();
+    taps = taps.filter(function (t) { return n - t < 3000; });
+    taps.push(n);
+    if (taps.length >= 5) { taps = []; testNotif(); }
+  });
+
+  // Dibuka dari ikon layar utama? Catat (maks 1x/hari/perangkat)
+  window.addEventListener('load', function () {
+    if (isStandalone()) setTimeout(function () { track('homescreen'); }, 2500);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(function () {});
+    }
+  });
 })();
 </script>
 </body>
