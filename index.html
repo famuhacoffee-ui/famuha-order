@@ -2067,6 +2067,7 @@ body[data-step="2"] .mk{display:none}
 </div>
     <label class="tp-search"><span>🔍</span><input type="search" id="tpSearch" name="menu-search" placeholder="Cari menu di Famuha Coffee" autocomplete="new-password" inputmode="search" readonly onfocus="this.removeAttribute('readonly')" data-lpignore="true" data-1p-ignore="true"></label>
     <div class="tp-actions" id="tpActions"></div>
+    <button type="button" class="history-btn" id="pwaInstallBtn" style="display:none">📲 Pasang Aplikasi</button>
     <button type="button" class="history-btn" id="historyBtn">📊 Riwayat Transaksi</button>
     <button type="button" class="history-btn" id="adminBtn" style="right:auto; left:16px;">⚙️ Admin</button>
     <button type="button" class="history-btn" id="menuOnlineBtn">🍽️ Menu Online</button>
@@ -8206,7 +8207,7 @@ body[data-step="2"] .fq{display:none}
 <script>
 (function(){
   var a=document.getElementById('tpActions');
-  ['adminBtn','historyBtn','menuOnlineBtn'].forEach(function(id){var b=document.getElementById(id); if(b&&a){a.appendChild(b);}});
+  ['pwaInstallBtn','adminBtn','historyBtn','menuOnlineBtn'].forEach(function(id){var b=document.getElementById(id); if(b&&a){a.appendChild(b);}});
   var s=document.getElementById('tpSearch');
   if(s){ s.addEventListener('input',function(){
     var q=s.value.trim().toLowerCase();
@@ -8910,17 +8911,20 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   function track(kind) {
     try { if (window.FAMUHA_PUSH && window.FAMUHA_PUSH.logInstalled) window.FAMUHA_PUSH.logInstalled(kind); } catch (e) {}
   }
-  function showBar(html, onYes) {
+  function showBar(html, onYes, yesLabel) {
     if (document.getElementById('famuhaPwaBar')) return;
+    var pushYes = document.getElementById('famuhaPushYes');
+    var lift = 0;
+    try { if (pushYes) lift = pushYes.parentNode.parentNode.offsetHeight + 12; } catch (e) {}
     var bar = document.createElement('div');
     bar.id = 'famuhaPwaBar';
-    bar.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));' +
+    bar.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(' + (12 + lift) + 'px + env(safe-area-inset-bottom,0px));' +
       'z-index:99998;background:#2b1a12;color:#fff;border-radius:14px;padding:12px 14px;display:flex;' +
       'align-items:center;gap:10px;box-shadow:0 8px 28px rgba(0,0,0,.35);font:14px/1.35 Inter,system-ui,sans-serif;max-width:520px;margin:0 auto;';
     bar.innerHTML =
       '<img src="/icon-192.png" alt="" width="40" height="40" style="border-radius:9px;flex:none">' +
       '<div style="flex:1;min-width:0">' + html + '</div>' +
-      (onYes ? '<button id="famuhaPwaYes" style="background:#16A34A;color:#fff;border:none;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer">Pasang</button>' : '') +
+      (onYes ? '<button id="famuhaPwaYes" style="background:#16A34A;color:#fff;border:none;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer">' + (yesLabel || 'Pasang') + '</button>' : '') +
       '<button id="famuhaPwaNo" aria-label="Tutup" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;padding:8px 10px;cursor:pointer">✕</button>';
     document.body.appendChild(bar);
     document.getElementById('famuhaPwaNo').addEventListener('click', function () { dismiss(bar); });
@@ -8938,7 +8942,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
         deferred.prompt();
         deferred.userChoice.then(function () { deferred = null; if (bar.parentNode) bar.parentNode.removeChild(bar); });
       });
-    }, 8000);
+    }, 5000);
   });
 
   window.addEventListener('appinstalled', function () {
@@ -8954,11 +8958,80 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
       ? 'Ketuk tombol <b>Bagikan</b> ' + SHARE_ICON + ' di bawah layar'
       : 'Ketuk ikon <b>Bagikan</b> ' + SHARE_ICON + ' di dekat kolom alamat';
     setTimeout(function () {
-      showBar('<b>Pasang Famuha di iPhone</b><br><span style="opacity:.85">' + where + ', lalu pilih <b>Tambah ke Layar Utama</b>.</span>', null);
-    }, 8000);
+      showBar('<b>Pasang Famuha di iPhone</b><br><span style="opacity:.85">Pesan lebih cepat &amp; dapat info promo.</span>', function (bar) {
+        if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+        openGuide();
+      }, 'Caranya');
+    }, 5000);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', maybeShowIOSHint);
   else maybeShowIOSHint();
+
+  // ---------- Panduan pasang (langkah demi langkah) + tombol permanen di header ----------
+  var guideEl = null;
+  function closeGuide() { if (guideEl && guideEl.parentNode) guideEl.parentNode.removeChild(guideEl); guideEl = null; }
+  function openGuide() {
+    if (guideEl) return;
+    var ios = isIOS(), br = iosBrowser(), steps;
+    if (ios) {
+      steps = [
+        (br === 'safari' ? 'Ketuk tombol <b>Bagikan</b> ' + SHARE_ICON + ' di bagian bawah layar.' : 'Ketuk ikon <b>Bagikan</b> ' + SHARE_ICON + ' di dekat kolom alamat.'),
+        'Gulir ke bawah, lalu pilih <b>Tambah ke Layar Utama</b>.',
+        'Ketuk <b>Tambah</b> di pojok kanan atas.',
+        'Buka Famuha dari <b>ikon di layar utama</b>, lalu ketuk <b>Izinkan</b> saat diminta notifikasi.'
+      ];
+    } else if (/android/i.test(navigator.userAgent)) {
+      steps = [
+        'Ketuk menu <b>⋮</b> di pojok kanan atas browser.',
+        'Pilih <b>Pasang aplikasi</b> atau <b>Tambahkan ke Layar utama</b>.',
+        'Ketuk <b>Pasang</b>.',
+        'Buka Famuha dari ikon di layar utama, lalu ketuk <b>Izinkan</b> saat diminta notifikasi.'
+      ];
+    } else {
+      steps = ['Klik ikon <b>Pasang</b> di sisi kanan kolom alamat browser, atau buka menu browser lalu pilih <b>Pasang Famuha</b>.'];
+    }
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;font:14px/1.5 Inter,system-ui,sans-serif';
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#2b1a12;color:#fff;border-radius:18px;padding:22px 20px 18px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5)';
+    card.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><img src="/icon-192.png" alt="" width="44" height="44" style="border-radius:10px">' +
+      '<div style="font-size:17px;font-weight:800">Pasang Famuha di HP</div></div>' +
+      '<ol style="margin:0 0 14px;padding-left:20px">' + steps.map(function (t) { return '<li style="margin:6px 0">' + t + '</li>'; }).join('') + '</ol>' +
+      '<button type="button" id="famuhaGuideClose" style="width:100%;background:#16A34A;color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;cursor:pointer">Mengerti</button>';
+    wrap.appendChild(card);
+    wrap.addEventListener('click', function (e) { if (e.target === wrap) closeGuide(); });
+    document.body.appendChild(wrap);
+    guideEl = wrap;
+    card.querySelector('#famuhaGuideClose').addEventListener('click', closeGuide);
+    if (ios && br === 'safari') {
+      var st = document.createElement('style');
+      st.textContent = '@keyframes famuhaBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(10px)}}';
+      wrap.appendChild(st);
+      var arrow = document.createElement('div');
+      arrow.style.cssText = 'position:fixed;left:0;right:0;bottom:calc(8px + env(safe-area-inset-bottom,0px));text-align:center;font-size:34px;animation:famuhaBounce 1s infinite;pointer-events:none';
+      arrow.textContent = '👇';
+      wrap.appendChild(arrow);
+    }
+  }
+
+  function wireInstallButton() {
+    var btn = document.getElementById('pwaInstallBtn');
+    if (!btn) return;
+    if (isStandalone()) { btn.parentNode.removeChild(btn); return; }
+    btn.style.display = '';
+    btn.addEventListener('click', function () {
+      if (deferred) {
+        deferred.prompt();
+        deferred.userChoice.then(function () { deferred = null; });
+      } else {
+        openGuide();
+      }
+    });
+    window.addEventListener('appinstalled', function () { if (btn.parentNode) btn.parentNode.removeChild(btn); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireInstallButton);
+  else wireInstallButton();
 
   // ---------- Tes notifikasi sederhana (untuk pemilik) ----------
   // Cara: ketuk logo FAMUHA COFFEE 5x cepat. Notifikasi tes muncul 5 detik kemudian.
@@ -8997,6 +9070,25 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
     taps.push(n);
     if (taps.length >= 5) { taps = []; testNotif(); }
   });
+
+  // Hapus badge angka di ikon (dan antrean hitungannya) saat Famuha dibuka.
+  function clearBadge() {
+    try { if (navigator.clearAppBadge) navigator.clearAppBadge(); } catch (e) {}
+    try { if (window.caches) caches.open('famuha-badge').then(function (c) { return c.delete('/__badge'); }); } catch (e) {}
+    try {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(function (reg) {
+          if (reg && reg.getNotifications) reg.getNotifications().then(function (list) {
+            list.forEach(function (n) { n.close(); });
+          });
+        });
+      }
+    } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') clearBadge();
+  });
+  clearBadge();
 
   // Dibuka dari ikon layar utama? Catat (maks 1x/hari/perangkat)
   window.addEventListener('load', function () {
