@@ -1,5 +1,6 @@
 // Mengirim antrean notifikasi dari Admin (sheet "PushQueue") ke semua perangkat di "PushSubscriptions".
 // Dijalankan oleh .github/workflows/push-broadcast.yml
+// Hasil kirim per perangkat dicatat ke sheet "Log Penerima" (action pushLogRecipients).
 
 const crypto = require('crypto');
 const webpush = require('web-push');
@@ -71,6 +72,7 @@ async function main() {
     let sent = 0, failed = 0;
     const dead = [];
     const rejected = [];
+    const results = []; // hasil per perangkat, untuk sheet "Log Penerima"
 
     for (let i = 0; i < subs.length; i += 10) {
       await Promise.all(subs.slice(i, i + 10).map(async (s) => {
@@ -81,13 +83,32 @@ async function main() {
             { TTL: 86400, urgency: 'normal' }
           );
           sent++;
+          results.push({ endpoint: s.endpoint, ok: true });
         } catch (err) {
           failed++;
+          const detail = (err.body || err.message || '').toString().slice(0, 120);
+          results.push({
+            endpoint: s.endpoint,
+            ok: false,
+            error: ((err.statusCode || '') + ' ' + detail).trim().slice(0, 150)
+          });
           if (err.statusCode === 404 || err.statusCode === 410) dead.push(s.endpoint);
           else if (err.statusCode === 401 || err.statusCode === 403) rejected.push(s.endpoint);
-          else console.log('Gagal kirim:', err.statusCode || '', (err.body || err.message || '').toString().slice(0, 120));
+          else console.log('Gagal kirim:', err.statusCode || '', detail);
         }
       }));
+    }
+
+    // Catat siapa saja yang menerima / gagal. HARUS sebelum langganan mati dihapus,
+    // supaya nama, No HP, dan perangkatnya masih bisa dicari di PushSubscriptions.
+    // Kalau pencatatan gagal, pengiriman tetap dianggap selesai.
+    try {
+      for (let i = 0; i < results.length; i += 200) {
+        const logRes = await gasPost({ action: 'pushLogRecipients', id: item.id, results: results.slice(i, i + 200) });
+        if (!logRes.ok) console.log('Log Penerima gagal dicatat:', logRes.error || 'tidak diketahui');
+      }
+    } catch (e) {
+      console.log('Log Penerima gagal dicatat:', e.message);
     }
 
     // 401/403 = langganan dibuat dengan kunci VAPID lain (lama). Hanya dibuang kalau ada yang berhasil terkirim,
