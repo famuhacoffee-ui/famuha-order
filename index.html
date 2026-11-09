@@ -8879,7 +8879,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
 (function () {
   'use strict';
   var DISMISS_KEY = 'famuha_pwa_dismissed_at';
-  var COOLDOWN_MS = 7 * 24 * 3600 * 1000; // tanya lagi setelah 7 hari kalau ditutup
+  var COOLDOWN_MS = 24 * 3600 * 1000; // tanya lagi setelah 1 hari kalau ditutup (buka ?pasang=1 untuk memaksa tampil)
   var deferred = null;
   var SHARE_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"/></svg>';
 
@@ -8899,6 +8899,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
     return 'safari';
   }
   function recentlyDismissed() {
+    if (/[?&]pasang=1/.test(location.search)) return false;
     try {
       var t = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
       return t && (Date.now() - t) < COOLDOWN_MS;
