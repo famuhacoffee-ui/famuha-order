@@ -9035,7 +9035,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   else wireInstallButton();
 
   // ---------- Tes notifikasi sederhana (untuk pemilik) ----------
-  // Cara: ketuk logo FAMUHA COFFEE 5x cepat. Notifikasi tes muncul 5 detik kemudian.
+  // Cara: ketuk logo FAMUHA COFFEE 5x cepat untuk membuka "Cek notifikasi" (status perangkat + tes).
   function toast(msg) {
     var t = document.createElement('div');
     t.style.cssText = 'position:fixed;left:16px;right:16px;top:calc(16px + env(safe-area-inset-top,0px));z-index:99999;' +
@@ -9063,13 +9063,69 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
       }, 5000);
     });
   }
+  // ---------- Cek notifikasi (ketuk logo 5x): menampilkan status perangkat ini ----------
+  function openDiag() {
+    var old = document.getElementById('famuhaDiag');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    var wrap = document.createElement('div');
+    wrap.id = 'famuhaDiag';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;font:14px/1.45 Inter,system-ui,sans-serif';
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#2b1a12;color:#fff;border-radius:18px;padding:20px 18px 16px;max-width:400px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)';
+    card.innerHTML = '<div style="font-size:17px;font-weight:800;margin-bottom:8px">Cek notifikasi</div><div id="famuhaDiagRows">Memeriksa…</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">' +
+      '<button type="button" id="famuhaDiagOn" style="background:#16A34A;color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;cursor:pointer">Aktifkan / perbarui notifikasi</button>' +
+      '<button type="button" id="famuhaDiagTest" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:10px;padding:10px;cursor:pointer">Tes notifikasi (muncul 5 detik lagi)</button>' +
+      '<button type="button" id="famuhaDiagClose" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:10px;padding:10px;cursor:pointer">Tutup</button></div>';
+    wrap.appendChild(card);
+    document.body.appendChild(wrap);
+    wrap.addEventListener('click', function (e) { if (e.target === wrap) wrap.parentNode.removeChild(wrap); });
+    card.querySelector('#famuhaDiagClose').addEventListener('click', function () { wrap.parentNode.removeChild(wrap); });
+    card.querySelector('#famuhaDiagTest').addEventListener('click', function () { wrap.parentNode.removeChild(wrap); testNotif(); });
+    card.querySelector('#famuhaDiagOn').addEventListener('click', function () {
+      try { window.FAMUHA_PUSH.requestPermissionAndSubscribe(); } catch (e) {}
+      card.querySelector('#famuhaDiagRows').textContent = 'Memproses…';
+      setTimeout(openDiag, 4500);
+    });
+
+    var rows = [];
+    function row(ok, label, val) {
+      rows.push('<div style="margin:7px 0">' + (ok === true ? '✅' : ok === false ? '❌' : '⚠️') + ' <b>' + label + '</b><br><span style="opacity:.85">' + val + '</span></div>');
+    }
+    var standalone = isStandalone();
+    row(standalone, 'Dibuka dari ikon layar utama', standalone ? 'Ya' : 'Belum. Di iPhone, notifikasi hanya jalan kalau Famuha dibuka dari ikon di layar utama.');
+    var supported = ('Notification' in window) && ('PushManager' in window) && ('serviceWorker' in navigator);
+    row(supported, 'Perangkat mendukung notifikasi', supported ? 'Ya' : 'Belum. Pasang Famuha ke layar utama dulu, lalu buka dari ikonnya.');
+    var perm = ('Notification' in window) ? Notification.permission : 'tidak tersedia';
+    row(perm === 'granted' ? true : (perm === 'denied' ? false : null), 'Izin notifikasi',
+      perm === 'granted' ? 'Diizinkan' : perm === 'denied' ? 'Ditolak. Nyalakan di Pengaturan iPhone → Notifikasi → Famuha.' : 'Belum diputuskan. Ketuk tombol hijau di bawah, lalu pilih Izinkan.');
+    var verOk = false;
+    try { verOk = localStorage.getItem('famuha_push_vapid_ver') === 'v2'; } catch (e) {}
+    row(verOk, 'Langganan memakai kunci baru', verOk ? 'Ya' : 'Belum. Ketuk tombol hijau di bawah.');
+
+    function render() { var el = card.querySelector('#famuhaDiagRows'); if (el) el.innerHTML = rows.join(''); }
+    if (!('serviceWorker' in navigator)) { render(); return; }
+    navigator.serviceWorker.getRegistration().then(function (reg) {
+      row(!!(reg && reg.active), 'Service worker aktif', reg && reg.active ? 'Ya' : 'Belum aktif. Tutup lalu buka lagi Famuha.');
+      if (!reg || !reg.pushManager) return null;
+      return reg.pushManager.getSubscription();
+    }).then(function (sub) {
+      if (sub === null || sub === undefined) { row(false, 'Langganan push di perangkat ini', 'Belum ada. Ketuk tombol hijau di bawah.'); return; }
+      var host = '';
+      try { host = new URL(sub.endpoint).host; } catch (e) {}
+      row(true, 'Langganan push di perangkat ini', 'Ada (' + host + ')');
+    }).catch(function (err) {
+      row(false, 'Pemeriksaan', String(err && err.message || err));
+    }).then(render);
+  }
+
   var taps = [];
   document.addEventListener('click', function (e) {
     if (!e.target.closest || !e.target.closest('.tp-logo')) return;
     var n = Date.now();
     taps = taps.filter(function (t) { return n - t < 3000; });
     taps.push(n);
-    if (taps.length >= 5) { taps = []; testNotif(); }
+    if (taps.length >= 5) { taps = []; openDiag(); }
   });
 
   // Hapus badge angka di ikon (dan antrean hitungannya) saat Famuha dibuka.
