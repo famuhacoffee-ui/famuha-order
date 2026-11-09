@@ -42,6 +42,25 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
+// ---------- Badge angka di ikon (seperti WhatsApp) ----------
+// Menghitung notifikasi yang belum "dibaca". Angka naik tiap push masuk,
+// dan di-nol-kan saat pelanggan membuka Famuha (lihat clearBadge di index.html).
+const BADGE_CACHE = 'famuha-badge';
+const BADGE_KEY = '/__badge';
+
+function bumpBadge() {
+  return caches.open(BADGE_CACHE).then((c) =>
+    c.match(BADGE_KEY)
+      .then((r) => (r ? r.text() : '0'))
+      .then((t) => {
+        const n = (parseInt(t, 10) || 0) + 1;
+        return c.put(BADGE_KEY, new Response(String(n))).then(() => n);
+      })
+  ).then((n) => {
+    if (self.navigator && self.navigator.setAppBadge) return self.navigator.setAppBadge(n);
+  }).catch(() => {});
+}
+
 // ---------- Push notification ----------
 self.addEventListener('push', (event) => {
   let data = {};
@@ -59,7 +78,9 @@ self.addEventListener('push', (event) => {
     data: { url: data.url || '/' }
   };
   if (data.image) options.image = data.image;
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    self.registration.showNotification(title, options).then(bumpBadge)
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {
