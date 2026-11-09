@@ -8119,6 +8119,7 @@ body[data-step="2"] .fq{display:none}
           action: 'pushSubscribe',
           phone: getPhone(),
           visitorId: getOrCreateVisitorId(),
+          userAgent: navigator.userAgent,
           subscription: sub.toJSON(),
           firstVisit: localStorage.getItem(FIRST_VISIT_KEY) || now(),
           wishlistFilled: hasWishlist()
