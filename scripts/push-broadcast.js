@@ -70,6 +70,7 @@ async function main() {
     });
     let sent = 0, failed = 0;
     const dead = [];
+    const rejected = [];
 
     for (let i = 0; i < subs.length; i += 10) {
       await Promise.all(subs.slice(i, i + 10).map(async (s) => {
@@ -83,11 +84,15 @@ async function main() {
         } catch (err) {
           failed++;
           if (err.statusCode === 404 || err.statusCode === 410) dead.push(s.endpoint);
+          else if (err.statusCode === 401 || err.statusCode === 403) rejected.push(s.endpoint);
           else console.log('Gagal kirim:', err.statusCode || '', (err.body || err.message || '').toString().slice(0, 120));
         }
       }));
     }
 
+    // 401/403 = langganan dibuat dengan kunci VAPID lain (lama). Hanya dibuang kalau ada yang berhasil terkirim,
+    // supaya salah pengaturan kunci tidak menghapus semua langganan.
+    if (sent > 0) rejected.forEach((ep) => dead.push(ep));
     for (const endpoint of dead) await gasPost({ action: 'pushRemoveEndpoint', endpoint });
     await gasPost({ action: 'pushQueueMarkSent', id: item.id, sent, failed });
     console.log('Selesai ' + item.id + ': berhasil ' + sent + ', gagal ' + failed + ', langganan mati dibersihkan ' + dead.length);
