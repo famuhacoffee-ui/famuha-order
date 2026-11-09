@@ -93,7 +93,7 @@ async function main() {
             error: ((err.statusCode || '') + ' ' + detail).trim().slice(0, 150)
           });
           if (err.statusCode === 404 || err.statusCode === 410) dead.push(s.endpoint);
-          else if (err.statusCode === 401 || err.statusCode === 403) rejected.push(s.endpoint);
+          else if (err.statusCode === 401 || err.statusCode === 403 || /VapidPkHashMismatch/.test(String(err.body || ''))) rejected.push(s.endpoint);
           else console.log('Gagal kirim:', err.statusCode || '', detail);
         }
       }));
@@ -111,7 +111,7 @@ async function main() {
       console.log('Log Penerima gagal dicatat:', e.message);
     }
 
-    // 401/403 = langganan dibuat dengan kunci VAPID lain (lama). Hanya dibuang kalau ada yang berhasil terkirim,
+    // 401/403 atau 400 VapidPkHashMismatch (Apple) = langganan dibuat dengan kunci VAPID lain (lama). Hanya dibuang kalau ada yang berhasil terkirim,
     // supaya salah pengaturan kunci tidak menghapus semua langganan.
     if (sent > 0) rejected.forEach((ep) => dead.push(ep));
     for (const endpoint of dead) await gasPost({ action: 'pushRemoveEndpoint', endpoint });
