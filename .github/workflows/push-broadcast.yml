@@ -26,7 +26,7 @@ jobs:
         run: node scripts/push-broadcast.js
         env:
           GAS_URL: 'https://script.google.com/macros/s/AKfycbzGwMhiIx3o6VWSpOO5nvA125bQAr5QdIqQHEaWzUZ_2HhiFS44-iQX_uVIhKoShbiC/exec'
-          VAPID_PUBLIC_KEY: 'BDCCwgMZwl5gDx0kVoZraSNdlChIdaK9JjxS724cLM7h6b2FLoNdMBHQts8g24Aj8FUk9ku6gE4bb6f6uSzvRMQ'
+          VAPID_PUBLIC_KEY: 'BPoTdvCl3ggDIJh_tghfVK8DaWemhw8J87Gfcyobydp1oY-rCPFtUzmabKYv8C8vtRxIhtbB9Gijnsad5Nl2-nw'
           VAPID_SUBJECT: 'mailto:famuhacoffee@gmail.com'
           PUSH_SECRET: ${{ secrets.PUSH_SECRET }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
