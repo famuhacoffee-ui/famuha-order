@@ -1948,6 +1948,10 @@ body[data-step="2"] .site-footer{display:none}
 @media(prefers-reduced-motion:no-preference){.mk-btn svg,.mk-btn img{animation:mkBob 3.2s ease-in-out infinite}@keyframes mkBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}}
 body[data-step="2"] .mk{display:none}
 </style>
+<style id="famuha-hide-menuonline">/* Menu Online, Pasang Aplikasi & Bagikan (tombol header) disembunyikan sementara. Untuk menampilkan lagi, hapus baris yang bersangkutan atau blok style ini. */
+#menuOnlineBtn{display:none!important}
+#pwaInstallBtn{display:none!important}
+#fmShareHdrBtn{display:none!important}</style>
 </head>
 <body data-step="1"><div id='welcomePopup'><div class='card'>
   <div class='wc-step active' id='wcStep1'>
@@ -8078,6 +8082,7 @@ body[data-step="2"] .fq{display:none}
 
   // ---------- Prompt izin yang tidak mengganggu ----------
   function showSoftPrompt() {
+    if (isAndroidPushCapable()) return; // Android Chrome: izin diminta otomatis (lihat askAndroidOnce), tanpa bar ini
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'default') return;
     try { if (localStorage.getItem(PROMPT_DISMISSED) === '1') return; } catch (e) {}
@@ -8178,6 +8183,41 @@ body[data-step="2"] .fq{display:none}
     });
   }
 
+  // ---------- Android Chrome: minta izin notifikasi otomatis ----------
+  // Di Android, push jalan langsung dari Chrome (tanpa "Pasang ke layar utama").
+  // Dialog izin Chrome dimunculkan sendiri oleh situs, tepat setelah pelanggan
+  // menutup popup Buku Tamu atau menambah menu ke keranjang (bukan saat halaman
+  // baru dibuka, supaya tidak ditolak reflek). Maksimal sekali per 3 hari selama
+  // pelanggan belum memutuskan. Browser dalam aplikasi (TikTok/IG/FB/WA) tidak
+  // mendukung push, jadi dilewati.
+  var ANDROID_ASKED_KEY = 'famuha_push_android_asked';
+  function isInAppBrowser() {
+    return /FBAN|FBAV|Instagram|Line\/|TikTok|musical_ly|Bytedance|MicroMessenger|Snapchat|; wv\)/i.test(navigator.userAgent || '');
+  }
+  function isAndroidPushCapable() {
+    return /Android/i.test(navigator.userAgent || '') && !isInAppBrowser() &&
+      ('Notification' in window) && ('PushManager' in window) && ('serviceWorker' in navigator);
+  }
+  function askAndroidOnce() {
+    if (!isAndroidPushCapable()) return;
+    if (Notification.permission !== 'default') return;
+    if (window.__famuhaGuestOpen) return;
+    try {
+      var t = parseInt(localStorage.getItem(ANDROID_ASKED_KEY) || '0', 10);
+      if (t && Date.now() - t < 3 * 86400000) return;
+      localStorage.setItem(ANDROID_ASKED_KEY, String(Date.now()));
+    } catch (e) {}
+    requestPermissionAndSubscribe();
+  }
+  function hookAndroidAutoAsk() {
+    if (!isAndroidPushCapable()) return;
+    window.addEventListener('famuha:guestclosed', function () { setTimeout(askAndroidOnce, 400); });
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t && t.closest && t.closest('.fm-add, #addCartBtn, #addCartBtnM')) askAndroidOnce();
+    }, true);
+  }
+
   // ---------- Auto-hook ke tombol "Tambah ke Pesanan/Keranjang" ----------
   function hookAddToCartButtons() {
     ['addCartBtn', 'addCartBtnM'].forEach(function (id) {
@@ -8190,6 +8230,7 @@ body[data-step="2"] .fq{display:none}
     captureTrafficSource_();
     ensureFirstVisit();
     hookAddToCartButtons();
+    hookAndroidAutoAsk();
     logPageVisit();
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(function () {});
@@ -8347,7 +8388,7 @@ body[data-step="2"] .fq{display:none}
   // Tombol Bagikan di header (bagikan toko)
   var a = $('tpActions');
   if (a){
-    var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'history-btn'; hb.textContent = '\uD83D\uDCE4 Bagikan';
+    var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'history-btn'; hb.id = 'fmShareHdrBtn'; hb.textContent = '\uD83D\uDCE4 Bagikan';
     a.insertBefore(hb, a.firstChild);
     hb.addEventListener('click', function(){ open('Bagikan Famuha Coffee', 'Pesan kopi favoritmu online di Famuha Coffee \u2615', BASE); });
   }
@@ -9177,9 +9218,9 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
 /* Transparansi semua popup: ubah satu angka ini (0.5 = sangat bening, 1 = solid) */
 :root{--popup-alpha:.86;--popup-dim:.32}
 #fg-overlay,#fg-wrap,#fg-wrap *{box-sizing:border-box}
-#fg-overlay{position:fixed;inset:0;background:rgba(0,0,0,var(--popup-dim));backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;z-index:320}
+#fg-overlay{position:fixed;inset:0;background:rgba(0,0,0,var(--popup-dim));backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;z-index:99999}
 #fg-overlay.show{display:block}
-#fg-wrap{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:14px;display:none;align-items:flex-end;justify-content:flex-end;gap:6px;z-index:330;pointer-events:none;font-family:inherit}
+#fg-wrap{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:14px;display:none;align-items:flex-end;justify-content:flex-end;gap:6px;z-index:100000;pointer-events:none;font-family:inherit}
 #fg-wrap.show{display:flex}
 #fg-card{pointer-events:auto;background:rgba(255,255,255,var(--popup-alpha));backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);border:1px solid rgba(255,255,255,.55);border-radius:20px 20px 4px 20px;box-shadow:0 10px 30px rgba(0,0,0,.22);padding:16px 16px 14px;width:min(320px,calc(100vw - 130px));position:relative;color:var(--tp-text,#31353B);animation:fgPop .35s cubic-bezier(.2,1.2,.4,1)}
 @keyframes fgPop{from{transform:translateY(20px) scale(.92);opacity:0}to{transform:none;opacity:1}}
@@ -9205,21 +9246,21 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
 #fg-card .fg-ok h2{margin:4px 0;text-align:center}
 #fg-card .fg-ok .fg-sub{text-align:center}
 #fg-mascot{pointer-events:auto;cursor:pointer;width:108px;flex:none;overflow:visible;-webkit-tap-highlight-color:transparent;user-select:none}
-#fg-mascot #m-body{transform-box:fill-box;transform-origin:50% 100%;animation:fgBob 2.4s ease-in-out infinite}
+#fg-mascot #m-body{transform-box:view-box;transform-origin:70px 166px;animation:fgBob 2.4s ease-in-out infinite}
 @keyframes fgBob{50%{transform:translateY(-5px) rotate(-2deg)}}
-#fg-mascot .shadow{transform-box:fill-box;transform-origin:center;animation:fgSh 2.4s ease-in-out infinite}
+#fg-mascot .shadow{transform-box:view-box;transform-origin:70px 168px;animation:fgSh 2.4s ease-in-out infinite}
 @keyframes fgSh{50%{transform:scale(.85);opacity:.1}}
 #fg-mascot .steam{animation:fgSt 2s ease-in-out infinite}@keyframes fgSt{50%{opacity:.3}}
 #fg-mascot .eye{transform-box:fill-box;transform-origin:center;animation:fgBlink 4s infinite}
 @keyframes fgBlink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
-#fg-mascot #m-armL{transform-box:fill-box;transform-origin:100% 100%;animation:fgWave 3s ease-in-out infinite}
+#fg-mascot #m-armL{transform-box:view-box;transform-origin:34px 110px;animation:fgWave 3s ease-in-out infinite}
 @keyframes fgWave{0%,55%,100%{transform:rotate(0)}65%{transform:rotate(-28deg)}75%{transform:rotate(6deg)}85%{transform:rotate(-28deg)}}
-#fg-mascot #m-armR{transform-box:fill-box;transform-origin:0% 0%}
+#fg-mascot #m-armR{transform-box:view-box;transform-origin:108px 126px}
 #fg-mascot #m-pupils{transition:transform .12s ease-out}
 #fg-mascot #mo-open,#fg-mascot #mo-talk{display:none}
 #fg-mascot.m-happy #mo-smile,#fg-mascot.m-cheer #mo-smile,#fg-mascot.m-talk #mo-smile{display:none}
 #fg-mascot.m-happy #mo-open,#fg-mascot.m-cheer #mo-open{display:inline}
-#fg-mascot.m-talk #mo-talk{display:inline;animation:fgTalk .3s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+#fg-mascot.m-talk #mo-talk{display:inline;animation:fgTalk .3s ease-in-out infinite alternate;transform-box:view-box;transform-origin:70px 113px}
 @keyframes fgTalk{from{transform:scaleY(.6)}to{transform:scaleY(1.1)}}
 #fg-mascot.m-happy #m-body{animation:fgBob 1.2s ease-in-out infinite}
 #fg-mascot.m-jump #m-body{animation:fgHop .65s ease-out 1}
@@ -9232,9 +9273,15 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
 @keyframes fgCheerR{from{transform:rotate(-70deg)}to{transform:rotate(-115deg)}}
 #fg-mascot .spk{opacity:0}#fg-mascot.m-cheer .spk{animation:fgTw .5s ease-in-out infinite alternate}
 @keyframes fgTw{from{opacity:0}to{opacity:1}}
-.fg-fx{position:fixed;pointer-events:none;z-index:340;font-size:20px;animation:fgFly 1.1s ease-out forwards}
+.fg-fx{position:fixed;pointer-events:none;z-index:100001;font-size:20px;animation:fgFly 1.1s ease-out forwards}
 @keyframes fgFly{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
-@media (prefers-reduced-motion:reduce){#fg-mascot #m-body,#fg-mascot #m-armL,#fg-mascot #m-armR,#fg-mascot .shadow,#fg-mascot .steam,#fg-mascot .eye,#fg-card,#fg-mascot .spk,#fg-mascot #mo-talk{animation:none!important}}
+/* "Kurangi Gerakan" (iPhone/Android): hilangkan gerakan besar, tapi maskot tetap hidup: kedip, uap, kilau, mulut, dan goyang sangat halus */
+@media (prefers-reduced-motion:reduce){
+#fg-card{animation:none!important}
+#fg-mascot .shadow,#fg-mascot #m-armL,#fg-mascot #m-armR,#fg-mascot.m-cheer #m-armL,#fg-mascot.m-cheer #m-armR,#fg-mascot.m-jump #m-body,#fg-mascot.m-cheer #m-body{animation:none!important}
+#fg-mascot #m-body,#fg-mascot.m-happy #m-body{animation:fgBobSoft 3.2s ease-in-out infinite!important}
+}
+@keyframes fgBobSoft{50%{transform:translateY(-2px)}}
 
 /* ---- Popup lain dibuat transparan juga (promo menu / weekend / TBV / diskon / selamat datang kembali) ---- */
 .promo-weekend-overlay,.promo-jumat-pick-overlay,#discountPopup,#welcomeBackPopup{background:rgba(0,0,0,var(--popup-dim)) !important;backdrop-filter:blur(4px) !important;-webkit-backdrop-filter:blur(4px) !important}
@@ -9275,7 +9322,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
       <ellipse cx="70" cy="64" rx="44" ry="10" fill="#3b2314"/><ellipse cx="70" cy="65" rx="38" ry="7" fill="#7a4a2a"/>
       <path d="M70 68l-5-4a3 3 0 0 1 5-3a3 3 0 0 1 5 3z" fill="#f5e6c8"/>
       <g class="eye"><ellipse cx="54" cy="96" rx="9" ry="10.5" fill="#fff"/></g><g class="eye"><ellipse cx="86" cy="96" rx="9" ry="10.5" fill="#fff"/></g>
-      <g id="m-pupils" class="eye"><circle cx="54" cy="98" r="5.5" fill="#1f1308"/><circle cx="86" cy="98" r="5.5" fill="#1f1308"/><circle cx="56" cy="95.5" r="1.8" fill="#fff"/><circle cx="88" cy="95.5" r="1.8" fill="#fff"/></g>
+      <g class="eye"><g id="m-pupils"><circle cx="54" cy="98" r="5.5" fill="#1f1308"/><circle cx="86" cy="98" r="5.5" fill="#1f1308"/><circle cx="56" cy="95.5" r="1.8" fill="#fff"/><circle cx="88" cy="95.5" r="1.8" fill="#fff"/></g></g>
       <ellipse cx="40" cy="111" rx="7" ry="4.2" fill="#fb7185" opacity=".6"/><ellipse cx="100" cy="111" rx="7" ry="4.2" fill="#fb7185" opacity=".6"/>
       <path id="mo-smile" d="M60 111q10 9 20 0" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
       <g id="mo-open"><path d="M58 109q12 18 24 0z" fill="#7f1d1d" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><ellipse cx="70" cy="117" rx="5" ry="2.8" fill="#f87171"/></g>
@@ -9410,5 +9457,124 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
 })();
 </script>
 <!-- ===== SAMPAI SINI: BUKU TAMU POPUP ===== -->
+<!-- ===== LONCENG: KOTAK NOTIFIKASI (info terbaru dari admin) ===== -->
+<style id="famuha-bell-css">
+#bellBtn{position:relative!important;top:0!important;right:auto!important;left:auto!important;bottom:auto!important}
+#bellBtn .bell-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#dc2626;color:#fff;font:700 11px/18px Inter,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px #fff;display:none}
+#bellBtn.has-new .bell-badge{display:block}
+#bellBtn.has-new .bell-ico{display:inline-block;animation:bellRing 2.6s ease-in-out infinite;transform-origin:50% 8%}
+@keyframes bellRing{0%,60%,100%{transform:rotate(0)}66%{transform:rotate(14deg)}72%{transform:rotate(-12deg)}78%{transform:rotate(8deg)}84%{transform:rotate(-4deg)}}
+@media (prefers-reduced-motion:reduce){#bellBtn.has-new .bell-ico{animation:none}}
+#bellOv{position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,var(--popup-dim,.32));backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center}
+#bellOv.open{display:flex}
+@media(min-width:600px){#bellOv{align-items:flex-start;justify-content:flex-end;padding:72px 24px 0}}
+#bellCard{background:rgba(255,255,255,var(--popup-alpha,.86));backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);border:1px solid rgba(255,255,255,.55);width:100%;max-width:420px;max-height:min(78vh,560px);display:flex;flex-direction:column;border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.2);color:#31353B;font-family:inherit;padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(min-width:600px){#bellCard{border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.25)}}
+#bellHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px}
+#bellHead h3{margin:0;font-size:16px;font-weight:800}
+#bellClose{border:0;background:none;font-size:22px;line-height:1;color:#6b7280;cursor:pointer;padding:0 2px}
+#bellList{overflow-y:auto;padding:0 10px 12px;-webkit-overflow-scrolling:touch}
+#bellList .bn{display:block;width:100%;text-align:left;border:0;background:rgba(255,255,255,.55);border-radius:12px;padding:11px 12px 10px;margin:0 0 8px;font:inherit;color:inherit;cursor:default;position:relative}
+#bellList .bn.go{cursor:pointer}
+#bellList .bn.go:hover{background:rgba(255,255,255,.85)}
+#bellList .bn.unread{box-shadow:inset 3px 0 0 #16a34a}
+#bellList .bn.unread .bn-t::after{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#16a34a;margin-left:6px;vertical-align:middle}
+#bellList .bn-t{font-weight:800;font-size:14px;line-height:1.3;margin:0 0 3px}
+#bellList .bn-b{font-size:13px;color:#4b5563;line-height:1.45;margin:0 0 5px;white-space:pre-wrap;word-break:break-word}
+#bellList .bn-m{font-size:11.5px;color:#6b7280;display:flex;justify-content:space-between;gap:8px}
+#bellList .bn-m b{color:#16a34a;font-weight:700}
+#bellEmpty{padding:28px 16px 30px;text-align:center;color:#6b7280;font-size:13.5px;line-height:1.5}
+#bellEmpty .e-ico{font-size:30px;display:block;margin-bottom:6px}
+</style>
+<div id="bellOv" role="dialog" aria-modal="true" aria-labelledby="bellTitle">
+  <div id="bellCard">
+    <div id="bellHead"><h3 id="bellTitle">🔔 Info Terbaru</h3><button id="bellClose" type="button" aria-label="Tutup">×</button></div>
+    <div id="bellList"></div>
+  </div>
+</div>
+<script>
+(function(){
+  var SEEN_KEY='famuha_notif_seen', CACHE_KEY='famuha_notif_cache';
+  var items=[], seen=0, loaded=false;
+  var $=function(id){return document.getElementById(id)};
+  function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+
+  // --- tombol lonceng di baris ikon header ---
+  var bar=$('tpActions'), bell=document.createElement('button');
+  bell.type='button'; bell.className='history-btn'; bell.id='bellBtn'; bell.setAttribute('aria-label','Info terbaru dari Famuha Coffee');
+  bell.innerHTML='<span class="bell-ico">\uD83D\uDD14</span> Info<span class="bell-badge" id="bellBadge"></span>';
+  if(bar) bar.insertBefore(bell,bar.firstChild); else return;
+
+  seen=parseInt(lsGet(SEEN_KEY)||'0',10)||0;
+  try{ var c=JSON.parse(lsGet(CACHE_KEY)||'null'); if(c&&c.length){items=c; updateBadge();} }catch(e){}
+
+  function unreadCount(){ return items.filter(function(n){return n.ts>seen}).length; }
+  function updateBadge(){
+    var n=unreadCount(), b=$('bellBadge');
+    bell.classList.toggle('has-new',n>0);
+    if(b) b.textContent=n>9?'9+':String(n);
+  }
+  function ago(ts){
+    var s=Math.max(0,(Date.now()-ts)/1000);
+    if(s<60) return 'baru saja';
+    if(s<3600) return Math.floor(s/60)+' menit lalu';
+    if(s<86400) return Math.floor(s/3600)+' jam lalu';
+    if(s<7*86400) return Math.floor(s/86400)+' hari lalu';
+    return new Date(ts).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+  }
+  function safeUrl(u){
+    u=String(u||''); if(!u||u==='/') return '';
+    try{ var x=new URL(u,location.href); return x.origin===location.origin?x.href:''; }catch(e){ return ''; }
+  }
+  function render(prevSeen){
+    var box=$('bellList'); box.textContent='';
+    if(!items.length){
+      var e=document.createElement('div'); e.id='bellEmpty';
+      e.innerHTML='<span class="e-ico">\u2615</span>'; 
+      e.appendChild(document.createTextNode(loaded?'Belum ada info terbaru dari Famuha Coffee. Cek lagi nanti ya, kak!':'Memuat info terbaru\u2026'));
+      box.appendChild(e); return;
+    }
+    items.forEach(function(n){
+      var url=safeUrl(n.url);
+      var el=document.createElement(url?'button':'div'); el.className='bn'+(url?' go':'')+(n.ts>prevSeen?' unread':'');
+      if(url) el.type='button';
+      var t=document.createElement('div'); t.className='bn-t'; t.textContent=n.title;
+      var b=document.createElement('div'); b.className='bn-b'; b.textContent=n.body;
+      var m=document.createElement('div'); m.className='bn-m';
+      var w=document.createElement('span'); w.textContent=ago(n.ts); m.appendChild(w);
+      if(url){ var g=document.createElement('b'); g.textContent='Lihat \u203A'; m.appendChild(g); el.addEventListener('click',function(){ location.href=url; }); }
+      el.appendChild(t); el.appendChild(b); el.appendChild(m); box.appendChild(el);
+    });
+  }
+  var prevSeen=0, panelOpen=false;
+  function markSeen(){
+    var latest=items.reduce(function(m,n){return Math.max(m,n.ts)},0);
+    if(latest>seen){ seen=latest; lsSet(SEEN_KEY,String(seen)); }
+    updateBadge();
+  }
+  function load(){
+    var g=window.__famuhaGas||{}; if(!g.url) return;
+    fetch(g.url+'?action=notifList').then(function(r){return r.json()}).then(function(res){
+      if(res&&res.ok&&Array.isArray(res.items)){
+        items=res.items.filter(function(n){return n&&n.title&&n.ts}); loaded=true;
+        lsSet(CACHE_KEY,JSON.stringify(items));
+        if(panelOpen){ markSeen(); render(prevSeen); } else updateBadge();
+      }
+    }).catch(function(){ loaded=true; if(panelOpen) render(prevSeen); });
+  }
+  function open(){
+    prevSeen=seen; panelOpen=true; render(prevSeen);
+    $('bellOv').classList.add('open'); markSeen(); load();
+  }
+  function close(){ panelOpen=false; $('bellOv').classList.remove('open'); }
+  bell.addEventListener('click',open);
+  $('bellClose').addEventListener('click',close);
+  $('bellOv').addEventListener('click',function(e){ if(e.target===$('bellOv')) close(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  setTimeout(load,1500);
+})();
+</script>
+<!-- ===== SAMPAI SINI: LONCENG ===== -->
 </body>
 </html>
