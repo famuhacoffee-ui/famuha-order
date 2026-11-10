@@ -4285,7 +4285,7 @@ body[data-step="2"] .fq{display:none}
     // Tamu baru yang baru mengisi Buku Tamu: setelah popup ditutup, cek ke server (diskon pembelian pertama / sapaan)
     // dan isi otomatis form checkout dengan nama & nomornya.
     var _guestJustRegistered = false;
-    window.addEventListener('famuha:guest', function(){ _guestJustRegistered = true; });
+    window.addEventListener('famuha:guest', function(e){ if (e && e.detail && e.detail.changed) _guestJustRegistered = true; });
     window.addEventListener('famuha:guestclosed', function(){
       if (_guestJustRegistered){ _guestJustRegistered = false; tryAutoRecognizeReturningCustomer_(); }
     });
@@ -9246,8 +9246,8 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   <div id="fg-card">
     <button id="fg-close" type="button" aria-label="Tutup">×</button>
     <div id="fg-form">
-      <h2>Halo kak! <b>Selamat datang di Famuha Coffee</b> ☕</h2>
-      <p class="fg-sub">Boleh info nama dan nomor teleponnya? Buat pendataan dan info promo spesial.</p>
+      <h2 id="fg-title">Halo kak! <b>Selamat datang di Famuha Coffee</b> ☕</h2>
+      <p class="fg-sub" id="fg-intro">Boleh info nama dan nomor teleponnya? Buat pendataan dan info promo spesial.</p>
       <div class="fg-f" id="f-name"><label for="fg-name">Nama</label><input id="fg-name" type="text" autocomplete="given-name" placeholder="Nama kakak" maxlength="40"><div class="fg-msg">Nama wajib diisi ya, kak.</div></div>
       <div class="fg-f" id="f-phone"><label for="fg-phone">Nomor WhatsApp / HP</label><input id="fg-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" maxlength="16"><div class="fg-msg">Nomor belum valid. Contoh: 081234567890</div></div>
       <label class="fg-chk"><input type="checkbox" id="fg-consent" checked><span>Saya setuju dihubungi lewat WhatsApp untuk info promo. Data hanya dipakai Famuha Coffee.</span></label>
@@ -9285,10 +9285,14 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
 </div>
 <script>
 (function(){
-  var SKIP_KEY = "famuha_guest_skip";   // waktu terakhir klik "Nanti saja"
-  var GUEST_KEY = "famuha_guest";       // data tamu yang sudah mengisi
-  var SKIP_DAYS = 3;                    // tampilkan lagi setelah N hari jika dilewati
+  var GUEST_KEY = "famuha_guest";       // data tamu terakhir yang mengisi
+  var DAY_KEY = "famuha_guest_day";     // tanggal (WIB) terakhir popup ditangani (diisi / "Nanti saja")
   var DELAY_MS = 600;                   // jeda sebelum popup muncul
+  // Popup muncul SEKALI SEHARI untuk semua pengunjung (baru maupun sudah tersimpan), supaya kunjungan harian bisa dipantau.
+  function today(){
+    try{ return new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Jakarta"}); }
+    catch(e){ var d=new Date(); return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
+  }
 
   var $ = function(id){return document.getElementById(id)};
   var wrap=$("fg-wrap"), ov=$("fg-overlay");
@@ -9301,6 +9305,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   function show(){
     wrap.classList.add("show"); ov.classList.add("show"); window.__famuhaGuestOpen=true;
     $("fg-form").style.display=""; $("fg-done").style.display="none";
+    prefill();
     try{ if(!window.matchMedia("(pointer:coarse)").matches) setTimeout(function(){$("fg-name").focus()},400); }catch(e){}
   }
   function hide(){
@@ -9317,13 +9322,19 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   }
   function validPhone(d){ return /^08\d{8,12}$/.test(d); }
 
-  function shouldShow(){
-    if(/[?&]menu=/.test(location.search)) return false;   // dibuka dari link menu tertentu
-    if(get(GUEST_KEY)) return false;
-    var cp=(get("customerPhone")||"").replace(/\D/g,"");
-    if(cp.length>=10) return false;                        // pelanggan lama (sudah pernah checkout / mengisi)
-    var s=parseInt(get(SKIP_KEY)||"0",10);
-    return !(s && Date.now()-s < SKIP_DAYS*864e5);
+  function shouldShow(){ return get(DAY_KEY)!==today(); }   // sekali per hari, berlaku untuk semua pengunjung
+
+  // Pelanggan yang datanya sudah tersimpan: form terisi otomatis, tinggal konfirmasi
+  function prefill(){
+    var n=(get("customerName")||"").trim(), p=normPhone(get("customerPhone")||"");
+    if(n.length>=2 && validPhone(p)){
+      $("fg-name").value=n; $("fg-phone").value=p;
+      $("fg-title").innerHTML="Selamat datang kembali, <b></b> ☕";
+      $("fg-title").querySelector("b").textContent=n.split(" ")[0]+"!";
+      $("fg-intro").textContent="Cek dulu datanya ya, kak. Tinggal tekan tombol di bawah untuk absen kunjungan hari ini.";
+      $("fg-submit").textContent="Konfirmasi & lihat menu";
+      mood("happy");
+    }
   }
 
   // Simpan ke sheet Buku Tamu (aksi registerGuest yang sama dengan sebelumnya)
@@ -9331,7 +9342,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
     var g=window.__famuhaGas||{}; if(!g.url) return;
     try{
       fetch(g.url,{method:"POST",keepalive:true,headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body:JSON.stringify({action:"registerGuest",custName:data.nama,custPhone:data.hp,promoConsent:data.promo})}).catch(function(e){console.warn("Gagal menyimpan ke Buku Tamu:",e)});
+        body:JSON.stringify({action:"registerGuest",custName:data.nama,custPhone:data.hp,promoConsent:data.promo,visitDate:data.tanggal,source:"popup-harian"})}).catch(function(e){console.warn("Gagal menyimpan ke Buku Tamu:",e)});
     }catch(e){}
   }
 
@@ -9341,8 +9352,9 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
     $("f-name").classList.toggle("bad",!okN);
     $("f-phone").classList.toggle("bad",!okP);
     if(!okN||!okP) return;
-    var data={nama:nama,hp:hp,promo:$("fg-consent").checked,waktu:new Date().toISOString()};
-    set(GUEST_KEY,JSON.stringify(data)); del(SKIP_KEY);
+    var prev=normPhone(get("customerPhone")||"");
+    var data={nama:nama,hp:hp,promo:$("fg-consent").checked,waktu:new Date().toISOString(),tanggal:today(),changed:prev!==hp};
+    set(GUEST_KEY,JSON.stringify(data)); set(DAY_KEY,today());
     set("customerName",nama); set("customerPhone",hp);   // dipakai form checkout & pengenalan pelanggan
     registered=true; send(data);
     $("fg-who").textContent=nama.split(" ")[0];
@@ -9350,9 +9362,9 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
     window.dispatchEvent(new CustomEvent("famuha:guest",{detail:data}));
     cheer();
   };
-  $("fg-skip").onclick=$("fg-close").onclick=function(){ set(SKIP_KEY,String(Date.now())); hide(); };
+  $("fg-skip").onclick=$("fg-close").onclick=function(){ set(DAY_KEY,today()); hide(); };
   $("fg-ok").onclick=hide;
-  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && wrap.classList.contains("show")){ if(!registered) set(SKIP_KEY,String(Date.now())); hide(); } });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && wrap.classList.contains("show")){ if(!registered) set(DAY_KEY,today()); hide(); } });
   $("fg-phone").addEventListener("keydown",function(e){ if(e.key==="Enter") $("fg-submit").click(); });
   $("fg-name").addEventListener("keydown",function(e){ if(e.key==="Enter") $("fg-phone").focus(); });
 
