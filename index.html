@@ -1948,10 +1948,6 @@ body[data-step="2"] .site-footer{display:none}
 @media(prefers-reduced-motion:no-preference){.mk-btn svg,.mk-btn img{animation:mkBob 3.2s ease-in-out infinite}@keyframes mkBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}}
 body[data-step="2"] .mk{display:none}
 </style>
-<style id="famuha-hide-menuonline">/* Menu Online, Pasang Aplikasi & Bagikan (tombol header) disembunyikan sementara. Untuk menampilkan lagi, hapus baris yang bersangkutan atau blok style ini. */
-#menuOnlineBtn{display:none!important}
-#pwaInstallBtn{display:none!important}
-#fmShareHdrBtn{display:none!important}</style>
 </head>
 <body data-step="1"><div id='welcomePopup'><div class='card'>
   <div class='wc-step active' id='wcStep1'>
@@ -2031,30 +2027,6 @@ body[data-step="2"] .mk{display:none}
       <p class="menupromo-until" id="menuPromoUntil"></p>
       <button type="button" class="promo-weekend-cta" id="menuPromoNow">Pesan Sekarang</button>
       <button type="button" class="promo-weekend-later" id="menuPromoLater">Nanti</button>
-    </div>
-  </div>
-
-  <div class="promo-weekend-overlay" id="promoTbvOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="promoTbvTitle">
-    <div class="promo-weekend-card">
-      <button type="button" class="promo-weekend-close" id="promoTbvClose" aria-label="Tutup">×</button>
-      <span class="promo-weekend-badge">PROMO WARGA TRAN BOGE VILLAGE</span>
-      <div class="promo-weekend-emoji">🏡☕</div>
-      <h3 class="promo-weekend-title" id="promoTbvTitle">Promo TBV Gayub</h3>
-      <p class="promo-weekend-price"><small>cuma</small><span id="promoTbvPrice">Rp18.000</span></p>
-      <div class="promo-weekend-save">☕ Double Espresso · 1 cup</div>
-      <div id="tbvMain">
-        <p class="promo-weekend-default">Spesial warga <b>Tran Boge Village</b>: <b>Cappuccino</b> atau <b>Ice Coffee Latte</b> Double Espresso. Kode promo: <b>TBV Gayub</b>.</p>
-        <button type="button" class="promo-weekend-cta" id="promoTbvNow">Mau Gunakan Sekarang</button>
-        <button type="button" class="promo-weekend-later" id="promoTbvLater">Nanti</button>
-      </div>
-      <div id="tbvPick" hidden>
-        <p class="promo-weekend-default">Pilih menu promonya:</p>
-        <button type="button" class="promo-weekend-cta tbv-pick-btn" data-tbv-v="cappuccino" data-tbv-t="cold">Ice Cappuccino</button>
-        <button type="button" class="promo-weekend-cta tbv-pick-btn" data-tbv-v="cappuccino" data-tbv-t="hot">Hot Cappuccino</button>
-        <button type="button" class="promo-weekend-cta tbv-pick-btn" data-tbv-v="latte" data-tbv-t="cold">Ice Coffee Latte</button>
-        <button type="button" class="promo-weekend-later" id="promoTbvBack">Batal</button>
-      </div>
-      <p class="promo-weekend-note">Berlaku Sabtu &amp; Minggu, 1x seminggu. Pilih "Nanti"? Masukkan kode <b>TBV Gayub</b> saat checkout.</p>
     </div>
   </div>
 
@@ -2947,9 +2919,8 @@ body[data-step="2"] .fq{display:none}
   // supaya customer bisa lihat status ini di halaman order.
   var STORE_OPEN = true;
   // Saklar popup (diatur dari panel Admin, disimpan di config server). Default: tbv & menuPromo nyala, welcomeBack mati.
-  var POPUP_SETTINGS = { tbv: true, menuPromo: true, welcomeBack: false, guestbook: true };
+  var POPUP_SETTINGS = { tbv: false, menuPromo: true, welcomeBack: false };
   function popupOn_(k){ return POPUP_SETTINGS[k] === true; }
-  window.__famuhaPopupOn = popupOn_;
   function enforcePopupSettings_(){
     try {
       if (!popupOn_('tbv')){ var t = document.getElementById('promoTbvOverlay'); if (t) t.hidden = true; }
@@ -2964,7 +2935,7 @@ body[data-step="2"] .fq{display:none}
     custName:'', custPhone:'', custAddress:'', deliveryArea:'',
     orderTiming:'now', scheduleDate:'', scheduleTime:'',
     firstPurchaseDiscount:false, firstPurchaseAlreadyUsed:false, fifthReward:false, custChecked:false, nextOrderNumber:null,
-    voucherCode:'', voucherAmount:0,
+    voucherCode:'', voucherAmount:0, voucherMenuId:'',
     isReturningCustomer:false,
     promo1708UsedServer:false, promo1708ServerChecked:false
   };
@@ -3123,6 +3094,8 @@ body[data-step="2"] .fq{display:none}
     return cartHasMontBlanc_() ? MONT_BLANC_FIRST_PURCHASE_DISCOUNT : FIRST_PURCHASE_DISCOUNT_AMOUNT;
   }
 
+  function cartHasVariant_(v){ return cart.some(function(it){ return it.variant === v; }); }
+  window.famuhaCartHasVariant = cartHasVariant_;
   function computeCartTotal(){
     var subtotal = cart.reduce(function(sum, item){
       return sum + item.unitPrice * item.qty;
@@ -3130,7 +3103,7 @@ body[data-step="2"] .fq{display:none}
     if (subtotal > 0 && state.firstPurchaseDiscount && !cartHasExcludedFromFirstDiscount_()){
       subtotal = Math.max(0, subtotal - firstPurchaseDiscountAmount_());
     }
-    if (subtotal > 0 && state.voucherCode && state.voucherAmount > 0){
+    if (subtotal > 0 && state.voucherCode && state.voucherAmount > 0 && (!state.voucherMenuId || cartHasVariant_(state.voucherMenuId))){
       subtotal = Math.max(0, subtotal - state.voucherAmount);
     }
     return subtotal;
@@ -4286,13 +4259,6 @@ body[data-step="2"] .fq{display:none}
         });
     }
     tryAutoRecognizeReturningCustomer_();
-    // Tamu baru yang baru mengisi Buku Tamu: setelah popup ditutup, cek ke server (diskon pembelian pertama / sapaan)
-    // dan isi otomatis form checkout dengan nama & nomornya.
-    var _guestJustRegistered = false;
-    window.addEventListener('famuha:guest', function(e){ if (e && e.detail && e.detail.changed) _guestJustRegistered = true; });
-    window.addEventListener('famuha:guestclosed', function(){
-      if (_guestJustRegistered){ _guestJustRegistered = false; tryAutoRecognizeReturningCustomer_(); }
-    });
 
     // Popup Selamat Datang (beserta form OTP-nya) sudah dihapus di atas, jadi wiring OTP di bawah
     // tidak punya elemen lagi (otpRow = null -> TypeError). Berhenti di sini; perilaku sama seperti
@@ -5185,7 +5151,7 @@ body[data-step="2"] .fq{display:none}
       syncSold();
       var pCard = [].slice.call(document.querySelectorAll('#fmGrid .fm-card')).filter(function(c){ return c.dataset.name === name; })[0];
       var pb = pCard && pCard.dataset.variant ? admPromoButton_(pCard.dataset.variant, name) : null;
-      row.appendChild(th); row.appendChild(info); row.appendChild(fl); row.appendChild(rs); row.appendChild(sb); if (pb) row.appendChild(pb); row.appendChild(dl); list.appendChild(row);
+      row.appendChild(th); row.appendChild(info); row.appendChild(fl); row.appendChild(rs); row.appendChild(sb); if (pb) row.appendChild(pb); var nb = (window.famuhaNegoAdminButton && pCard && pCard.dataset.variant) ? window.famuhaNegoAdminButton(pCard.dataset.variant, name, function(){ return menuBasePrice_(pCard.dataset.variant) || 0; }, ADMIN_PIN) : null; if (nb) row.appendChild(nb); row.appendChild(dl); list.appendChild(row);
     });
     wrap.appendChild(box);
   }
@@ -5250,7 +5216,7 @@ body[data-step="2"] .fq{display:none}
         sb2.addEventListener('click', function(){ var i = ADMIN_HIDDEN_DRAFT.indexOf(sKey2); if (i > -1) ADMIN_HIDDEN_DRAFT.splice(i, 1); else ADMIN_HIDDEN_DRAFT.push(sKey2); syncSold2(); });
         syncSold2();
         var pb2 = admPromoButton_(m.id, m.name, function(){ return +m.price || 0; });
-        row.appendChild(th); row.appendChild(info); row.appendChild(ed); row.appendChild(sb2); row.appendChild(pb2); row.appendChild(de); list.appendChild(row);
+        row.appendChild(th); row.appendChild(info); row.appendChild(ed); row.appendChild(sb2); row.appendChild(pb2); var nb2 = window.famuhaNegoAdminButton ? window.famuhaNegoAdminButton(m.id, m.name, function(){ return +m.price || 0; }, ADMIN_PIN) : null; if (nb2) row.appendChild(nb2); row.appendChild(de); list.appendChild(row);
       });
     }
     fFile.addEventListener('change', function(){
@@ -5301,10 +5267,10 @@ body[data-step="2"] .fq{display:none}
     }
     if (typeof cfg.storeOpen === 'boolean') STORE_OPEN = cfg.storeOpen;
     if (cfg.popups && typeof cfg.popups === 'object'){
-      Object.keys(POPUP_SETTINGS).forEach(function(k){ if (typeof cfg.popups[k] === 'boolean') POPUP_SETTINGS[k] = cfg.popups[k]; });
+      Object.keys(POPUP_SETTINGS).forEach(function(k){ if (k !== 'tbv' && typeof cfg.popups[k] === 'boolean') POPUP_SETTINGS[k] = cfg.popups[k]; });
     }
     if (cfg.promoTbv){
-      if (typeof cfg.promoTbv.enabled === 'boolean') PROMO_TBV_ENABLED = cfg.promoTbv.enabled;
+      /* Promo TBV Gayub sudah tidak berlaku: abaikan pengaturan lama dari server. */
       if (typeof cfg.promoTbv.price === 'number' && cfg.promoTbv.price >= 0){
         PROMO_TBV_PRICE = cfg.promoTbv.price;
         var _tp = document.getElementById('promoTbvPrice'); if (_tp) _tp.textContent = idr(PROMO_TBV_PRICE).replace('Rp ', 'Rp');
@@ -5633,30 +5599,12 @@ body[data-step="2"] .fq{display:none}
       var l = document.createElement('label'); l.setAttribute('for', id); l.textContent = text;
       r.appendChild(c); r.appendChild(l); wrap.appendChild(r);
     }
-    var tbvHeader = document.createElement('div');
-    tbvHeader.className = 'admin-section-title';
-    tbvHeader.textContent = 'Promo TBV Gayub (warga Tran Boge Village)';
-    wrap.appendChild(tbvHeader);
-    addAdminToggle_('adminPromoTbvEnabled', 'Aktifkan Promo TBV Gayub (kode promo & harga di checkout)', PROMO_TBV_ENABLED);
-    var tbvPriceRow = document.createElement('div');
-    tbvPriceRow.className = 'admin-field-row';
-    var tbvPriceLabel = document.createElement('label');
-    tbvPriceLabel.textContent = 'Harga Promo TBV Gayub (1 cup)';
-    tbvPriceLabel.setAttribute('for', 'adminPromoTbvPrice');
-    var tbvPriceInput = document.createElement('input');
-    tbvPriceInput.type = 'number'; tbvPriceInput.id = 'adminPromoTbvPrice';
-    tbvPriceInput.min = '0'; tbvPriceInput.step = '500'; tbvPriceInput.value = PROMO_TBV_PRICE;
-    tbvPriceRow.appendChild(tbvPriceLabel); tbvPriceRow.appendChild(tbvPriceInput);
-    wrap.appendChild(tbvPriceRow);
-
     var popupHeader = document.createElement('div');
     popupHeader.className = 'admin-section-title';
     popupHeader.textContent = 'Popup (tampil / sembunyikan)';
     wrap.appendChild(popupHeader);
-    addAdminToggle_('adminPopupTbv', 'Popup Promo TBV Gayub (Sabtu & Minggu)', POPUP_SETTINGS.tbv);
     addAdminToggle_('adminPopupMenuPromo', 'Popup Promo Harga Menu (sapaan awal + hitung mundur)', POPUP_SETTINGS.menuPromo);
     addAdminToggle_('adminPopupWelcomeBack', 'Popup "Selamat Datang Kembali" (pelanggan lama)', POPUP_SETTINGS.welcomeBack);
-    addAdminToggle_('adminPopupGuestbook', 'Popup Buku Tamu (nama & no. WhatsApp, pengunjung baru)', POPUP_SETTINGS.guestbook);
     var popupNote = document.createElement('div');
     popupNote.className = 'admin-note';
     popupNote.style.cssText = 'font-size:12px;color:#6b7280;margin:2px 0 10px';
@@ -5731,17 +5679,13 @@ body[data-step="2"] .fq{display:none}
         })()
       },
       promoTbv: {
-        enabled: document.getElementById('adminPromoTbvEnabled').checked,
-        price: (function(){
-          var v = parseInt(document.getElementById('adminPromoTbvPrice').value, 10);
-          return isNaN(v) || v < 0 ? 0 : v;
-        })()
+        enabled: false,
+        price: PROMO_TBV_PRICE
       },
       popups: {
-        tbv: document.getElementById('adminPopupTbv').checked,
+        tbv: false,
         menuPromo: document.getElementById('adminPopupMenuPromo').checked,
-        welcomeBack: document.getElementById('adminPopupWelcomeBack').checked,
-        guestbook: document.getElementById('adminPopupGuestbook').checked
+        welcomeBack: document.getElementById('adminPopupWelcomeBack').checked
       },
       storeOpen: document.getElementById('adminStoreOpen').checked
     };
@@ -5866,6 +5810,7 @@ body[data-step="2"] .fq{display:none}
   function clearVoucherLoyal_(clearInput){
     state.voucherCode = '';
     state.voucherAmount = 0;
+    state.voucherMenuId = '';
     if (clearInput){ var i = document.getElementById('voucherLoyalInput'); if (i) i.value = ''; }
     voucherMsg_('');
   }
@@ -5883,11 +5828,15 @@ body[data-step="2"] .fq{display:none}
       fetch(GAS_URL + '?action=voucherLoyalCheck&kode=' + encodeURIComponent(kode) + '&phone=' + encodeURIComponent(phone))
         .then(function(res){ if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
         .then(function(data){
-          if (data && data.ok && data.valid){
+          if (data && data.ok && data.valid && data.menuId && !cartHasVariant_(data.menuId)){
+            clearVoucherLoyal_(false);
+            voucherMsg_('Kode nego ini khusus ' + (data.menuName || 'menu yang kamu nego') + '. Masukkan menunya ke keranjang dulu ya.', false);
+          } else if (data && data.ok && data.valid){
             state.voucherCode = kode;
+            state.voucherMenuId = data.menuId || '';
             state.voucherAmount = Number(data.potongan) || 0;
             input.value = kode;
-            voucherMsg_('✓ Voucher dipakai: -' + idr(state.voucherAmount) + ' (berlaku 1x pakai).', true);
+            voucherMsg_(state.voucherMenuId ? ('✓ Harga nego dipakai: hemat ' + idr(state.voucherAmount) + '.') : ('✓ Voucher dipakai: -' + idr(state.voucherAmount) + ' (berlaku 1x pakai).'), true);
           } else {
             clearVoucherLoyal_(false);
             voucherMsg_((data && data.pesan) || 'Kode voucher tidak valid.', false);
@@ -6307,7 +6256,7 @@ body[data-step="2"] .fq{display:none}
   // Hanya Sabtu & Minggu, maksimal 1x per minggu (Senin-Minggu). Muncul sebagai popup
   // pertama menggantikan popup Promo Weekend, atau dipakai lewat kode saat checkout.
   // Preview popup di hari lain: tambahkan ?promo=tbv di URL. Matikan: PROMO_TBV_ENABLED = false.
-  var PROMO_TBV_ENABLED = true;
+  var PROMO_TBV_ENABLED = false; // Promo TBV Gayub sudah tidak berlaku (dimatikan permanen)
   var PROMO_TBV_CODE = 'tbvgayub';
   var PROMO_TBV_LABEL = 'TBV Gayub';
   var PROMO_TBV_PRICE = 18000;
@@ -6490,7 +6439,6 @@ body[data-step="2"] .fq{display:none}
   }
   function showMenuPromoPopup_(force){
     if (!menuPromoOverlay || menuPromoOpen_()) return;
-    if (window.__famuhaGuestOpen) return;   // tunggu popup Buku Tamu ditutup dulu
     if (!force && !popupOn_('menuPromo')) return;
     if (promoTbvOverlay && !promoTbvOverlay.hidden) return;
     if (!force){
@@ -6535,13 +6483,9 @@ body[data-step="2"] .fq{display:none}
     menuPromoOverlay.addEventListener('click', function(e){ if (e.target === menuPromoOverlay) closeMenuPromo_(); });
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && menuPromoOpen_()) closeMenuPromo_(); });
     setTimeout(function(){ showMenuPromoPopup_(menuPromoPreviewActive_()); }, 900);
-    window.addEventListener('famuha:guestclosed', function(){
-      _pageT0_ = Date.now();
-      setTimeout(function(){ showMenuPromoPopup_(menuPromoPreviewActive_()); }, 500);
-    });
   }
   function whenMenuPromoClosed_(fn, tries){
-    if ((!menuPromoOpen_() && !window.__famuhaGuestOpen) || (tries || 0) > 300) { fn(); return; }
+    if (!menuPromoOpen_() || (tries || 0) > 300) { fn(); return; }
     setTimeout(function(){ whenMenuPromoClosed_(fn, (tries || 0) + 1); }, 400);
   }
   function initPromoWeekendPopup_(){
@@ -8082,7 +8026,6 @@ body[data-step="2"] .fq{display:none}
 
   // ---------- Prompt izin yang tidak mengganggu ----------
   function showSoftPrompt() {
-    if (isAndroidPushCapable()) return; // Android Chrome: izin diminta otomatis (lihat askAndroidOnce), tanpa bar ini
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'default') return;
     try { if (localStorage.getItem(PROMPT_DISMISSED) === '1') return; } catch (e) {}
@@ -8183,41 +8126,6 @@ body[data-step="2"] .fq{display:none}
     });
   }
 
-  // ---------- Android Chrome: minta izin notifikasi otomatis ----------
-  // Di Android, push jalan langsung dari Chrome (tanpa "Pasang ke layar utama").
-  // Dialog izin Chrome dimunculkan sendiri oleh situs, tepat setelah pelanggan
-  // menutup popup Buku Tamu atau menambah menu ke keranjang (bukan saat halaman
-  // baru dibuka, supaya tidak ditolak reflek). Maksimal sekali per 3 hari selama
-  // pelanggan belum memutuskan. Browser dalam aplikasi (TikTok/IG/FB/WA) tidak
-  // mendukung push, jadi dilewati.
-  var ANDROID_ASKED_KEY = 'famuha_push_android_asked';
-  function isInAppBrowser() {
-    return /FBAN|FBAV|Instagram|Line\/|TikTok|musical_ly|Bytedance|MicroMessenger|Snapchat|; wv\)/i.test(navigator.userAgent || '');
-  }
-  function isAndroidPushCapable() {
-    return /Android/i.test(navigator.userAgent || '') && !isInAppBrowser() &&
-      ('Notification' in window) && ('PushManager' in window) && ('serviceWorker' in navigator);
-  }
-  function askAndroidOnce() {
-    if (!isAndroidPushCapable()) return;
-    if (Notification.permission !== 'default') return;
-    if (window.__famuhaGuestOpen) return;
-    try {
-      var t = parseInt(localStorage.getItem(ANDROID_ASKED_KEY) || '0', 10);
-      if (t && Date.now() - t < 3 * 86400000) return;
-      localStorage.setItem(ANDROID_ASKED_KEY, String(Date.now()));
-    } catch (e) {}
-    requestPermissionAndSubscribe();
-  }
-  function hookAndroidAutoAsk() {
-    if (!isAndroidPushCapable()) return;
-    window.addEventListener('famuha:guestclosed', function () { setTimeout(askAndroidOnce, 400); });
-    document.addEventListener('click', function (e) {
-      var t = e.target;
-      if (t && t.closest && t.closest('.fm-add, #addCartBtn, #addCartBtnM')) askAndroidOnce();
-    }, true);
-  }
-
   // ---------- Auto-hook ke tombol "Tambah ke Pesanan/Keranjang" ----------
   function hookAddToCartButtons() {
     ['addCartBtn', 'addCartBtnM'].forEach(function (id) {
@@ -8230,7 +8138,6 @@ body[data-step="2"] .fq{display:none}
     captureTrafficSource_();
     ensureFirstVisit();
     hookAddToCartButtons();
-    hookAndroidAutoAsk();
     logPageVisit();
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(function () {});
@@ -8388,7 +8295,7 @@ body[data-step="2"] .fq{display:none}
   // Tombol Bagikan di header (bagikan toko)
   var a = $('tpActions');
   if (a){
-    var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'history-btn'; hb.id = 'fmShareHdrBtn'; hb.textContent = '\uD83D\uDCE4 Bagikan';
+    var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'history-btn'; hb.textContent = '\uD83D\uDCE4 Bagikan';
     a.insertBefore(hb, a.firstChild);
     hb.addEventListener('click', function(){ open('Bagikan Famuha Coffee', 'Pesan kopi favoritmu online di Famuha Coffee \u2615', BASE); });
   }
@@ -9213,368 +9120,381 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   });
 })();
 </script>
-<!-- ===== BUKU TAMU POPUP (maskot) — digabung dari bukutamu.html ===== -->
-<style id="famuha-guestbook-css">
-/* Transparansi semua popup: ubah satu angka ini (0.5 = sangat bening, 1 = solid) */
-:root{--popup-alpha:.86;--popup-dim:.32}
-#fg-overlay,#fg-wrap,#fg-wrap *{box-sizing:border-box}
-#fg-overlay{position:fixed;inset:0;background:rgba(0,0,0,var(--popup-dim));backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;z-index:99999}
-#fg-overlay.show{display:block}
-#fg-wrap{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:14px;display:none;align-items:flex-end;justify-content:flex-end;gap:6px;z-index:100000;pointer-events:none;font-family:inherit}
+<!-- ===== FAMUHA: popup Buku Tamu (nama + nomor HP) dengan maskot interaktif ===== -->
+<style id="fg-style">
+#tbvCodeRow,#tbvCodeMsg{display:none!important}
+#fg-wrap{--fg-op:.5;position:fixed;right:10px;bottom:150px;z-index:90;display:none;align-items:flex-end;gap:2px;max-width:calc(100vw - 20px);pointer-events:none;font-family:inherit}
+#fg-wrap *{box-sizing:border-box}
 #fg-wrap.show{display:flex}
-#fg-card{pointer-events:auto;background:rgba(255,255,255,var(--popup-alpha));backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);border:1px solid rgba(255,255,255,.55);border-radius:20px 20px 4px 20px;box-shadow:0 10px 30px rgba(0,0,0,.22);padding:16px 16px 14px;width:min(320px,calc(100vw - 130px));position:relative;color:var(--tp-text,#31353B);animation:fgPop .35s cubic-bezier(.2,1.2,.4,1)}
-@keyframes fgPop{from{transform:translateY(20px) scale(.92);opacity:0}to{transform:none;opacity:1}}
-#fg-close{position:absolute;top:8px;right:10px;border:0;background:none;color:var(--tp-sub,#6D7588);font-size:20px;cursor:pointer;line-height:1;padding:0}
-#fg-card h2{font-size:15px;margin:0 22px 4px 0;line-height:1.35;color:var(--tp-text,#31353B);text-align:left;font-family:inherit}
-#fg-card h2 b{color:var(--fm-green-dark,#15803d)}
-#fg-card .fg-sub{font-size:12.5px;color:var(--tp-sub,#6D7588);margin:0 0 10px;text-align:left;line-height:1.45}
-#fg-card .fg-f{margin-bottom:9px}
-#fg-card .fg-f label{display:block;font-size:12px;font-weight:600;margin:0 0 3px;color:var(--tp-text,#31353B)}
-#fg-card .fg-f input[type=text],#fg-card .fg-f input[type=tel]{width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1.5px solid var(--tp-line,#E5E7E9);border-radius:10px;background:rgba(255,255,255,.6);color:var(--tp-text,#31353B);outline:none}
-#fg-card .fg-f input:focus{border-color:var(--fm-green,#16a34a)}
-#fg-card .fg-f.bad input{border-color:#dc2626}
-#fg-card .fg-msg{display:none;color:#dc2626;font-size:11.5px;margin-top:3px}
-#fg-card .fg-f.bad .fg-msg{display:block}
-#fg-card .fg-chk{display:flex;gap:8px;align-items:flex-start;font-size:11.5px;color:var(--tp-sub,#6D7588);margin:2px 0 10px;line-height:1.4}
-#fg-card .fg-chk input{margin-top:2px;accent-color:var(--fm-green,#16a34a)}
-#fg-card .fg-go{width:100%;border:0;background:var(--fm-green,#16a34a);color:#fff;font:inherit;font-weight:700;font-size:15px;padding:11px;border-radius:10px;cursor:pointer;margin:0}
-#fg-card .fg-go:hover{background:var(--fm-green-dark,#15803d)}
-#fg-card .fg-go:disabled{opacity:.6;cursor:wait}
-#fg-card .fg-skip{display:block;margin:8px auto 0;border:0;background:none;color:var(--tp-sub,#6D7588);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;width:auto;padding:0}
-#fg-card .fg-ok{text-align:center;padding:6px 0 2px}
-#fg-card .fg-ok .fg-big{font-size:28px}
-#fg-card .fg-ok h2{margin:4px 0;text-align:center}
-#fg-card .fg-ok .fg-sub{text-align:center}
-#fg-mascot{pointer-events:auto;cursor:pointer;width:108px;flex:none;overflow:visible;-webkit-tap-highlight-color:transparent;user-select:none}
-#fg-mascot #m-body{transform-box:view-box;transform-origin:70px 166px;animation:fgBob 2.4s ease-in-out infinite}
+body[data-step="2"] #fg-wrap{display:none!important}
+@media(min-width:880px){#fg-wrap{bottom:40px;right:18px}}
+#fg-card{pointer-events:auto;position:relative;width:min(300px,calc(100vw - 124px));margin-bottom:18px;padding:14px 14px 12px;border-radius:20px 20px 4px 20px;color:var(--fm-text,#1f2937);text-shadow:0 0 6px rgba(255,255,255,.85);
+  background:rgba(255,255,255,var(--fg-op));-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);border:1px solid rgba(255,255,255,.7);box-shadow:0 8px 26px rgba(0,0,0,.18);animation:fgPop .35s cubic-bezier(.2,1.2,.4,1)}
+@keyframes fgPop{from{transform:translateY(18px) scale(.92);opacity:0}to{transform:none;opacity:1}}
+#fg-wrap .fg-x{position:absolute;top:6px;right:8px;border:0;background:none;color:var(--fm-muted,#6b7280);font-size:20px;line-height:1;padding:4px 6px;cursor:pointer}
+#fg-wrap h2{font-size:15px;margin:0 22px 3px 0;line-height:1.3;font-weight:800;color:inherit}
+#fg-wrap h2 b{color:var(--fm-green-dark,#15803d)}
+#fg-wrap .fg-sub{font-size:12.5px;line-height:1.4;margin:0 0 9px;color:var(--fm-muted,#4b5563)}
+#fg-wrap .fg-f{margin-bottom:8px}
+#fg-wrap .fg-f label{display:block;font-size:12px;font-weight:700;margin-bottom:3px}
+#fg-wrap .fg-f input[type=text],#fg-wrap .fg-f input[type=tel]{width:100%;font:inherit;font-size:16px;padding:9px 11px;border:1.5px solid rgba(0,0,0,.18);border-radius:10px;background:rgba(255,255,255,.6);color:#1f2937;outline:none;text-shadow:none}
+#fg-wrap .fg-f input:focus{border-color:var(--fm-green,#16a34a);background:rgba(255,255,255,.85)}
+#fg-wrap .fg-f.bad input{border-color:#dc2626}
+#fg-wrap .fg-msg{display:none;color:#dc2626;font-size:11.5px;margin-top:2px;font-weight:600}
+#fg-wrap .fg-f.bad .fg-msg{display:block}
+#fg-wrap .fg-chk{display:flex;gap:7px;align-items:flex-start;font-size:11.5px;line-height:1.35;margin:2px 0 9px;color:var(--fm-muted,#4b5563)}
+#fg-wrap .fg-chk input{margin-top:1px;accent-color:var(--fm-green,#16a34a)}
+#fg-wrap .fg-go{width:100%;border:0;background:var(--fm-green,#16a34a);color:#fff;font:inherit;font-weight:800;font-size:15px;padding:10px;border-radius:10px;cursor:pointer;text-shadow:none}
+#fg-wrap .fg-go:disabled{opacity:.6;cursor:wait}
+#fg-wrap .fg-skip{display:block;margin:7px auto 0;border:0;background:none;color:var(--fm-muted,#4b5563);font-size:12px;cursor:pointer;text-decoration:underline}
+#fg-wrap .fg-ok{text-align:center;padding:4px 0 0}
+#fg-wrap .fg-ok .fg-big{font-size:28px}
+#fg-mascot{pointer-events:auto;cursor:pointer;width:96px;flex:none;overflow:visible;-webkit-tap-highlight-color:transparent;user-select:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,.22))}
+@media(min-width:880px){#fg-mascot{width:108px}}
+#fg-body{transform-box:fill-box;transform-origin:50% 100%;animation:fgBob 2.4s ease-in-out infinite}
 @keyframes fgBob{50%{transform:translateY(-5px) rotate(-2deg)}}
-#fg-mascot .shadow{transform-box:view-box;transform-origin:70px 168px;animation:fgSh 2.4s ease-in-out infinite}
+#fg-mascot .fg-shadow{transform-box:fill-box;transform-origin:center;animation:fgSh 2.4s ease-in-out infinite}
 @keyframes fgSh{50%{transform:scale(.85);opacity:.1}}
-#fg-mascot .steam{animation:fgSt 2s ease-in-out infinite}@keyframes fgSt{50%{opacity:.3}}
-#fg-mascot .eye{transform-box:fill-box;transform-origin:center;animation:fgBlink 4s infinite}
+#fg-mascot .fg-steam{animation:fgSt 2s ease-in-out infinite}@keyframes fgSt{50%{opacity:.3}}
+#fg-mascot .fg-eye{transform-box:fill-box;transform-origin:center;animation:fgBlink 4s infinite}
 @keyframes fgBlink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
-#fg-mascot #m-armL{transform-box:view-box;transform-origin:34px 110px;animation:fgWave 3s ease-in-out infinite}
+#fg-armL{transform-box:fill-box;transform-origin:100% 100%;animation:fgWave 3s ease-in-out infinite}
 @keyframes fgWave{0%,55%,100%{transform:rotate(0)}65%{transform:rotate(-28deg)}75%{transform:rotate(6deg)}85%{transform:rotate(-28deg)}}
-#fg-mascot #m-armR{transform-box:view-box;transform-origin:108px 126px}
-#fg-mascot #m-pupils{transition:transform .12s ease-out}
-#fg-mascot #mo-open,#fg-mascot #mo-talk{display:none}
-#fg-mascot.m-happy #mo-smile,#fg-mascot.m-cheer #mo-smile,#fg-mascot.m-talk #mo-smile{display:none}
-#fg-mascot.m-happy #mo-open,#fg-mascot.m-cheer #mo-open{display:inline}
-#fg-mascot.m-talk #mo-talk{display:inline;animation:fgTalk .3s ease-in-out infinite alternate;transform-box:view-box;transform-origin:70px 113px}
+#fg-armR{transform-box:fill-box;transform-origin:0% 0%}
+#fg-pupils{transition:transform .12s ease-out}
+#fg-mo-open,#fg-mo-talk{display:none}
+#fg-mascot.m-happy #fg-mo-smile,#fg-mascot.m-cheer #fg-mo-smile,#fg-mascot.m-talk #fg-mo-smile{display:none}
+#fg-mascot.m-happy #fg-mo-open,#fg-mascot.m-cheer #fg-mo-open{display:inline}
+#fg-mascot.m-talk #fg-mo-talk{display:inline;animation:fgTalk .3s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
 @keyframes fgTalk{from{transform:scaleY(.6)}to{transform:scaleY(1.1)}}
-#fg-mascot.m-happy #m-body{animation:fgBob 1.2s ease-in-out infinite}
-#fg-mascot.m-jump #m-body{animation:fgHop .65s ease-out 1}
+#fg-mascot.m-happy #fg-body{animation:fgBob 1.2s ease-in-out infinite}
+#fg-mascot.m-jump #fg-body{animation:fgHop .65s ease-out 1}
 @keyframes fgHop{30%{transform:translateY(-22px) scaleY(1.07)}60%{transform:translateY(0) scale(1.1,.88)}100%{transform:none}}
-#fg-mascot.m-cheer #m-body{animation:fgJump .5s ease-in-out infinite}
+#fg-mascot.m-cheer #fg-body{animation:fgJump .5s ease-in-out infinite}
 @keyframes fgJump{50%{transform:translateY(-18px) scale(1.04,.98)}}
-#fg-mascot.m-cheer #m-armL{animation:fgCheerL .3s ease-in-out infinite alternate}
-#fg-mascot.m-cheer #m-armR{animation:fgCheerR .3s ease-in-out infinite alternate}
-@keyframes fgCheerL{from{transform:rotate(-35deg)}to{transform:rotate(8deg)}}
-@keyframes fgCheerR{from{transform:rotate(-70deg)}to{transform:rotate(-115deg)}}
-#fg-mascot .spk{opacity:0}#fg-mascot.m-cheer .spk{animation:fgTw .5s ease-in-out infinite alternate}
+#fg-mascot.m-cheer #fg-armL{animation:fgCL .3s ease-in-out infinite alternate}
+#fg-mascot.m-cheer #fg-armR{animation:fgCR .3s ease-in-out infinite alternate}
+@keyframes fgCL{from{transform:rotate(-35deg)}to{transform:rotate(8deg)}}
+@keyframes fgCR{from{transform:rotate(-70deg)}to{transform:rotate(-115deg)}}
+#fg-mascot .fg-spk{opacity:0}#fg-mascot.m-cheer .fg-spk{animation:fgTw .5s ease-in-out infinite alternate}
 @keyframes fgTw{from{opacity:0}to{opacity:1}}
-.fg-fx{position:fixed;pointer-events:none;z-index:100001;font-size:20px;animation:fgFly 1.1s ease-out forwards}
+.fg-fx{position:fixed;pointer-events:none;z-index:95;font-size:20px;animation:fgFly 1.1s ease-out forwards}
 @keyframes fgFly{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
-/* "Kurangi Gerakan" (iPhone/Android): hilangkan gerakan besar, tapi maskot tetap hidup: kedip, uap, kilau, mulut, dan goyang sangat halus */
-@media (prefers-reduced-motion:reduce){
-#fg-card{animation:none!important}
-#fg-mascot .shadow,#fg-mascot #m-armL,#fg-mascot #m-armR,#fg-mascot.m-cheer #m-armL,#fg-mascot.m-cheer #m-armR,#fg-mascot.m-jump #m-body,#fg-mascot.m-cheer #m-body{animation:none!important}
-#fg-mascot #m-body,#fg-mascot.m-happy #m-body{animation:fgBobSoft 3.2s ease-in-out infinite!important}
-}
-@keyframes fgBobSoft{50%{transform:translateY(-2px)}}
-
-/* ---- Popup lain dibuat transparan juga (promo menu / weekend / TBV / diskon / selamat datang kembali) ---- */
-.promo-weekend-overlay,.promo-jumat-pick-overlay,#discountPopup,#welcomeBackPopup{background:rgba(0,0,0,var(--popup-dim)) !important;backdrop-filter:blur(4px) !important;-webkit-backdrop-filter:blur(4px) !important}
-.promo-weekend-card,.promo-jumat-pick-card,#discountPopup .card,#welcomeBackPopup .card{background:rgba(255,255,255,var(--popup-alpha)) !important;backdrop-filter:blur(16px) saturate(1.2) !important;-webkit-backdrop-filter:blur(16px) saturate(1.2) !important;border:1px solid rgba(255,255,255,.55) !important}
+@media (prefers-reduced-motion:reduce){#fg-body,#fg-armL,#fg-armR,#fg-mascot .fg-shadow,#fg-mascot .fg-steam,#fg-mascot .fg-eye,#fg-card,#fg-mascot .fg-spk,#fg-mo-talk{animation:none!important}}
 </style>
 
-<div id="fg-overlay"></div>
 <div id="fg-wrap" role="dialog" aria-live="polite" aria-label="Buku tamu Famuha Coffee">
   <div id="fg-card">
-    <button id="fg-close" type="button" aria-label="Tutup">×</button>
+    <button type="button" class="fg-x" id="fg-close" aria-label="Tutup">&times;</button>
     <div id="fg-form">
-      <h2 id="fg-title">Halo kak! <b>Selamat datang di Famuha Coffee</b> ☕</h2>
-      <p class="fg-sub" id="fg-intro">Boleh info nama dan nomor teleponnya? Buat pendataan dan info promo spesial.</p>
-      <div class="fg-f" id="f-name"><label for="fg-name">Nama</label><input id="fg-name" type="text" autocomplete="given-name" placeholder="Nama kakak" maxlength="40"><div class="fg-msg">Nama wajib diisi ya, kak.</div></div>
-      <div class="fg-f" id="f-phone"><label for="fg-phone">Nomor WhatsApp / HP</label><input id="fg-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" maxlength="16"><div class="fg-msg">Nomor belum valid. Contoh: 081234567890</div></div>
-      <label class="fg-chk"><input type="checkbox" id="fg-consent" checked><span>Saya setuju dihubungi lewat WhatsApp untuk info promo. Data hanya dipakai Famuha Coffee.</span></label>
-      <button class="fg-go" id="fg-submit" type="button">Simpan &amp; lihat menu</button>
-      <button class="fg-skip" id="fg-skip" type="button">Nanti saja</button>
+      <h2>Halo kak! <b>Selamat datang di Famuha Coffee</b> ☕</h2>
+      <p class="fg-sub">Boleh info nama dan nomor teleponnya? Buat pendataan dan info promo spesial.</p>
+      <div class="fg-f" id="fg-f-name"><label for="fg-name">Nama</label><input id="fg-name" type="text" autocomplete="given-name" placeholder="Nama kakak" maxlength="40"><div class="fg-msg">Nama wajib diisi ya, kak.</div></div>
+      <div class="fg-f" id="fg-f-phone"><label for="fg-phone">Nomor WhatsApp / HP</label><input id="fg-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" maxlength="16"><div class="fg-msg">Nomor belum valid. Contoh: 081234567890</div></div>
+      <label class="fg-chk"><input type="checkbox" id="fg-consent" checked><span>Saya setuju dihubungi lewat WhatsApp untuk info promo.</span></label>
+      <button type="button" class="fg-go" id="fg-submit">Simpan &amp; lihat menu</button>
+      <button type="button" class="fg-skip" id="fg-skip">Nanti saja</button>
     </div>
     <div class="fg-ok" id="fg-done" style="display:none">
       <div class="fg-big">🎉</div>
       <h2>Terima kasih, <b id="fg-who"></b>!</h2>
       <p class="fg-sub">Data tersimpan. Selamat menikmati, silakan pilih menunya.</p>
-      <button class="fg-go" id="fg-ok" type="button">Lihat menu</button>
+      <button type="button" class="fg-go" id="fg-ok">Lihat menu</button>
     </div>
   </div>
   <svg id="fg-mascot" viewBox="0 0 140 175" role="img" aria-label="Maskot Famuha Coffee, colek aku!">
-    <ellipse class="shadow" cx="70" cy="168" rx="32" ry="5" fill="#000" opacity=".2"/>
-    <text class="spk" x="6" y="58" font-size="16">✨</text><text class="spk" x="118" y="40" font-size="16">✨</text>
-    <g id="m-body">
-      <g class="steam" fill="none" stroke="#9fb0c4" stroke-width="3.5" stroke-linecap="round"><path d="M52 22c-6 7 6 11 0 19"/><path d="M70 17c-6 7 6 11 0 19"/><path d="M88 22c-6 7 6 11 0 19"/></g>
+    <ellipse class="fg-shadow" cx="70" cy="168" rx="32" ry="5" fill="#000" opacity=".2"/>
+    <text class="fg-spk" x="6" y="58" font-size="16">✨</text><text class="fg-spk" x="118" y="40" font-size="16">✨</text>
+    <g id="fg-body">
+      <g class="fg-steam" fill="none" stroke="#9fb0c4" stroke-width="3.5" stroke-linecap="round"><path d="M52 22c-6 7 6 11 0 19"/><path d="M70 17c-6 7 6 11 0 19"/><path d="M88 22c-6 7 6 11 0 19"/></g>
       <ellipse cx="54" cy="160" rx="10" ry="6" fill="#14532d"/><ellipse cx="86" cy="160" rx="10" ry="6" fill="#14532d"/>
       <path d="M110 78c26-4 30 32 2 38" fill="none" stroke="#4a2c17" stroke-width="8" stroke-linecap="round"/>
-      <g id="m-armL"><path d="M32 108C16 104 10 92 15 82" fill="none" stroke="#15803d" stroke-width="8" stroke-linecap="round"/><circle cx="15" cy="80" r="6.5" fill="#22c55e"/></g>
+      <g id="fg-armL"><path d="M32 108C16 104 10 92 15 82" fill="none" stroke="#15803d" stroke-width="8" stroke-linecap="round"/><circle cx="15" cy="80" r="6.5" fill="#22c55e"/></g>
       <path d="M30 64h80v66c0 24-18 36-40 36S30 154 30 130z" fill="#16a34a"/>
       <path d="M38 78v46" stroke="#fff" stroke-opacity=".28" stroke-width="5" stroke-linecap="round"/>
-      <g id="m-armR"><path d="M108 126c9 2 14 9 14 16" fill="none" stroke="#15803d" stroke-width="8" stroke-linecap="round"/><circle cx="122" cy="143" r="6.5" fill="#22c55e"/></g>
+      <g id="fg-armR"><path d="M108 126c9 2 14 9 14 16" fill="none" stroke="#15803d" stroke-width="8" stroke-linecap="round"/><circle cx="122" cy="143" r="6.5" fill="#22c55e"/></g>
       <ellipse cx="70" cy="64" rx="44" ry="10" fill="#3b2314"/><ellipse cx="70" cy="65" rx="38" ry="7" fill="#7a4a2a"/>
       <path d="M70 68l-5-4a3 3 0 0 1 5-3a3 3 0 0 1 5 3z" fill="#f5e6c8"/>
-      <g class="eye"><ellipse cx="54" cy="96" rx="9" ry="10.5" fill="#fff"/></g><g class="eye"><ellipse cx="86" cy="96" rx="9" ry="10.5" fill="#fff"/></g>
-      <g class="eye"><g id="m-pupils"><circle cx="54" cy="98" r="5.5" fill="#1f1308"/><circle cx="86" cy="98" r="5.5" fill="#1f1308"/><circle cx="56" cy="95.5" r="1.8" fill="#fff"/><circle cx="88" cy="95.5" r="1.8" fill="#fff"/></g></g>
+      <g class="fg-eye"><ellipse cx="54" cy="96" rx="9" ry="10.5" fill="#fff"/></g><g class="fg-eye"><ellipse cx="86" cy="96" rx="9" ry="10.5" fill="#fff"/></g>
+      <g id="fg-pupils" class="fg-eye"><circle cx="54" cy="98" r="5.5" fill="#1f1308"/><circle cx="86" cy="98" r="5.5" fill="#1f1308"/><circle cx="56" cy="95.5" r="1.8" fill="#fff"/><circle cx="88" cy="95.5" r="1.8" fill="#fff"/></g>
       <ellipse cx="40" cy="111" rx="7" ry="4.2" fill="#fb7185" opacity=".6"/><ellipse cx="100" cy="111" rx="7" ry="4.2" fill="#fb7185" opacity=".6"/>
-      <path id="mo-smile" d="M60 111q10 9 20 0" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
-      <g id="mo-open"><path d="M58 109q12 18 24 0z" fill="#7f1d1d" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><ellipse cx="70" cy="117" rx="5" ry="2.8" fill="#f87171"/></g>
-      <ellipse id="mo-talk" cx="70" cy="113" rx="4.5" ry="5.5" fill="#7f1d1d" stroke="#fff" stroke-width="2"/>
+      <path id="fg-mo-smile" d="M60 111q10 9 20 0" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+      <g id="fg-mo-open"><path d="M58 109q12 18 24 0z" fill="#7f1d1d" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><ellipse cx="70" cy="117" rx="5" ry="2.8" fill="#f87171"/></g>
+      <ellipse id="fg-mo-talk" cx="70" cy="113" rx="4.5" ry="5.5" fill="#7f1d1d" stroke="#fff" stroke-width="2"/>
     </g>
   </svg>
 </div>
-<script>
+<script id="fg-script">
 (function(){
-  var GUEST_KEY = "famuha_guest";       // data tamu terakhir yang mengisi
-  var DAY_KEY = "famuha_guest_day";     // tanggal (WIB) terakhir popup ditangani (diisi / "Nanti saja")
-  var DELAY_MS = 600;                   // jeda sebelum popup muncul
-  // Popup muncul SEKALI SEHARI untuk semua pengunjung (baru maupun sudah tersimpan), supaya kunjungan harian bisa dipantau.
-  function today(){
-    try{ return new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Jakarta"}); }
-    catch(e){ var d=new Date(); return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
-  }
+  var SKIP_KEY='famuha_guest_skip', PEND_KEY='famuha_guest_pending', SKIP_DAYS=3, DELAY_MS=1500;
+  var $=function(id){return document.getElementById(id)};
+  var wrap=$('fg-wrap'); if(!wrap) return;
+  var mascot=$('fg-mascot'), pup=$('fg-pupils'), mk=$('mk'), tk=null;
+  function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+  function normPhone(v){var d=String(v).replace(/[^\d+]/g,''); if(d.indexOf('+62')===0) d='0'+d.slice(3); else if(d.indexOf('62')===0) d='0'+d.slice(2); return d;}
+  function validPhone(d){return /^08\d{8,12}$/.test(d);}
+  function known(){return (lsGet('customerPhone')||'').replace(/\D/g,'').length>=10;}
+  function skipped(){var s=parseInt(lsGet(SKIP_KEY)||'0',10); return !!s && Date.now()-s<SKIP_DAYS*864e5;}
+  function reduced(){return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
 
-  var $ = function(id){return document.getElementById(id)};
-  var wrap=$("fg-wrap"), ov=$("fg-overlay");
-  if(!wrap||!ov) return;
-  function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
-  function set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
-  function del(k){try{localStorage.removeItem(k)}catch(e){}}
-  var registered=false;
-
-  function show(){
-    wrap.classList.add("show"); ov.classList.add("show"); window.__famuhaGuestOpen=true;
-    $("fg-form").style.display=""; $("fg-done").style.display="none";
-    prefill();
-    try{ if(!window.matchMedia("(pointer:coarse)").matches) setTimeout(function(){$("fg-name").focus()},400); }catch(e){}
-  }
-  function hide(){
-    wrap.classList.remove("show"); ov.classList.remove("show"); window.__famuhaGuestOpen=false; mood(null);
-    // popup promo & cek pelanggan lama menunggu sampai popup ini ditutup
-    window.dispatchEvent(new CustomEvent("famuha:guestclosed",{detail:{registered:registered}}));
-  }
-
-  function normPhone(v){
-    var d=String(v).replace(/[^\d+]/g,"");
-    if(d.indexOf("+62")===0) d="0"+d.slice(3);
-    else if(d.indexOf("62")===0) d="0"+d.slice(2);
-    return d;
-  }
-  function validPhone(d){ return /^08\d{8,12}$/.test(d); }
-
-  function shouldShow(){ return get(DAY_KEY)!==today(); }   // sekali per hari, berlaku untuk semua pengunjung
-
-  // Pelanggan yang datanya sudah tersimpan: form terisi otomatis, tinggal konfirmasi
-  function prefill(){
-    var n=(get("customerName")||"").trim(), p=normPhone(get("customerPhone")||"");
-    if(n.length>=2 && validPhone(p)){
-      $("fg-name").value=n; $("fg-phone").value=p;
-      $("fg-title").innerHTML="Selamat datang kembali, <b></b> ☕";
-      $("fg-title").querySelector("b").textContent=n.split(" ")[0]+"!";
-      $("fg-intro").textContent="Cek dulu datanya ya, kak. Tinggal tekan tombol di bawah untuk absen kunjungan hari ini.";
-      $("fg-submit").textContent="Konfirmasi & lihat menu";
-      mood("happy");
-    }
-  }
-
-  // Simpan ke sheet Buku Tamu (aksi registerGuest yang sama dengan sebelumnya)
-  function send(data){
-    var g=window.__famuhaGas||{}; if(!g.url) return;
-    try{
-      fetch(g.url,{method:"POST",keepalive:true,headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body:JSON.stringify({action:"registerGuest",custName:data.nama,custPhone:data.hp,promoConsent:data.promo,visitDate:data.tanggal,source:"popup-harian"})}).catch(function(e){console.warn("Gagal menyimpan ke Buku Tamu:",e)});
-    }catch(e){}
-  }
-
-  $("fg-submit").onclick=function(){
-    var nama=$("fg-name").value.trim(), hp=normPhone($("fg-phone").value);
-    var okN=nama.length>=2, okP=validPhone(hp);
-    $("f-name").classList.toggle("bad",!okN);
-    $("f-phone").classList.toggle("bad",!okP);
-    if(!okN||!okP) return;
-    var prev=normPhone(get("customerPhone")||"");
-    var data={nama:nama,hp:hp,promo:$("fg-consent").checked,waktu:new Date().toISOString(),tanggal:today(),changed:prev!==hp};
-    set(GUEST_KEY,JSON.stringify(data)); set(DAY_KEY,today());
-    set("customerName",nama); set("customerPhone",hp);   // dipakai form checkout & pengenalan pelanggan
-    registered=true; send(data);
-    $("fg-who").textContent=nama.split(" ")[0];
-    $("fg-form").style.display="none"; $("fg-done").style.display="";
-    window.dispatchEvent(new CustomEvent("famuha:guest",{detail:data}));
-    cheer();
-  };
-  $("fg-skip").onclick=$("fg-close").onclick=function(){ set(DAY_KEY,today()); hide(); };
-  $("fg-ok").onclick=hide;
-  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && wrap.classList.contains("show")){ if(!registered) set(DAY_KEY,today()); hide(); } });
-  $("fg-phone").addEventListener("keydown",function(e){ if(e.key==="Enter") $("fg-submit").click(); });
-  $("fg-name").addEventListener("keydown",function(e){ if(e.key==="Enter") $("fg-phone").focus(); });
-
-  // === MASKOT INTERAKTIF ===
-  var mascot=$("fg-mascot"), pup=$("m-pupils"), tk=null;
-  function mood(m){ mascot.classList.remove("m-talk","m-happy","m-cheer"); if(m) mascot.classList.add("m-"+m); }
-  function look(dx,dy){ pup.style.transform="translate("+dx+"px,"+dy+"px)"; }
-  function ready(){ return $("fg-name").value.trim().length>=2 && validPhone(normPhone($("fg-phone").value)); }
+  function mood(m){mascot.classList.remove('m-talk','m-happy','m-cheer'); if(m) mascot.classList.add('m-'+m);}
+  function look(dx,dy){pup.style.transform='translate('+dx+'px,'+dy+'px)';}
+  function ready(){return $('fg-name').value.trim().length>=2 && validPhone(normPhone($('fg-phone').value));}
   function burst(list,n){
+    if(reduced()) return;
     var r=mascot.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height*0.35;
     for(var i=0;i<n;i++){
-      var s=document.createElement("span"); s.className="fg-fx"; s.textContent=list[i%list.length];
+      var s=document.createElement('span'); s.className='fg-fx'; s.textContent=list[i%list.length];
       var a=Math.random()*Math.PI*2, d=50+Math.random()*90;
-      s.style.left=cx+"px"; s.style.top=cy+"px";
-      s.style.setProperty("--dx",Math.cos(a)*d+"px"); s.style.setProperty("--dy",(Math.sin(a)*d-40)+"px"); s.style.setProperty("--r",(Math.random()*120-60)+"deg");
+      s.style.left=cx+'px'; s.style.top=cy+'px';
+      s.style.setProperty('--dx',Math.cos(a)*d+'px'); s.style.setProperty('--dy',(Math.sin(a)*d-40)+'px'); s.style.setProperty('--r',(Math.random()*120-60)+'deg');
       document.body.appendChild(s); setTimeout(function(el){el.remove()},1200,s);
     }
   }
-  function cheer(){ mood("cheer"); burst(["🎉","✨","☕","💚","🎊"],16); look(0,0); }
-  window.addEventListener("mousemove",function(e){
-    if(!wrap.classList.contains("show")) return;
+  function cheer(){mood('cheer'); burst(['🎉','✨','☕','💚','🎊'],16); look(0,0);}
+
+  function show(){
+    wrap.classList.add('show'); if(mk) mk.style.display='none';
+    $('fg-form').style.display=''; $('fg-done').style.display='none';
+    setTimeout(function(){try{$('fg-name').focus({preventScroll:true})}catch(e){}},400);
+  }
+  function hide(){wrap.classList.remove('show'); if(mk) mk.style.removeProperty('display'); mood(null);}
+  function keMenu(){var t=$('fmCats')||$('fmGrid')||document.querySelector('.fm-market'); if(t) t.scrollIntoView({behavior:'smooth',block:'start'});}
+
+  // Kirim ke Buku Tamu (aksi registerGuest yang sama dengan alur lama). Gagal kirim -> dicoba lagi saat halaman dibuka berikutnya.
+  function send(d){
+    var g=window.__famuhaGas, url=g && g.url; if(!url) return Promise.resolve(false);
+    return fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'registerGuest',custName:d.nama,custPhone:d.hp,promoConsent:d.promo,source:'popup-web'})})
+      .then(function(r){return r.ok}).catch(function(){return false});
+  }
+  function retryPending(){
+    var p=lsGet(PEND_KEY); if(!p) return;
+    try{ var d=JSON.parse(p); send(d).then(function(ok){ if(ok) lsDel(PEND_KEY); }); }catch(e){ lsDel(PEND_KEY); }
+  }
+
+  $('fg-submit').onclick=function(){
+    var nama=$('fg-name').value.trim(), hp=normPhone($('fg-phone').value);
+    var okN=nama.length>=2, okP=validPhone(hp);
+    $('fg-f-name').classList.toggle('bad',!okN); $('fg-f-phone').classList.toggle('bad',!okP);
+    if(!okN||!okP) return;
+    var d={nama:nama,hp:hp,promo:$('fg-consent').checked};
+    // Simpan seperti alur lama supaya form checkout & sapaan maskot ikut terisi otomatis.
+    lsSet('customerName',nama); lsSet('customerPhone',hp); lsDel(SKIP_KEY);
+    [['custName',nama],['custPhone',hp]].forEach(function(p){var el=$(p[0]); if(el){el.value=p[1]; try{el.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}}});
+    lsSet(PEND_KEY,JSON.stringify(d));
+    send(d).then(function(ok){ if(ok) lsDel(PEND_KEY); });
+    $('fg-who').textContent=nama.split(/\s+/)[0];
+    $('fg-form').style.display='none'; $('fg-done').style.display='';
+    try{window.dispatchEvent(new CustomEvent('famuha:guest',{detail:d}));}catch(e){}
+    cheer();
+  };
+  $('fg-skip').onclick=$('fg-close').onclick=function(){lsSet(SKIP_KEY,String(Date.now())); hide();};
+  $('fg-ok').onclick=function(){hide(); keMenu();};
+  $('fg-phone').addEventListener('keydown',function(e){if(e.key==='Enter') $('fg-submit').click();});
+  $('fg-name').addEventListener('keydown',function(e){if(e.key==='Enter') $('fg-phone').focus();});
+
+  window.addEventListener('mousemove',function(e){
+    if(!wrap.classList.contains('show')) return;
     var r=mascot.getBoundingClientRect(); if(!r.width) return;
     var dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height*0.5), m=Math.max(1,Math.hypot(dx,dy));
-    look(dx/m*3.2, dy/m*2.6);
+    look(dx/m*3.2,dy/m*2.6);
   });
-  ["fg-name","fg-phone"].forEach(function(id){
+  ['fg-name','fg-phone'].forEach(function(id){
     var el=$(id);
-    el.addEventListener("focus",function(){ look(-3.5,2.5); });
-    el.addEventListener("input",function(){
-      look(-3.5,3); mood("talk"); clearTimeout(tk);
-      tk=setTimeout(function(){ mood(ready()?"happy":null); },700);
-    });
+    el.addEventListener('focus',function(){look(-3.5,2.5);});
+    el.addEventListener('input',function(){look(-3.5,3); mood('talk'); clearTimeout(tk); tk=setTimeout(function(){mood(ready()?'happy':null);},700);});
   });
-  mascot.addEventListener("click",function(){
-    mascot.classList.remove("m-jump"); void mascot.getBoundingClientRect(); mascot.classList.add("m-jump");
-    burst(["❤️","💚","☕"],6); setTimeout(function(){mascot.classList.remove("m-jump")},700);
+  mascot.addEventListener('click',function(){
+    mascot.classList.remove('m-jump'); void mascot.getBoundingClientRect(); mascot.classList.add('m-jump');
+    burst(['❤️','💚','☕'],6); setTimeout(function(){mascot.classList.remove('m-jump')},700);
   });
 
-  setTimeout(function(){
-    var on=true; try{ on = window.__famuhaPopupOn ? window.__famuhaPopupOn("guestbook") : true; }catch(e){}
-    if(on && shouldShow()) show();
-  },DELAY_MS);
+  retryPending();
+  window.__famuhaGuestPopup={show:show,hide:hide}; // untuk uji manual: __famuhaGuestPopup.show()
+  if(!known() && !skipped()) setTimeout(show,DELAY_MS);
 })();
 </script>
-<!-- ===== SAMPAI SINI: BUKU TAMU POPUP ===== -->
-<!-- ===== LONCENG: KOTAK NOTIFIKASI (info terbaru dari admin) ===== -->
-<style id="famuha-bell-css">
-#bellBtn{position:relative!important;top:0!important;right:auto!important;left:auto!important;bottom:auto!important}
-#bellBtn .bell-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#dc2626;color:#fff;font:700 11px/18px Inter,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px #fff;display:none}
-#bellBtn.has-new .bell-badge{display:block}
-#bellBtn.has-new .bell-ico{display:inline-block;animation:bellRing 2.6s ease-in-out infinite;transform-origin:50% 8%}
-@keyframes bellRing{0%,60%,100%{transform:rotate(0)}66%{transform:rotate(14deg)}72%{transform:rotate(-12deg)}78%{transform:rotate(8deg)}84%{transform:rotate(-4deg)}}
-@media (prefers-reduced-motion:reduce){#bellBtn.has-new .bell-ico{animation:none}}
-#bellOv{position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,var(--popup-dim,.32));backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center}
-#bellOv.open{display:flex}
-@media(min-width:600px){#bellOv{align-items:flex-start;justify-content:flex-end;padding:72px 24px 0}}
-#bellCard{background:rgba(255,255,255,var(--popup-alpha,.86));backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);border:1px solid rgba(255,255,255,.55);width:100%;max-width:420px;max-height:min(78vh,560px);display:flex;flex-direction:column;border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.2);color:#31353B;font-family:inherit;padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(min-width:600px){#bellCard{border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.25)}}
-#bellHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px}
-#bellHead h3{margin:0;font-size:16px;font-weight:800}
-#bellClose{border:0;background:none;font-size:22px;line-height:1;color:#6b7280;cursor:pointer;padding:0 2px}
-#bellList{overflow-y:auto;padding:0 10px 12px;-webkit-overflow-scrolling:touch}
-#bellList .bn{display:block;width:100%;text-align:left;border:0;background:rgba(255,255,255,.55);border-radius:12px;padding:11px 12px 10px;margin:0 0 8px;font:inherit;color:inherit;cursor:default;position:relative}
-#bellList .bn.go{cursor:pointer}
-#bellList .bn.go:hover{background:rgba(255,255,255,.85)}
-#bellList .bn.unread{box-shadow:inset 3px 0 0 #16a34a}
-#bellList .bn.unread .bn-t::after{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#16a34a;margin-left:6px;vertical-align:middle}
-#bellList .bn-t{font-weight:800;font-size:14px;line-height:1.3;margin:0 0 3px}
-#bellList .bn-b{font-size:13px;color:#4b5563;line-height:1.45;margin:0 0 5px;white-space:pre-wrap;word-break:break-word}
-#bellList .bn-m{font-size:11.5px;color:#6b7280;display:flex;justify-content:space-between;gap:8px}
-#bellList .bn-m b{color:#16a34a;font-weight:700}
-#bellEmpty{padding:28px 16px 30px;text-align:center;color:#6b7280;font-size:13.5px;line-height:1.5}
-#bellEmpty .e-ico{font-size:30px;display:block;margin-bottom:6px}
+<!-- ===== AKHIR popup Buku Tamu ===== -->
+
+<!-- ===== FAMUHA: Nego harga per item (batas harga dicek di server) ===== -->
+<style id="ng-style">
+.fm-card .ng-btn{margin-left:auto;border:1.5px solid var(--fm-green,#16a34a);background:#fff;color:var(--fm-green-dark,#15803d);font:inherit;font-weight:800;font-size:12px;padding:5px 10px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.fm-card .fm-bottom{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#ng-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9500;display:none}
+#ng-ov.show{display:block}
+#ng-sheet{position:fixed;left:0;right:0;bottom:0;z-index:9501;display:none;max-width:480px;margin:0 auto;background:#fff;color:#1f2937;border-radius:20px 20px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.25);padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));font-family:inherit;max-height:85vh;overflow:auto}
+#ng-sheet.show{display:block;animation:ngUp .3s ease-out}
+@keyframes ngUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+#ng-sheet *{box-sizing:border-box}
+.ng-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.ng-av{width:40px;height:40px;border-radius:50%;background:#16a34a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.ng-ttl{flex:1;min-width:0}.ng-ttl b{display:block;font-size:15px}.ng-ttl span{font-size:12px;color:#6b7280}
+.ng-x{border:0;background:none;font-size:24px;line-height:1;color:#6b7280;cursor:pointer;padding:4px 8px}
+#ng-chat{display:flex;flex-direction:column;gap:7px;margin:8px 0;max-height:34vh;overflow:auto}
+.ng-b{max-width:86%;padding:8px 11px;border-radius:14px;font-size:14px;line-height:1.4;animation:ngUp .2s ease-out}
+.ng-b.m{background:#e8f6ec;align-self:flex-start;border-bottom-left-radius:4px}
+.ng-b.u{background:#16a34a;color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.ng-row{display:flex;gap:8px;margin-top:6px}
+.ng-row .pre{display:flex;align-items:center;border:1.5px solid #d1d5db;border-radius:10px;padding:0 10px;flex:1;background:#fff}
+.ng-row .pre span{font-weight:700;color:#6b7280;margin-right:4px}
+.ng-row input{border:0;outline:0;font:inherit;font-size:16px;padding:10px 0;width:100%;background:transparent}
+.ng-pri,.ng-sec{border:0;font:inherit;font-weight:800;font-size:14px;padding:10px 14px;border-radius:10px;cursor:pointer}
+.ng-pri{background:#16a34a;color:#fff}.ng-sec{background:#f3f4f6;color:#1f2937}
+.ng-pri:disabled{opacity:.6}
+.ng-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.ng-code{font-family:ui-monospace,Menlo,monospace;font-weight:800;letter-spacing:1px;background:#f0fdf4;border:1.5px dashed #16a34a;border-radius:10px;padding:8px 12px;text-align:center;margin-top:6px;user-select:all}
+.ng-adm-note{font-size:11px}
+@media (prefers-reduced-motion:reduce){#ng-sheet.show,.ng-b{animation:none}}
 </style>
-<div id="bellOv" role="dialog" aria-modal="true" aria-labelledby="bellTitle">
-  <div id="bellCard">
-    <div id="bellHead"><h3 id="bellTitle">🔔 Info Terbaru</h3><button id="bellClose" type="button" aria-label="Tutup">×</button></div>
-    <div id="bellList"></div>
+<div id="ng-ov"></div>
+<div id="ng-sheet" role="dialog" aria-label="Nego harga">
+  <div class="ng-head"><div class="ng-av">☕</div><div class="ng-ttl"><b id="ng-name">Nego yuk!</b><span id="ng-sub"></span></div><button type="button" class="ng-x" id="ng-close" aria-label="Tutup">&times;</button></div>
+  <div id="ng-chat"></div>
+  <div id="ng-input">
+    <div class="ng-row"><label class="pre"><span>Rp</span><input id="ng-in" type="text" inputmode="numeric" autocomplete="off" placeholder="Tawaranmu"></label><button type="button" class="ng-pri" id="ng-go">Tawar</button></div>
   </div>
+  <div class="ng-acts" id="ng-acts"></div>
 </div>
-<script>
+<script id="ng-script">
 (function(){
-  var SEEN_KEY='famuha_notif_seen', CACHE_KEY='famuha_notif_cache';
-  var items=[], seen=0, loaded=false;
   var $=function(id){return document.getElementById(id)};
+  var LIST={}; // id -> {normal}
+  var cur=null, busy=false;
+  function gas(){var g=window.__famuhaGas; return g&&g.url||'';}
+  function rp(n){return 'Rp'+String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+  function digits(s){return parseInt(String(s).replace(/[^0-9]/g,''),10)||0;}
   function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
-  function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function toast(t){ if(window.famuhaToast) window.famuhaToast(t,4200); else alert(t); }
 
-  // --- tombol lonceng di baris ikon header ---
-  var bar=$('tpActions'), bell=document.createElement('button');
-  bell.type='button'; bell.className='history-btn'; bell.id='bellBtn'; bell.setAttribute('aria-label','Info terbaru dari Famuha Coffee');
-  bell.innerHTML='<span class="bell-ico">\uD83D\uDD14</span> Info<span class="bell-badge" id="bellBadge"></span>';
-  if(bar) bar.insertBefore(bell,bar.firstChild); else return;
-
-  seen=parseInt(lsGet(SEEN_KEY)||'0',10)||0;
-  try{ var c=JSON.parse(lsGet(CACHE_KEY)||'null'); if(c&&c.length){items=c; updateBadge();} }catch(e){}
-
-  function unreadCount(){ return items.filter(function(n){return n.ts>seen}).length; }
-  function updateBadge(){
-    var n=unreadCount(), b=$('bellBadge');
-    bell.classList.toggle('has-new',n>0);
-    if(b) b.textContent=n>9?'9+':String(n);
+  // ---- Daftar menu yang bisa dinego (hanya id + harga normal; batas bawah TIDAK pernah dikirim ke browser) ----
+  function loadList(){
+    var u=gas(); if(!u) return Promise.resolve();
+    return fetch(u+'?action=negoList').then(function(r){return r.json()}).then(function(d){
+      LIST={}; ((d&&d.items)||[]).forEach(function(x){ if(x&&x.id) LIST[x.id]={normal:+x.normal||0}; });
+      inject();
+    }).catch(function(){});
   }
-  function ago(ts){
-    var s=Math.max(0,(Date.now()-ts)/1000);
-    if(s<60) return 'baru saja';
-    if(s<3600) return Math.floor(s/60)+' menit lalu';
-    if(s<86400) return Math.floor(s/3600)+' jam lalu';
-    if(s<7*86400) return Math.floor(s/86400)+' hari lalu';
-    return new Date(ts).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
-  }
-  function safeUrl(u){
-    u=String(u||''); if(!u||u==='/') return '';
-    try{ var x=new URL(u,location.href); return x.origin===location.origin?x.href:''; }catch(e){ return ''; }
-  }
-  function render(prevSeen){
-    var box=$('bellList'); box.textContent='';
-    if(!items.length){
-      var e=document.createElement('div'); e.id='bellEmpty';
-      e.innerHTML='<span class="e-ico">\u2615</span>'; 
-      e.appendChild(document.createTextNode(loaded?'Belum ada info terbaru dari Famuha Coffee. Cek lagi nanti ya, kak!':'Memuat info terbaru\u2026'));
-      box.appendChild(e); return;
-    }
-    items.forEach(function(n){
-      var url=safeUrl(n.url);
-      var el=document.createElement(url?'button':'div'); el.className='bn'+(url?' go':'')+(n.ts>prevSeen?' unread':'');
-      if(url) el.type='button';
-      var t=document.createElement('div'); t.className='bn-t'; t.textContent=n.title;
-      var b=document.createElement('div'); b.className='bn-b'; b.textContent=n.body;
-      var m=document.createElement('div'); m.className='bn-m';
-      var w=document.createElement('span'); w.textContent=ago(n.ts); m.appendChild(w);
-      if(url){ var g=document.createElement('b'); g.textContent='Lihat \u203A'; m.appendChild(g); el.addEventListener('click',function(){ location.href=url; }); }
-      el.appendChild(t); el.appendChild(b); el.appendChild(m); box.appendChild(el);
+  function inject(){
+    [].forEach.call(document.querySelectorAll('#fmGrid .fm-card'),function(c){
+      var id=c.dataset.variant, bt=c.querySelector('.fm-bottom'), ex=c.querySelector('.ng-btn');
+      var ok=id && LIST[id] && bt && digits((c.querySelector('.fm-price')||{}).textContent)===LIST[id].normal;
+      if(ok && !ex){
+        var b=document.createElement('button'); b.type='button'; b.className='ng-btn'; b.textContent='🤝 Nego';
+        b.addEventListener('click',function(e){e.stopPropagation(); open(c);});
+        bt.appendChild(b);
+      } else if(!ok && ex){ ex.remove(); }
     });
   }
-  var prevSeen=0, panelOpen=false;
-  function markSeen(){
-    var latest=items.reduce(function(m,n){return Math.max(m,n.ts)},0);
-    if(latest>seen){ seen=latest; lsSet(SEEN_KEY,String(seen)); }
-    updateBadge();
+  var grid=$('fmGrid');
+  if(grid && window.MutationObserver){
+    var t=null; new MutationObserver(function(){clearTimeout(t); t=setTimeout(inject,150);}).observe(grid,{childList:true});
   }
-  function load(){
-    var g=window.__famuhaGas||{}; if(!g.url) return;
-    fetch(g.url+'?action=notifList').then(function(r){return r.json()}).then(function(res){
-      if(res&&res.ok&&Array.isArray(res.items)){
-        items=res.items.filter(function(n){return n&&n.title&&n.ts}); loaded=true;
-        lsSet(CACHE_KEY,JSON.stringify(items));
-        if(panelOpen){ markSeen(); render(prevSeen); } else updateBadge();
-      }
-    }).catch(function(){ loaded=true; if(panelOpen) render(prevSeen); });
+
+  // ---- Percakapan ----
+  function bub(text,who){var d=document.createElement('div'); d.className='ng-b '+who; d.textContent=text; $('ng-chat').appendChild(d); $('ng-chat').scrollTop=1e6;}
+  function acts(list){var a=$('ng-acts'); a.innerHTML=''; list.forEach(function(x){var b=document.createElement('button'); b.type='button'; b.className=x.pri?'ng-pri':'ng-sec'; b.textContent=x.t; b.onclick=x.f; a.appendChild(b);});}
+  function showInput(v){$('ng-input').style.display=v?'':'none';}
+
+  function open(card){
+    var phone=(lsGet('customerPhone')||'').replace(/\D/g,'');
+    if(phone.length<10){
+      if(window.__famuhaGuestPopup){ window.__famuhaGuestPopup.show(); toast('Isi nama dan nomor HP dulu ya kak, baru kita nego.'); }
+      else toast('Isi nomor HP dulu di Data Pelanggan ya kak.');
+      return;
+    }
+    var id=card.dataset.variant, nm=card.dataset.name||'menu ini', normal=LIST[id]?LIST[id].normal:0;
+    cur={id:id,name:nm,normal:normal,card:card,phone:phone,nama:lsGet('customerName')||''};
+    $('ng-name').textContent='Nego: '+nm; $('ng-sub').textContent='Harga normal '+rp(normal);
+    $('ng-chat').innerHTML=''; $('ng-in').value=''; acts([]); showInput(true);
+    bub('Halo kak! Mau nego '+nm+'? Harga normalnya '+rp(normal)+'. Kakak punya 1 kali tawar, jadi pilih harga terbaikmu ya. Mau tawar berapa? 😄','m');
+    $('ng-ov').classList.add('show'); $('ng-sheet').classList.add('show');
+    setTimeout(function(){try{$('ng-in').focus({preventScroll:true})}catch(e){}},300);
   }
-  function open(){
-    prevSeen=seen; panelOpen=true; render(prevSeen);
-    $('bellOv').classList.add('open'); markSeen(); load();
+  function close(){$('ng-ov').classList.remove('show'); $('ng-sheet').classList.remove('show');}
+
+  function offer(price){
+    if(busy||!cur) return;
+    if(!(price>0)){bub('Isi angka tawarannya dulu ya kak 🙏','m'); return;}
+    var u=gas(); if(!u){bub('Nego belum bisa dipakai sekarang, coba lagi nanti ya kak.','m'); return;}
+    busy=true; $('ng-go').disabled=true; bub(rp(price)+' ya kak?','u'); acts([]);
+    fetch(u,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'negoOffer',menuId:cur.id,harga:price,custPhone:cur.phone,custName:cur.nama})})
+      .then(function(r){return r.json()}).then(handle).catch(function(){bub('Duh, koneksinya lagi bermasalah. Coba lagi ya kak.','m');})
+      .then(function(){busy=false; $('ng-go').disabled=false;});
   }
-  function close(){ panelOpen=false; $('bellOv').classList.remove('open'); }
-  bell.addEventListener('click',open);
-  $('bellClose').addEventListener('click',close);
-  $('bellOv').addEventListener('click',function(e){ if(e.target===$('bellOv')) close(); });
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
-  setTimeout(load,1500);
+  function handle(d){
+    if(!d||!d.ok){bub((d&&d.pesan)||'Nego sedang tidak tersedia.','m'); return;}
+    bub(d.pesan||'','m');
+    if(d.status==='deal'){
+      showInput(false);
+      try{localStorage.setItem('famuha_nego_deal',JSON.stringify({kode:d.kode,menuId:cur.id,harga:d.harga,exp:Date.now()+30*60000,n:0}));}catch(e){}
+      acts([{t:'Pesan sekarang',pri:true,f:order},{t:'Nanti',f:close}]);
+    } else if(d.status==='tolak'||d.status==='limit'||d.status==='closed'||d.status==='normal'){
+      showInput(false); acts([{t:'Tutup',f:close}]);
+    }
+  }
+  function order(){
+    close();
+    var ci=document.getElementById('custPhone'); if(ci && !ci.value){ci.value=cur.phone; try{ci.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}}
+    var cn=document.getElementById('custName'); if(cn && !cn.value && cur.nama){cn.value=cur.nama; try{cn.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}}
+    toast('Harga nego sudah dikunci 30 menit. Pilih menunya, potongan masuk otomatis.');
+    if(cur.card) cur.card.click();
+  }
+  // Potongan nego dipasang otomatis begitu menunya masuk keranjang (kode hanya dipakai internal, pelanggan tidak perlu mengetik apa-apa).
+  function tryApply(){
+    var dl; try{dl=JSON.parse(lsGet('famuha_nego_deal')||'null');}catch(e){dl=null;}
+    if(!dl) return;
+    if(dl.exp<Date.now()||dl.n>=3){try{localStorage.removeItem('famuha_nego_deal')}catch(e){} return;}
+    if(!window.famuhaCartHasVariant||!window.famuhaCartHasVariant(dl.menuId)) return;
+    var vi=document.getElementById('voucherLoyalInput'), vb=document.getElementById('voucherLoyalBtn'); if(!vi||!vb||vi.value===dl.kode) return;
+    var ph=lsGet('customerPhone'), ci=document.getElementById('custPhone'); if(ci && !ci.value && ph){ci.value=ph; try{ci.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}}
+    vi.value=dl.kode; dl.n++; try{localStorage.setItem('famuha_nego_deal',JSON.stringify(dl));}catch(e){}
+    vb.click();
+  }
+  document.addEventListener('click',function(e){ if(e.target.closest&&e.target.closest('button')) setTimeout(tryApply,700); },true);
+  setTimeout(tryApply,2000);
+  $('ng-go').onclick=function(){offer(digits($('ng-in').value));};
+  $('ng-in').addEventListener('keydown',function(e){if(e.key==='Enter') $('ng-go').click();});
+  $('ng-in').addEventListener('input',function(){var d=digits(this.value); this.value=d?String(d).replace(/\B(?=(\d{3})+(?!\d))/g,'.'):'';});
+  $('ng-close').onclick=$('ng-ov').onclick=close;
+
+  // ---- Tombol Admin: atur harga batas bawah per menu (disimpan di server, tidak ditampilkan ke pelanggan) ----
+  var admCache=null;
+  function admLoad(pin){
+    if(admCache) return admCache;
+    var u=gas(); if(!u) return Promise.resolve({});
+    admCache=fetch(u+'?action=negoAdminList&pin='+encodeURIComponent(pin)).then(function(r){return r.json()}).then(function(d){
+      var m={}; ((d&&d.items)||[]).forEach(function(x){m[x.id]=x;}); return m;
+    }).catch(function(){admCache=null; return {};});
+    return admCache;
+  }
+  window.famuhaNegoAdminButton=function(id,name,normalFn,pin){
+    var b=document.createElement('button'); b.type='button'; b.className='adm-btn'; b.textContent='Nego';
+    function paint(x){ if(x&&x.aktif){b.textContent='Nego: min '+rp(x.floor)+' ✎'; b.classList.add('pri');} else {b.textContent='Nego'; b.classList.remove('pri');} }
+    admLoad(pin).then(function(m){paint(m[id]);});
+    b.addEventListener('click',function(){
+      var normal=normalFn(); if(!(normal>0)){alert('Harga normal menu ini belum terbaca.'); return;}
+      admLoad(pin).then(function(m){
+        var cu=m[id], ans=window.prompt('Harga batas bawah nego untuk "'+name+'" (Rp).\nHarga normal saat ini '+rp(normal)+'.\nPelanggan tidak akan pernah melihat angka ini.\nKosongkan lalu OK untuk mematikan nego.',cu&&cu.aktif?String(cu.floor):'');
+        if(ans===null) return;
+        ans=String(ans).replace(/[^0-9]/g,''); var fl=ans?parseInt(ans,10):0;
+        if(ans && (fl<1000||fl>=normal)){alert('Batas bawah harus di bawah harga normal ('+rp(normal)+') dan minimal Rp1.000.'); return;}
+        b.disabled=true;
+        fetch(gas(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'negoSetFloor',pin:pin,menuId:id,nama:name,normal:normal,floor:fl,aktif:!!ans})})
+          .then(function(r){return r.json()}).then(function(d){
+            if(!d||!d.ok){alert((d&&d.pesan)||'Gagal menyimpan pengaturan nego.'); return;}
+            m[id]={id:id,floor:fl,aktif:!!ans}; paint(m[id]); loadList();
+          }).catch(function(){alert('Gagal menyimpan pengaturan nego.');}).then(function(){b.disabled=false;});
+      });
+    });
+    return b;
+  };
+
+  loadList();
 })();
 </script>
-<!-- ===== SAMPAI SINI: LONCENG ===== -->
+<!-- ===== AKHIR Nego harga ===== -->
+
 </body>
 </html>
