@@ -9610,18 +9610,34 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
     });
   }
   // ---- Tombol Nego di halaman detail menu (di atas tombol "Bagikan menu ini") ----
+  function activeDeal(id){ var dl; try{dl=JSON.parse(lsGet('famuha_nego_deal')||'null');}catch(e){dl=null;} return (dl&&dl.menuId===id&&dl.exp>Date.now())?dl:null; }
+  function hhmm(t){var d=new Date(t); return ('0'+d.getHours()).slice(-2)+'.'+('0'+d.getMinutes()).slice(-2);}
+  function setTxt(el,t){ if(el.textContent!==t) el.textContent=t; }
   function injectDetail(){
     var sh=$('fdShare'); if(!sh) return;
-    var r=document.querySelector('input[name="variant"]:checked'), id=r&&r.value, ex=$('ng-detail-btn');
-    var ok=!!(id && LIST[id]);
-    if(ok && !ex){
-      var b=document.createElement('button'); b.type='button'; b.className='fd-btn s'; b.id='ng-detail-btn'; b.textContent='🤝 Tawar Harga';
-      b.addEventListener('click',function(){
-        var rr=document.querySelector('input[name="variant"]:checked'), nm=($('fdName')||{}).textContent||'menu ini';
-        if(rr) open(null,{id:rr.value,name:nm});
-      });
-      sh.parentNode.insertBefore(b,sh);
-    } else if(!ok && ex){ ex.remove(); }
+    var r=document.querySelector('input[name="variant"]:checked'), id=r&&r.value, ex=$('ng-detail-btn'), note=$('ng-deal-note'), pl=$('ng-price-line'), pe=$('fdPrice');
+    var deal=id?activeDeal(id):null, ok=!!(id && LIST[id]);
+    // Harga tawar tampil jelas di bawah harga menu
+    if(deal && pe){
+      var hemat=(LIST[id]&&LIST[id].normal)?Math.max(0,LIST[id].normal-deal.harga):0;
+      if(!pl){ pl=document.createElement('div'); pl.id='ng-price-line'; pl.style.cssText='color:#15803d;font-weight:700;font-size:14px;margin:-8px 0 12px'; pe.parentNode.insertBefore(pl,pe.nextSibling); }
+      setTxt(pl,'🤝 Harga tawarmu '+rp(deal.harga)+(hemat?' (hemat '+rp(hemat)+')':'')+' · berlaku sampai '+hhmm(deal.exp));
+    } else if(pl){ pl.remove(); }
+    if(deal){
+      if(ex) ex.remove();
+      if(!note){ note=document.createElement('div'); note.id='ng-deal-note'; note.style.cssText='background:#f0fdf4;border:1px solid #86efac;color:#15803d;border-radius:8px;padding:10px 12px;font-size:13px;font-weight:700;margin-bottom:10px;text-align:center'; sh.parentNode.insertBefore(note,sh); }
+      setTxt(note,'🤝 Harga tawar aktif. Potongan dipasang otomatis saat kamu lanjut memesan.');
+    } else {
+      if(note) note.remove();
+      if(ok && !ex){
+        var b=document.createElement('button'); b.type='button'; b.className='fd-btn s'; b.id='ng-detail-btn'; b.textContent='🤝 Tawar Harga';
+        b.addEventListener('click',function(){
+          var rr=document.querySelector('input[name="variant"]:checked'), nm=($('fdName')||{}).textContent||'menu ini';
+          if(rr) open(null,{id:rr.value,name:nm});
+        });
+        sh.parentNode.insertBefore(b,sh);
+      } else if(!ok && ex){ ex.remove(); }
+    }
   }
   var det=$('fmDetail');
   if(det && window.MutationObserver){
@@ -9668,7 +9684,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
     bub(d.pesan||'','m');
     if(d.status==='deal'){
       showInput(false);
-      try{localStorage.setItem('famuha_nego_deal',JSON.stringify({kode:d.kode,menuId:cur.id,harga:d.harga,exp:Date.now()+30*60000,n:0}));}catch(e){}
+      try{localStorage.setItem('famuha_nego_deal',JSON.stringify({kode:d.kode,menuId:cur.id,harga:d.harga,exp:Date.now()+30*60000,n:0}));}catch(e){} injectDetail();
       acts([{t:'Pesan sekarang',pri:true,f:order},{t:'Nanti',f:close}]);
     } else if(d.status==='tolak'||d.status==='limit'||d.status==='closed'||d.status==='normal'){
       showInput(false); acts([{t:'Tutup',f:close}]);
