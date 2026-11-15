@@ -5163,7 +5163,7 @@ body[data-step="2"] .fq{display:none}
       syncSold();
       var pCard = [].slice.call(document.querySelectorAll('#fmGrid .fm-card')).filter(function(c){ return c.dataset.name === name; })[0];
       var pb = pCard && pCard.dataset.variant ? admPromoButton_(pCard.dataset.variant, name) : null;
-      row.appendChild(th); row.appendChild(info); row.appendChild(fl); row.appendChild(rs); row.appendChild(sb); if (pb) row.appendChild(pb); var nb = (window.famuhaNegoAdminButton && pCard && pCard.dataset.variant) ? window.famuhaNegoAdminButton(pCard.dataset.variant, name, function(){ return menuBasePrice_(pCard.dataset.variant) || 0; }, ADMIN_PIN) : null; if (nb) row.appendChild(nb); row.appendChild(dl); list.appendChild(row);
+      row.appendChild(th); row.appendChild(info); row.appendChild(fl); row.appendChild(rs); row.appendChild(sb); if (pb) row.appendChild(pb); var nb = (window.famuhaNegoAdminButton && pCard && pCard.dataset.variant) ? window.famuhaNegoAdminButton(pCard.dataset.variant, name, function(){ return (window.famuhaDisplayedPrice && window.famuhaDisplayedPrice(pCard.dataset.variant)) || menuBasePrice_(pCard.dataset.variant) || 0; }, ADMIN_PIN) : null; if (nb) row.appendChild(nb); row.appendChild(dl); list.appendChild(row);
     });
     wrap.appendChild(box);
   }
@@ -5844,13 +5844,13 @@ body[data-step="2"] .fq{display:none}
         .then(function(data){
           if (data && data.ok && data.valid && data.menuId && !cartHasVariant_(data.menuId)){
             clearVoucherLoyal_(false);
-            voucherMsg_('Kode nego ini khusus ' + (data.menuName || 'menu yang kamu nego') + '. Masukkan menunya ke keranjang dulu ya.', false);
+            voucherMsg_('Harga tawar ini khusus ' + (data.menuName || 'menu yang kamu tawar') + '. Masukkan menunya ke keranjang dulu ya.', false);
           } else if (data && data.ok && data.valid){
             state.voucherCode = kode;
             state.voucherMenuId = data.menuId || '';
             state.voucherAmount = Number(data.potongan) || 0;
             input.value = kode;
-            voucherMsg_(state.voucherMenuId ? ('✓ Harga nego dipakai: hemat ' + idr(state.voucherAmount) + '.') : ('✓ Voucher dipakai: -' + idr(state.voucherAmount) + ' (berlaku 1x pakai).'), true);
+            voucherMsg_(state.voucherMenuId ? ('✓ Harga tawar dipakai: hemat ' + idr(state.voucherAmount) + '.') : ('✓ Voucher dipakai: -' + idr(state.voucherAmount) + ' (berlaku 1x pakai).'), true);
           } else {
             clearVoucherLoyal_(false);
             voucherMsg_((data && data.pesan) || 'Kode voucher tidak valid.', false);
@@ -9544,9 +9544,9 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
 #tbvCodeRow,#tbvCodeMsg{display:none!important}
 .fm-card .ng-btn{margin-left:auto;border:1.5px solid var(--fm-green,#16a34a);background:#fff;color:var(--fm-green-dark,#15803d);font:inherit;font-weight:800;font-size:12px;padding:5px 10px;border-radius:999px;cursor:pointer;white-space:nowrap}
 .fm-card .fm-bottom{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#ng-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9500;display:none}
+#ng-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2147483000;display:none}
 #ng-ov.show{display:block}
-#ng-sheet{position:fixed;left:0;right:0;bottom:0;z-index:9501;display:none;max-width:480px;margin:0 auto;background:#fff;color:#1f2937;border-radius:20px 20px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.25);padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));font-family:inherit;max-height:85vh;overflow:auto}
+#ng-sheet{position:fixed;left:0;right:0;bottom:0;z-index:2147483001;display:none;max-width:480px;margin:0 auto;background:#fff;color:#1f2937;border-radius:20px 20px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.25);padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));font-family:inherit;max-height:85vh;overflow:auto}
 #ng-sheet.show{display:block;animation:ngUp .3s ease-out}
 @keyframes ngUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 #ng-sheet *{box-sizing:border-box}
@@ -9571,8 +9571,8 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
 @media (prefers-reduced-motion:reduce){#ng-sheet.show,.ng-b{animation:none}}
 </style>
 <div id="ng-ov"></div>
-<div id="ng-sheet" role="dialog" aria-label="Nego harga">
-  <div class="ng-head"><div class="ng-av">☕</div><div class="ng-ttl"><b id="ng-name">Nego yuk!</b><span id="ng-sub"></span></div><button type="button" class="ng-x" id="ng-close" aria-label="Tutup">&times;</button></div>
+<div id="ng-sheet" role="dialog" aria-label="Tawar harga">
+  <div class="ng-head"><div class="ng-av">☕</div><div class="ng-ttl"><b id="ng-name">Tawar harga yuk!</b><span id="ng-sub"></span></div><button type="button" class="ng-x" id="ng-close" aria-label="Tutup">&times;</button></div>
   <div id="ng-chat"></div>
   <div id="ng-input">
     <div class="ng-row"><label class="pre"><span>Rp</span><input id="ng-in" type="text" inputmode="numeric" autocomplete="off" placeholder="Tawaranmu"></label><button type="button" class="ng-pri" id="ng-go">Tawar</button></div>
@@ -9595,7 +9595,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
     var u=gas(); if(!u) return Promise.resolve();
     return fetch(u+'?action=negoList').then(function(r){return r.json()}).then(function(d){
       LIST={}; ((d&&d.items)||[]).forEach(function(x){ if(x&&x.id) LIST[x.id]={normal:+x.normal||0}; });
-      inject();
+      inject(); injectDetail();
     }).catch(function(){});
   }
   function inject(){
@@ -9603,11 +9603,29 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
       var id=c.dataset.variant, bt=c.querySelector('.fm-bottom'), ex=c.querySelector('.ng-btn');
       var ok=id && LIST[id] && bt && digits((c.querySelector('.fm-price')||{}).textContent)===LIST[id].normal;
       if(ok && !ex){
-        var b=document.createElement('button'); b.type='button'; b.className='ng-btn'; b.textContent='🤝 Nego';
+        var b=document.createElement('button'); b.type='button'; b.className='ng-btn'; b.textContent='🤝 Tawar Harga';
         b.addEventListener('click',function(e){e.stopPropagation(); open(c);});
         bt.appendChild(b);
       } else if(!ok && ex){ ex.remove(); }
     });
+  }
+  // ---- Tombol Nego di halaman detail menu (di atas tombol "Bagikan menu ini") ----
+  function injectDetail(){
+    var sh=$('fdShare'); if(!sh) return;
+    var r=document.querySelector('input[name="variant"]:checked'), id=r&&r.value, ex=$('ng-detail-btn');
+    var ok=!!(id && LIST[id]);
+    if(ok && !ex){
+      var b=document.createElement('button'); b.type='button'; b.className='fd-btn s'; b.id='ng-detail-btn'; b.textContent='🤝 Tawar Harga';
+      b.addEventListener('click',function(){
+        var rr=document.querySelector('input[name="variant"]:checked'), nm=($('fdName')||{}).textContent||'menu ini';
+        if(rr) open(null,{id:rr.value,name:nm});
+      });
+      sh.parentNode.insertBefore(b,sh);
+    } else if(!ok && ex){ ex.remove(); }
+  }
+  var det=$('fmDetail');
+  if(det && window.MutationObserver){
+    var td=null; new MutationObserver(function(){clearTimeout(td); td=setTimeout(injectDetail,120);}).observe(det,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
   }
   var grid=$('fmGrid');
   if(grid && window.MutationObserver){
@@ -9619,18 +9637,18 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   function acts(list){var a=$('ng-acts'); a.innerHTML=''; list.forEach(function(x){var b=document.createElement('button'); b.type='button'; b.className=x.pri?'ng-pri':'ng-sec'; b.textContent=x.t; b.onclick=x.f; a.appendChild(b);});}
   function showInput(v){$('ng-input').style.display=v?'':'none';}
 
-  function open(card){
+  function open(card,ov){
     var phone=(lsGet('customerPhone')||'').replace(/\D/g,'');
     if(phone.length<10){
-      if(window.__famuhaGuestPopup){ window.__famuhaGuestPopup.show(); toast('Isi nama dan nomor HP dulu ya kak, baru kita nego.'); }
+      if(window.__famuhaGuestPopup){ window.__famuhaGuestPopup.show(); toast('Isi nama dan nomor HP dulu ya kak, baru kita tawar-menawar.'); }
       else toast('Isi nomor HP dulu di Data Pelanggan ya kak.');
       return;
     }
-    var id=card.dataset.variant, nm=card.dataset.name||'menu ini', normal=LIST[id]?LIST[id].normal:0;
+    var id=ov?ov.id:card.dataset.variant, nm=ov?ov.name:(card.dataset.name||'menu ini'), normal=LIST[id]?LIST[id].normal:0;
     cur={id:id,name:nm,normal:normal,card:card,phone:phone,nama:lsGet('customerName')||''};
-    $('ng-name').textContent='Nego: '+nm; $('ng-sub').textContent='Harga normal '+rp(normal);
+    $('ng-name').textContent='Tawar Harga: '+nm; $('ng-sub').textContent='Harga normal '+rp(normal);
     $('ng-chat').innerHTML=''; $('ng-in').value=''; acts([]); showInput(true);
-    bub('Halo kak! Mau nego '+nm+'? Harga normalnya '+rp(normal)+'. Kakak punya 1 kali tawar, jadi pilih harga terbaikmu ya. Mau tawar berapa? 😄','m');
+    bub('Halo kak! Mau tawar '+nm+'? Harga normalnya '+rp(normal)+'. Kakak punya 1 kali tawar, jadi pilih harga terbaikmu ya. Mau tawar berapa? 😄','m');
     $('ng-ov').classList.add('show'); $('ng-sheet').classList.add('show');
     setTimeout(function(){try{$('ng-in').focus({preventScroll:true})}catch(e){}},300);
   }
@@ -9639,14 +9657,14 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   function offer(price){
     if(busy||!cur) return;
     if(!(price>0)){bub('Isi angka tawarannya dulu ya kak 🙏','m'); return;}
-    var u=gas(); if(!u){bub('Nego belum bisa dipakai sekarang, coba lagi nanti ya kak.','m'); return;}
+    var u=gas(); if(!u){bub('Tawar harga belum bisa dipakai sekarang, coba lagi nanti ya kak.','m'); return;}
     busy=true; $('ng-go').disabled=true; bub(rp(price)+' ya kak?','u'); acts([]);
     fetch(u,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'negoOffer',menuId:cur.id,harga:price,custPhone:cur.phone,custName:cur.nama})})
       .then(function(r){return r.json()}).then(handle).catch(function(){bub('Duh, koneksinya lagi bermasalah. Coba lagi ya kak.','m');})
       .then(function(){busy=false; $('ng-go').disabled=false;});
   }
   function handle(d){
-    if(!d||!d.ok){bub((d&&d.pesan)||'Nego sedang tidak tersedia.','m'); return;}
+    if(!d||!d.ok){bub((d&&d.pesan)||'Tawar harga sedang tidak tersedia.','m'); return;}
     bub(d.pesan||'','m');
     if(d.status==='deal'){
       showInput(false);
@@ -9660,7 +9678,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
     close();
     var ci=document.getElementById('custPhone'); if(ci && !ci.value){ci.value=cur.phone; try{ci.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}}
     var cn=document.getElementById('custName'); if(cn && !cn.value && cur.nama){cn.value=cur.nama; try{cn.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}}
-    toast('Harga nego sudah dikunci 30 menit. Pilih menunya, potongan masuk otomatis.');
+    toast('Harga tawarmu sudah dikunci 30 menit. Pilih menunya, potongan masuk otomatis.');
     if(cur.card) cur.card.click();
   }
   // Potongan nego dipasang otomatis begitu menunya masuk keranjang (kode hanya dipakai internal, pelanggan tidak perlu mengetik apa-apa).
@@ -9691,23 +9709,24 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
     }).catch(function(){admCache=null; return {};});
     return admCache;
   }
+  window.famuhaDisplayedPrice=function(v){ var el=document.querySelector('#fmGrid .fm-card[data-variant="'+CSS.escape(v)+'"] .fm-price'); return el?digits(el.textContent):0; };
   window.famuhaNegoAdminButton=function(id,name,normalFn,pin){
-    var b=document.createElement('button'); b.type='button'; b.className='adm-btn'; b.textContent='Nego';
-    function paint(x){ if(x&&x.aktif){b.textContent='Nego: min '+rp(x.floor)+' ✎'; b.classList.add('pri');} else {b.textContent='Nego'; b.classList.remove('pri');} }
+    var b=document.createElement('button'); b.type='button'; b.className='adm-btn'; b.textContent='Tawar Harga';
+    function paint(x){ if(x&&x.aktif){ var cp=normalFn(); b.textContent='Tawar: min '+rp(x.floor)+' ✎'+((cp&&x.normal&&cp!==x.normal)?' ⚠ harga berubah, simpan ulang':''); b.classList.add('pri'); b.title=(cp&&x.normal&&cp!==x.normal)?('Harga di kartu '+rp(cp)+' berbeda dari harga saat nego diatur ('+rp(x.normal)+'). Tombol Nego disembunyikan sampai disimpan ulang.'):''; } else {b.textContent='Tawar Harga'; b.classList.remove('pri'); b.title='';} }
     admLoad(pin).then(function(m){paint(m[id]);});
     b.addEventListener('click',function(){
       var normal=normalFn(); if(!(normal>0)){alert('Harga normal menu ini belum terbaca.'); return;}
       admLoad(pin).then(function(m){
-        var cu=m[id], ans=window.prompt('Harga batas bawah nego untuk "'+name+'" (Rp).\nHarga normal saat ini '+rp(normal)+'.\nPelanggan tidak akan pernah melihat angka ini.\nKosongkan lalu OK untuk mematikan nego.',cu&&cu.aktif?String(cu.floor):'');
+        var cu=m[id], ans=window.prompt('Harga batas bawah tawar harga untuk "'+name+'" (Rp).\nHarga normal saat ini '+rp(normal)+'.\nPelanggan tidak akan pernah melihat angka ini.\nKosongkan lalu OK untuk mematikan tawar harga.',cu&&cu.aktif?String(cu.floor):'');
         if(ans===null) return;
         ans=String(ans).replace(/[^0-9]/g,''); var fl=ans?parseInt(ans,10):0;
         if(ans && (fl<1000||fl>=normal)){alert('Batas bawah harus di bawah harga normal ('+rp(normal)+') dan minimal Rp1.000.'); return;}
         b.disabled=true;
         fetch(gas(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'negoSetFloor',pin:pin,menuId:id,nama:name,normal:normal,floor:fl,aktif:!!ans})})
           .then(function(r){return r.json()}).then(function(d){
-            if(!d||!d.ok){alert((d&&d.pesan)||'Gagal menyimpan pengaturan nego.'); return;}
-            m[id]={id:id,floor:fl,aktif:!!ans}; paint(m[id]); loadList();
-          }).catch(function(){alert('Gagal menyimpan pengaturan nego.');}).then(function(){b.disabled=false;});
+            if(!d||!d.ok){alert((d&&d.pesan)||'Gagal menyimpan pengaturan tawar harga.'); return;}
+            m[id]={id:id,floor:fl,normal:normal,aktif:!!ans}; paint(m[id]); loadList();
+          }).catch(function(){alert('Gagal menyimpan pengaturan tawar harga.');}).then(function(){b.disabled=false;});
       });
     });
     return b;
