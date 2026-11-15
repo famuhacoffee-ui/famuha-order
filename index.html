@@ -9374,6 +9374,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
   };
   $("fg-skip").onclick=$("fg-close").onclick=function(){ set(DAY_KEY,today()); hide(); };
   $("fg-ok").onclick=hide;
+  window.__famuhaGuestPopup={show:show,hide:hide};   // dipanggil fitur Tawar Harga bila data pelanggan belum ada
   document.addEventListener("keydown",function(e){ if(e.key==="Escape" && wrap.classList.contains("show")){ if(!registered) set(DAY_KEY,today()); hide(); } });
   $("fg-phone").addEventListener("keydown",function(e){ if(e.key==="Enter") $("fg-submit").click(); });
   $("fg-name").addEventListener("keydown",function(e){ if(e.key==="Enter") $("fg-phone").focus(); });
@@ -9583,7 +9584,9 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
 (function(){
   var $=function(id){return document.getElementById(id)};
   var LIST={}; // id -> {normal}
-  var cur=null, busy=false;
+  var cur=null, busy=false, pending=null;
+  // Setelah pelanggan mengisi popup Buku Tamu, lanjutkan tawar harga yang tadi tertunda
+  window.addEventListener('famuha:guest',function(){ var pd=pending; if(!pd) return; setTimeout(function(){ if(pending===pd) open(pd.card,pd.ov); },900); });
   function gas(){var g=window.__famuhaGas; return g&&g.url||'';}
   function rp(n){return 'Rp'+String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
   function digits(s){return parseInt(String(s).replace(/[^0-9]/g,''),10)||0;}
@@ -9655,11 +9658,26 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
 
   function open(card,ov){
     var phone=(lsGet('customerPhone')||'').replace(/\D/g,'');
+    // Belum ada data tersimpan (mis. popup Buku Tamu di-skip): coba ambil dari form "Data Pelanggan"
     if(phone.length<10){
+      var fp=document.getElementById('custPhone'), fn=document.getElementById('custName');
+      var p2=String(fp&&fp.value||'').replace(/[^\d+]/g,'');
+      if(p2.indexOf('+62')===0) p2='0'+p2.slice(3); else if(p2.indexOf('62')===0) p2='0'+p2.slice(2);
+      if(/^08\d{8,12}$/.test(p2)){
+        phone=p2;
+        try{ localStorage.setItem('customerPhone',p2); var n2=(fn&&fn.value||'').trim(); if(n2.length>=2) localStorage.setItem('customerName',n2); }catch(e){}
+      }
+    }
+    if(phone.length<10){
+      pending={card:card,ov:ov};
       if(window.__famuhaGuestPopup){ window.__famuhaGuestPopup.show(); toast('Isi nama dan nomor HP dulu ya kak, baru kita tawar-menawar.'); }
-      else toast('Isi nomor HP dulu di Data Pelanggan ya kak.');
+      else{
+        toast('Isi nomor HP dulu di Data Pelanggan ya kak.');
+        var f=document.getElementById('custPhone'); if(f){ try{ f.scrollIntoView({behavior:'smooth',block:'center'}); f.focus({preventScroll:true}); }catch(e){} }
+      }
       return;
     }
+    pending=null;
     var id=ov?ov.id:card.dataset.variant, nm=ov?ov.name:(card.dataset.name||'menu ini'), normal=LIST[id]?LIST[id].normal:0;
     cur={id:id,name:nm,normal:normal,card:card,phone:phone,nama:lsGet('customerName')||''};
     $('ng-name').textContent='Tawar Harga: '+nm; $('ng-sub').textContent='Harga normal '+rp(normal);
