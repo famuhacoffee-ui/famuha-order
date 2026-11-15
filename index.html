@@ -9682,7 +9682,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
     cur={id:id,name:nm,normal:normal,card:card,phone:phone,nama:lsGet('customerName')||''};
     $('ng-name').textContent='Tawar Harga: '+nm; $('ng-sub').textContent='Harga normal '+rp(normal);
     $('ng-chat').innerHTML=''; $('ng-in').value=''; acts([]); showInput(true);
-    bub('Halo kak! Mau tawar '+nm+'? Harga normalnya '+rp(normal)+'. Kakak punya 1 kali tawar, jadi pilih harga terbaikmu ya. Mau tawar berapa? 😄','m');
+    bub('Halo kak! Mau tawar '+nm+'? Harga normalnya '+rp(normal)+'. Kakak punya 2 kali kesempatan tawar, jadi pilih harga terbaikmu ya. Mau tawar berapa? 😄','m');
     $('ng-ov').classList.add('show'); $('ng-sheet').classList.add('show');
     setTimeout(function(){try{$('ng-in').focus({preventScroll:true})}catch(e){}},300);
   }
@@ -9704,6 +9704,10 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
       showInput(false);
       try{localStorage.setItem('famuha_nego_deal',JSON.stringify({kode:d.kode,menuId:cur.id,harga:d.harga,exp:Date.now()+30*60000,n:0}));}catch(e){} injectDetail();
       acts([{t:'Pesan sekarang',pri:true,f:order},{t:'Nanti',f:close}]);
+    } else if(d.status==='tolak' && d.sisa>0){
+      showInput(true); $('ng-in').value=''; // pesan sisa kesempatan datang dari server
+      acts([{t:'Tutup',f:close}]);
+      setTimeout(function(){try{$('ng-in').focus({preventScroll:true})}catch(e){}},200);
     } else if(d.status==='tolak'||d.status==='limit'||d.status==='closed'||d.status==='normal'){
       showInput(false); acts([{t:'Tutup',f:close}]);
     }
