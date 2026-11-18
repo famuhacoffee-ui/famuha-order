@@ -2473,7 +2473,7 @@ body[data-step="2"] .mk{display:none}
         <span class="tprice" id="totalPrice">Rp 0</span>
       </div>
 
-      <a href="#" target="_blank" class="cta-btn" id="ctaBtn">Kirim Pesanan</a>
+      <a href="#" target="_blank" class="cta-btn" id="ctaBtn">Konfirmasi Order</a>
       <div class="cta-note">Tambahkan minimal 1 varian ke pesanan</div>
     </div>
   </div>
@@ -2565,7 +2565,7 @@ body[data-step="2"] .fq{display:none}
     </div>
     <div class="mobile-bar-row mobile-bar-checkout">
       <div class="mtotal"><small>Total</small><span id="mobileTotal">Rp 0</span></div>
-      <a href="#" target="_blank" class="cta-btn" id="ctaBtnMobile">Kirim Pesanan</a>
+      <a href="#" target="_blank" class="cta-btn" id="ctaBtnMobile">Konfirmasi Order</a>
     </div>
   </div>
 
@@ -2578,7 +2578,7 @@ body[data-step="2"] .fq{display:none}
         <span>Total Pesanan</span>
         <span id="thankyouTotal">Rp 0</span>
       </div>
-      <a href="#" target="_blank" rel="noopener" class="cta-btn" id="thankyouWaBtn" style="display:block;text-align:center;text-decoration:none;margin-bottom:10px" hidden>💬 Kirim Pesanan via WhatsApp</a>
+      <a href="#" target="_blank" rel="noopener" class="cta-btn" id="thankyouWaBtn" style="display:block;text-align:center;text-decoration:none;margin-bottom:10px" hidden>💬 Konfirmasi Order via WhatsApp</a>
       <button type="button" class="cta-btn" id="thankyouClose">Tutup</button>
       <div class="overlay-note" id="thankyouNote">Kalau WhatsApp belum terbuka atau pesan belum terkirim, tekan tombol di atas</div>
     </div>
@@ -3294,6 +3294,10 @@ body[data-step="2"] .fq{display:none}
       .then(function(data){
         // Cadangan: server tidak berhasil mengirim notifikasi ke kasir -> minta pelanggan kirim lewat WhatsApp.
         if (window.__famuhaAutoPending && data && data.notifSent === false) showWaFallback_();
+        else if (window.__famuhaAutoPending && data && data.custSent === true){
+          var _tnC = document.getElementById('thankyouNote');
+          if (_tnC) _tnC.textContent = 'Pesananmu sudah masuk ke kasir kami. Konfirmasi juga kami kirim lewat WhatsApp ke nomormu.';
+        }
         // Voucher loyal baru terbit (pembelian ke-5): kabari pelanggan, kodenya dikirim lewat WhatsApp.
         if (data && data.voucherLoyal){
           var vmsg = '🎟️ Selamat! Kamu dapat voucher diskon ' + idr(data.voucherLoyal.nominal || 5000) + (data.voucherLoyal.waSent
@@ -3311,7 +3315,7 @@ body[data-step="2"] .fq{display:none}
       var b = document.getElementById('thankyouWaBtn'), n = document.getElementById('thankyouNote');
       if (!b || !window.__famuhaLastWaUrl) return;
       b.dataset.mode = 'open'; b.setAttribute('href', window.__famuhaLastWaUrl);
-      b.textContent = '💬 Kirim Pesanan via WhatsApp'; b.hidden = false;
+      b.textContent = '💬 Konfirmasi Order via WhatsApp'; b.hidden = false;
       if (n){ n.textContent = 'Pesanan belum terkirim otomatis. Tekan tombol di atas lalu tekan Kirim di WhatsApp.'; n.hidden = false; }
     } catch (e){}
   }
@@ -3598,7 +3602,7 @@ body[data-step="2"] .fq{display:none}
     if (qtyValueM) qtyValueM.textContent = state.qty;
     document.getElementById('qrisTotal').textContent = idr(total);
     document.getElementById('paymentNote').textContent = state.payment === 'qris'
-      ? 'Scan kode QRIS yang tampil, lalu tekan "Saya Sudah Bayar" untuk mengirim pesanan.'
+      ? 'Scan kode QRIS yang tampil, lalu tekan "Saya Sudah Bayar" untuk konfirmasi order.'
       : (['dana','ovo','gopay','transfer'].indexOf(state.payment) > -1
         ? 'Bayar sesuai total ke nomor di bawah, lalu kirim bukti bayar lewat WhatsApp.'
         : 'Siapkan uang pas — pembayaran dilakukan saat pesanan diterima.');
@@ -3770,9 +3774,9 @@ body[data-step="2"] .fq{display:none}
     } else if (cart.length === 0){
       waHint = 'Tambahkan minimal 1 varian ke pesanan · ' + (autoNotifyOn_() ? 'Pesanan langsung masuk ke kasir' : 'Konfirmasi akhir via WhatsApp');
     } else if (state.payment === 'qris' && !qrisPaidConfirmed){
-      waHint = 'Scan QRIS lalu tekan "Saya Sudah Bayar" untuk mengirim pesanan';
+      waHint = 'Scan QRIS lalu tekan "Saya Sudah Bayar" untuk konfirmasi order';
     } else if (!scheduleOk){
-      waHint = 'Lengkapi tanggal & jam jadwal pesanan dulu (jam operasional ' + SCHEDULE_TIME_MIN + '–' + SCHEDULE_TIME_MAX + ') sebelum kirim pesanan';
+      waHint = 'Lengkapi tanggal & jam jadwal pesanan dulu (jam operasional ' + SCHEDULE_TIME_MIN + '–' + SCHEDULE_TIME_MAX + ') sebelum konfirmasi order';
     } else {
       waHint = 'Tambahkan minimal 1 varian ke pesanan · ' + (autoNotifyOn_() ? 'Pesanan langsung masuk ke kasir' : 'Konfirmasi akhir via WhatsApp');
     }
@@ -6063,14 +6067,14 @@ body[data-step="2"] .fq{display:none}
           markPromo1708Used_();
         }
         showThankyou(
-          isQris
-            ? 'Konfirmasi pesanan telah kami terima, pesananmu sedang kami proses. Mohon menunggu sekitar 5–10 menit ya ☕'
-            : 'Konfirmasi pesanan telah kami terima, pesananmu sedang kami proses. Mohon menunggu sekitar 5–10 menit ya ☕',
+          _auto
+            ? 'Terima kasih sudah order! Kami sedang mengecek pesananmu, mohon tunggu sebentar ya ☕'
+            : 'Terima kasih sudah order! Kami sedang mengecek pesananmu. Jangan lupa lampirkan bukti bayar di chat WhatsApp ya ☕',
           total
         );
         var _twa2 = document.getElementById('thankyouWaBtn');
         if (_twa2){ _twa2.dataset.mode = 'open'; _twa2.setAttribute('href', _waUrl); _twa2.textContent = '💬 Pesan belum terkirim? Buka WhatsApp lagi'; _twa2.hidden = _auto; }
-        if (_auto){ var _tnA = document.getElementById('thankyouNote'); if (_tnA){ _tnA.textContent = 'Pesananmu sudah masuk ke kasir kami. Tidak perlu kirim chat WhatsApp lagi.'; _tnA.hidden = false; } }
+        if (_auto){ var _tnA = document.getElementById('thankyouNote'); if (_tnA){ _tnA.textContent = 'Pesananmu sudah masuk ke kasir kami. Tidak perlu kirim chat WhatsApp.'; _tnA.hidden = false; } }
         cart = [];
         var _onEl = document.getElementById('orderNote'); if (_onEl) _onEl.value = '';
         state.qty = 1;
@@ -7449,7 +7453,7 @@ body[data-step="2"] .fq{display:none}
         return 'Untuk info promo terbaru, coba cek halaman order — kalau sedang ada promo aktif, biasanya muncul otomatis di ringkasan pesanan. Kalau mau dipastikan langsung, chat admin kami ya.';
       }
       if (/(cara order|cara pesan|gimana order|gimana pesan|order gimana)/.test(q)){
-        return 'Cara order gampang kok:\n1. Pilih size, susu, shot, varian rasa, gula & es di form.\n2. Klik "Tambah ke Keranjang".\n3. Isi data diri & pilih metode delivery + pembayaran.\n4. Klik "Kirim Pesanan". Untuk COD & QRIS, pesananmu langsung masuk ke kasir kami. Untuk DANA/OVO/GoPay/Transfer, WhatsApp terbuka supaya kamu bisa melampirkan bukti bayar.';
+        return 'Cara order gampang kok:\n1. Pilih size, susu, shot, varian rasa, gula & es di form.\n2. Klik "Tambah ke Keranjang".\n3. Isi data diri & pilih metode delivery + pembayaran.\n4. Klik "Konfirmasi Order". Untuk COD & QRIS, pesananmu langsung masuk ke kasir kami. Untuk DANA/OVO/GoPay/Transfer, WhatsApp terbuka supaya kamu bisa melampirkan bukti bayar.';
       }
       if (/(bayar|pembayaran|qris|cod|transfer)/.test(q)){
         return 'Pembayaran bisa lewat COD (bayar di tempat/saat diantar) atau QRIS. Pilih metode pembayaran ini di bagian akhir form order sebelum checkout.';
@@ -9893,7 +9897,7 @@ body[data-step="2"] .preview-stage,body[data-step="2"] #previewLabel,body[data-s
       '<div>Total yang dibayar</div><div class="mp-total">'+esc(tot)+'</div>'+
       '<div class="mp-box"><span class="mp-num">'+esc(c.number)+'</span><button type="button" class="mp-copy" id="mpCopy">Salin</button></div>'+
       bankLine+(c.holder?('<div class="mp-holder">a.n. <b>'+esc(c.holder)+'</b></div>'):'')+
-      '<ol><li>Bayar tepat sesuai total di atas.</li><li>Screenshot bukti bayarnya.</li><li>Tekan tombol hijau untuk kirim pesanan lewat WhatsApp, lalu lampirkan screenshot bukti bayar di chat itu.</li></ol>';
+      '<ol><li>Bayar tepat sesuai total di atas.</li><li>Screenshot bukti bayarnya.</li><li>Tekan tombol hijau “Konfirmasi Order”, WhatsApp akan terbuka, lalu lampirkan screenshot bukti bayar di chat itu.</li></ol>';
     panel.hidden=false;
     var b=$('mpCopy'); if(b) b.onclick=function(){
       var t=String(c.number).replace(/\s/g,'');
